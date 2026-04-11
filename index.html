@@ -1349,6 +1349,7 @@ function decodePolyline(encoded) {
 }
 
 async function drawRouteBetween(project, target) {
+  console.log('drawRoute called, mode:', activeRouteMode, 'google:', !!(window.google && window.google.maps));
   setRouteStatus(project.name + ' → ' + target.name + ' hesaplanıyor...');
   const mode = ROUTE_MODES[activeRouteMode];
 
@@ -1383,13 +1384,15 @@ async function drawRouteBetween(project, target) {
     } catch(e) { console.warn('Google DirectionsService hata:', e); }
   }
 
-  // Fallback: OSRM
+  // Fallback: OSRM - profile must match mode
+  const osrmProfile = activeRouteMode === 'walk' ? 'foot' : 'car';
+  console.log('Using OSRM fallback with profile:', osrmProfile);
   try {
-    const profile = activeRouteMode === 'walk' ? 'foot' : 'car';
-    const r = await fetch('https://router.project-osrm.org/route/v1/' + profile + '/' +
+    const r = await fetch('https://router.project-osrm.org/route/v1/' + osrmProfile + '/' +
       project.lng + ',' + project.lat + ';' + target.lng + ',' + target.lat +
       '?overview=full&geometries=geojson');
     const d = await r.json();
+    console.log('OSRM result:', d.code, d.routes && d.routes[0] && d.routes[0].duration);
     if (d.code === 'Ok' && d.routes && d.routes.length) {
       renderRoute(d.routes[0].geometry, mode.color, false);
       renderTargetMarker(target, mode.color);
