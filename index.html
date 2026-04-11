@@ -1862,10 +1862,7 @@ async function dpSendForm() {
   ['cf-name','cf-phone','cf-email','cf-note'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
 }
 
-      (li ? '<button onclick="window.location.href=\"/acenta.html\"" style="margin-top:8px;background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.2);color:rgba(201,169,110,.7);font-family:Montserrat,sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:5px 10px;cursor:pointer;width:100%">Teklif Oluştur →</button>' : '') +
-  // Acenta portalını teklif sekmesiyle aç
-  window.location.href = '/acenta.html?tab=addoffer&proje='+projectId;
-}
+
 
 
 // Boot: load Supabase data first, then build UI
