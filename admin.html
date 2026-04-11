@@ -4,7 +4,185 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Arslanlar — Admin Panel</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js">
+// ══ CRM DATA ════════════════════════════════════════════════
+let crmAcentalar=[], crmMusteriler=[], crmTeklifler=[], crmProjects=[];
+let acentalarFiltered=[], musterilerFiltered=[], tekliflerFiltered=[];
+
+async function loadCrmData() {
+  const [agRes, auRes, cusRes, offRes, prRes] = await Promise.all([
+    sb.from('agencies').select('*').order('created_at',{ascending:false}),
+    sb.from('agency_users').select('id,agency_id'),
+    sb.from('customers').select('*').order('created_at',{ascending:false}),
+    sb.from('offers').select('*').order('created_at',{ascending:false}),
+    sb.from('projects').select('id,name').order('sira'),
+  ]);
+  crmAcentalar  = agRes.data  || [];
+  crmMusteriler = cusRes.data || [];
+  crmTeklifler  = offRes.data || [];
+  crmProjects   = prRes.data  || [];
+
+  // Proje filtrelerini doldur
+  ['mus-proje-filter','tek-proje-filter'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Tüm Projeler</option>';
+    crmProjects.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id; o.textContent = p.name;
+      sel.appendChild(o);
+    });
+  });
+
+  renderAcentalar(crmAcentalar);
+  renderMusteriler(crmMusteriler);
+  renderTeklifler(crmTeklifler);
+}
+
+function fmoney(n,d){ if(!n) return '—'; const s=d==='USD'?'$':d==='EUR'?'€':'₺'; return s+Math.round(n).toLocaleString('tr-TR'); }
+function fdate(d){ return d ? new Date(d).toLocaleDateString('tr-TR') : '—'; }
+function badge(s){
+  if(['aktif','onaylandi'].includes(s)) return '<span class="badge-ok">'+s+'</span>';
+  if(['beklemede'].includes(s)) return '<span class="badge-bk">'+s+'</span>';
+  return '<span class="badge-no">'+s+'</span>';
+}
+
+function renderAcentalar(list) {
+  const b = document.getElementById('crm-acentalar-body');
+  if (!b) return;
+  b.innerHTML = list.map(ag => `<tr>
+    <td style="font-weight:400">${ag.firma_adi||'—'}</td>
+    <td style="color:var(--wd)">${ag.yetkili_adi||'—'}</td>
+    <td style="color:var(--wd);font-size:11px">${ag.email||'—'}</td>
+    <td style="color:var(--wd)">${ag.sehir||'—'}</td>
+    <td>${badge(ag.durum||'beklemede')}</td>
+    <td style="color:var(--wd);font-size:11px">${fdate(ag.created_at)}</td>
+    <td style="display:flex;gap:5px">
+      ${ag.durum==='beklemede' ? `<button class="btn-sm" onclick="acentaOnayla('${ag.id}')">Onayla</button><button class="btn-sm" onclick="acentaReddet('${ag.id}')">Reddet</button>` : ''}
+      ${ag.durum==='aktif' ? `<button class="btn-sm" onclick="acentaPasif('${ag.id}')">Pasif Yap</button>` : ''}
+      ${ag.durum==='pasif'||ag.durum==='reddedildi' ? `<button class="btn-sm" onclick="acentaAktif('${ag.id}')">Aktif Yap</button>` : ''}
+    </td>
+  </tr>`).join('');
+}
+
+function renderMusteriler(list) {
+  const b = document.getElementById('crm-mus-body');
+  if (!b) return;
+  b.innerHTML = list.map(c => {
+    const ag  = crmAcentalar.find(a => a.id===c.agency_id);
+    const prj = crmProjects.find(p => p.id===c.ilgi_proje);
+    return `<tr>
+      <td style="font-weight:400">${c.ad_soyad||'—'}</td>
+      <td style="color:var(--wd)">${c.telefon||'—'}</td>
+      <td style="color:var(--wd);font-size:11px">${ag?ag.firma_adi:'—'}</td>
+      <td style="color:var(--wd)">${prj?prj.name:'—'}</td>
+      <td style="color:var(--wd);font-size:11px">${c.butce_min?fmoney(c.butce_min,c.doviz):'—'}</td>
+      <td>${badge(c.durum||'yeni')}</td>
+      <td style="color:var(--wd);font-size:11px">${fdate(c.created_at)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTeklifler(list) {
+  const b = document.getElementById('crm-tek-body');
+  if (!b) return;
+  b.innerHTML = list.map(o => {
+    const ag  = crmAcentalar.find(a => a.id===o.agency_id);
+    const mus = crmMusteriler.find(c => c.id===o.customer_id);
+    const prj = crmProjects.find(p => p.id===o.project_id);
+    return `<tr>
+      <td style="font-weight:400">${mus?mus.ad_soyad:'—'}</td>
+      <td style="color:var(--wd);font-size:11px">${ag?ag.firma_adi:'—'}</td>
+      <td style="color:var(--wd)">${prj?prj.name:'—'}</td>
+      <td style="color:var(--wd)">${o.daire_tipi||'—'}</td>
+      <td style="color:var(--gold)">${fmoney(o.satis_fiyati,o.doviz)}</td>
+      <td>${badge(o.durum||'beklemede')}</td>
+      <td style="color:var(--wd);font-size:11px">${fdate(o.created_at)}</td>
+      <td style="display:flex;gap:5px">
+        ${o.durum==='beklemede'?`<button class="btn-sm" onclick="teklifOnayla('${o.id}')">Onayla</button><button class="btn-sm" onclick="teklifReddet('${o.id}')">Reddet</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterAcentalar(durum, btn) {
+  document.querySelectorAll('.btn-sm').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const list = durum==='tumu' ? crmAcentalar : crmAcentalar.filter(a => {
+    if (durum==='beklemede') return a.durum==='beklemede'||!a.durum;
+    if (durum==='aktif') return a.durum==='aktif';
+    if (durum==='pasif') return a.durum==='pasif'||a.durum==='reddedildi';
+    return true;
+  });
+  renderAcentalar(list);
+}
+
+function filterMusteriler() {
+  const q  = (document.getElementById('mus-search')?.value||'').toLowerCase();
+  const pr = document.getElementById('mus-proje-filter')?.value||'';
+  renderMusteriler(crmMusteriler.filter(c =>
+    (!q || c.ad_soyad?.toLowerCase().includes(q) || c.telefon?.includes(q)) &&
+    (!pr || c.ilgi_proje===pr)
+  ));
+}
+
+function filterTeklifler() {
+  const d  = document.getElementById('tek-durum-filter')?.value||'';
+  const pr = document.getElementById('tek-proje-filter')?.value||'';
+  renderTeklifler(crmTeklifler.filter(o =>
+    (!d  || o.durum===d) &&
+    (!pr || o.project_id===pr)
+  ));
+}
+
+async function acentaOnayla(id) {
+  await sb.from('agencies').update({durum:'aktif'}).eq('id',id);
+  await loadCrmData(); filterAcentalar('tumu',null);
+  showToast('Acenta onaylandı.');
+}
+async function acentaReddet(id) {
+  await sb.from('agencies').update({durum:'reddedildi'}).eq('id',id);
+  await loadCrmData(); filterAcentalar('tumu',null);
+  showToast('Acenta reddedildi.');
+}
+async function acentaPasif(id) {
+  await sb.from('agencies').update({durum:'pasif'}).eq('id',id);
+  await loadCrmData(); filterAcentalar('tumu',null);
+  showToast('Acenta pasife alındı.');
+}
+async function acentaAktif(id) {
+  await sb.from('agencies').update({durum:'aktif'}).eq('id',id);
+  await loadCrmData(); filterAcentalar('tumu',null);
+  showToast('Acenta aktif edildi.');
+}
+async function teklifOnayla(id) {
+  await sb.from('offers').update({durum:'onaylandi'}).eq('id',id);
+  await loadCrmData();
+  showToast('Teklif onaylandı.');
+}
+async function teklifReddet(id) {
+  await sb.from('offers').update({durum:'reddedildi'}).eq('id',id);
+  await loadCrmData();
+  showToast('Teklif reddedildi.');
+}
+
+function showToast(msg) {
+  let t = document.getElementById('admin-toast');
+  if (!t) { t=document.createElement('div'); t.id='admin-toast'; t.style.cssText='position:fixed;bottom:20px;right:20px;background:#111;border:1px solid rgba(201,169,110,.4);color:#C9A96E;padding:10px 18px;font-size:12px;z-index:999;opacity:0;transition:opacity .3s;font-family:Montserrat,sans-serif'; document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity='1';
+  setTimeout(()=>t.style.opacity='0',3000);
+}
+
+// showPanel override — CRM paneller için veri yükle
+const _origShowPanel = showPanel;
+function showPanel(name, el) {
+  _origShowPanel(name, el);
+  if (name==='crm-acentalar'||name==='crm-musteriler'||name==='crm-teklifler') {
+    loadCrmData();
+  }
+}
+
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -223,6 +401,12 @@ html,body{min-height:100%;background:var(--black);color:var(--white);font-family
 
 .save-indicator{font-size:10px;color:var(--green);letter-spacing:1px;display:none;}
 .save-indicator.show{display:inline;}
+
+.btn-sm{background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.15);color:rgba(245,240,232,.45);font-family:'Montserrat',sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:7px 14px;cursor:pointer;transition:all .2s}
+.btn-sm:hover,.btn-sm.active{background:rgba(201,169,110,.15);border-color:rgba(201,169,110,.35);color:var(--gold)}
+.badge-bk{background:rgba(232,169,110,.1);color:#E8A96E;border:1px solid rgba(232,169,110,.25);font-size:9px;letter-spacing:.8px;padding:2px 8px;text-transform:uppercase;display:inline-block}
+.badge-ok{background:rgba(93,189,132,.1);color:#5DBD84;border:1px solid rgba(93,189,132,.25);font-size:9px;letter-spacing:.8px;padding:2px 8px;text-transform:uppercase;display:inline-block}
+.badge-no{background:rgba(232,112,112,.1);color:#E87070;border:1px solid rgba(232,112,112,.25);font-size:9px;letter-spacing:.8px;padding:2px 8px;text-transform:uppercase;display:inline-block}
 </style>
 </head>
 <body>
@@ -263,6 +447,16 @@ html,body{min-height:100%;background:var(--black);color:var(--white);font-family
     </div>
     <div id="sidebarProjects"></div>
 
+    <div class="sb-section">CRM</div>
+    <div class="sb-item" onclick="showPanel('crm-acentalar',this)">
+      <span>🏢</span><span>Acentalar</span>
+    </div>
+    <div class="sb-item" onclick="showPanel('crm-musteriler',this)">
+      <span>👥</span><span>Müşteriler</span>
+    </div>
+    <div class="sb-item" onclick="showPanel('crm-teklifler',this)">
+      <span>📋</span><span>Teklifler</span>
+    </div>
     <div class="sb-section">Yönetim</div>
     <div class="sb-item" onclick="showPanel('status',this)">
       <span>🏠</span><span>Daire Durumları</span>
@@ -579,7 +773,64 @@ html,body{min-height:100%;background:var(--black);color:var(--white);font-family
           <button class="btn-primary" onclick="addPOI()">Nokta Ekle</button>
         </div>
       </div>
+  
+
+    <!-- CRM: ACENTALAR -->
+    <div class="panel" id="panel-crm-acentalar">
+      <div class="page-title">Acenta <em>Yönetimi</em></div>
+      <div class="page-sub">Başvurular ve aktif acentalar</div>
+      <div class="gold-line"></div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="btn-sm active" onclick="filterAcentalar('tumu',this)">Tümü</button>
+        <button class="btn-sm" onclick="filterAcentalar('beklemede',this)">Beklemede</button>
+        <button class="btn-sm" onclick="filterAcentalar('aktif',this)">Aktif</button>
+        <button class="btn-sm" onclick="filterAcentalar('pasif',this)">Pasif/Red</button>
+      </div>
+      <table class="tbl" id="crm-acentalar-tbl">
+        <thead><tr><th>Firma</th><th>Yetkili</th><th>E-posta</th><th>Şehir</th><th>Durum</th><th>Kayıt</th><th>İşlem</th></tr></thead>
+        <tbody id="crm-acentalar-body"></tbody>
+      </table>
     </div>
+
+    <!-- CRM: MÜŞTERİLER -->
+    <div class="panel" id="panel-crm-musteriler">
+      <div class="page-title">Tüm <em>Müşteriler</em></div>
+      <div class="page-sub">Tüm acentaların müşteri portföyü</div>
+      <div class="gold-line"></div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <input type="text" id="mus-search" placeholder="İsim veya telefon ara..." oninput="filterMusteriler()" style="flex:1;background:var(--b3);border:1px solid var(--border);color:var(--white);padding:9px 13px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none;min-width:180px">
+        <select id="mus-proje-filter" onchange="filterMusteriler()" style="background:var(--b3);border:1px solid var(--border);color:var(--white);padding:9px 13px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none">
+          <option value="">Tüm Projeler</option>
+        </select>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Ad Soyad</th><th>Telefon</th><th>Acenta</th><th>İlgi Projesi</th><th>Bütçe</th><th>Durum</th><th>Kayıt</th></tr></thead>
+        <tbody id="crm-mus-body"></tbody>
+      </table>
+    </div>
+
+    <!-- CRM: TEKLİFLER -->
+    <div class="panel" id="panel-crm-teklifler">
+      <div class="page-title">Tüm <em>Teklifler</em></div>
+      <div class="page-sub">Tüm acentaların teklifleri</div>
+      <div class="gold-line"></div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <select id="tek-durum-filter" onchange="filterTeklifler()" style="background:var(--b3);border:1px solid var(--border);color:var(--white);padding:9px 13px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none">
+          <option value="">Tüm Durumlar</option>
+          <option value="beklemede">Beklemede</option>
+          <option value="onaylandi">Onaylandı</option>
+          <option value="reddedildi">Reddedildi</option>
+        </select>
+        <select id="tek-proje-filter" onchange="filterTeklifler()" style="background:var(--b3);border:1px solid var(--border);color:var(--white);padding:9px 13px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none">
+          <option value="">Tüm Projeler</option>
+        </select>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Müşteri</th><th>Acenta</th><th>Proje</th><th>Daire Tipi</th><th>Tutar</th><th>Durum</th><th>Tarih</th><th>İşlem</th></tr></thead>
+        <tbody id="crm-tek-body"></tbody>
+      </table>
+    </div>
+  </div>
 
   </div>
 </div>

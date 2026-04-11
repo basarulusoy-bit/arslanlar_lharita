@@ -246,6 +246,90 @@
     .sl{font-size:7px;}
     #compass{display:none;}
   }
+
+/* ══ DETAY PANELİ ══════════════════════════════════════ */
+#dp-ov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:800;opacity:0;pointer-events:none;transition:opacity .3s}
+#dp-ov.on{opacity:1;pointer-events:all}
+#dp-panel{position:fixed;top:0;right:0;bottom:0;width:min(760px,100vw);background:#0A0A0A;border-left:1px solid rgba(201,169,110,.18);z-index:801;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .36s cubic-bezier(.4,0,.2,1);overflow:hidden}
+#dp-panel.on{transform:translateX(0)}
+.dp-hdr{flex-shrink:0;height:50px;background:#111;border-bottom:1px solid rgba(201,169,110,.14);display:flex;align-items:center;justify-content:space-between;padding:0 18px}
+.dp-hdr-name{font-family:'Cormorant Garamond',serif;font-size:17px;color:#C9A96E;letter-spacing:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dp-hdr-x{background:none;border:1px solid rgba(201,169,110,.2);color:rgba(245,240,232,.4);width:28px;height:28px;cursor:pointer;font-size:13px;transition:all .2s;flex-shrink:0;margin-left:10px}
+.dp-hdr-x:hover{border-color:#C9A96E;color:#C9A96E}
+.dp-tabs{flex-shrink:0;display:flex;background:#111;border-bottom:1px solid rgba(201,169,110,.1);overflow-x:auto}
+.dp-tabs::-webkit-scrollbar{display:none}
+.dp-tab{flex-shrink:0;padding:10px 14px;font-size:8px;letter-spacing:1.8px;color:rgba(245,240,232,.38);cursor:pointer;text-transform:uppercase;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.dp-tab:hover{color:rgba(245,240,232,.7)}
+.dp-tab.on{color:#C9A96E;border-bottom-color:#C9A96E}
+.dp-body{flex:1;overflow-y:auto}
+.dp-body::-webkit-scrollbar{width:2px}
+.dp-body::-webkit-scrollbar-thumb{background:rgba(201,169,110,.18)}
+.dps{display:none;padding-bottom:40px}
+.dps.on{display:block}
+.dp-hero{position:relative;height:260px;background:#111;overflow:hidden}
+.dp-hero img{width:100%;height:100%;object-fit:cover;display:block}
+.dp-hero-ov{position:absolute;inset:0;background:linear-gradient(transparent 20%,rgba(0,0,0,.82));display:flex;flex-direction:column;justify-content:flex-end;padding:20px}
+.dp-badge{font-size:8px;letter-spacing:3px;color:#C9A96E;text-transform:uppercase;margin-bottom:5px}
+.dp-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:#F5F0E8;line-height:1.1;margin-bottom:3px}
+.dp-sub{font-size:11px;color:rgba(245,240,232,.5)}
+.dp-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.dp-chip{background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.22);color:#C9A96E;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 9px}
+.dp-grid{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid rgba(201,169,110,.09)}
+.dp-gi{padding:12px 16px;border-right:1px solid rgba(201,169,110,.09)}
+.dp-gi:nth-child(3n){border-right:none}
+.dp-lbl{font-size:7px;letter-spacing:2px;color:rgba(201,169,110,.45);text-transform:uppercase;margin-bottom:2px}
+.dp-val{font-family:'Cormorant Garamond',serif;font-size:15px;color:#F5F0E8}
+.dp-stl{font-size:8px;letter-spacing:2.5px;color:rgba(201,169,110,.55);text-transform:uppercase;padding:14px 18px 8px;border-bottom:1px solid rgba(201,169,110,.09)}
+.dp-desc{padding:12px 18px;font-size:12px;color:rgba(245,240,232,.5);line-height:1.9}
+.dp-ctas{padding:12px 18px 16px;display:flex;gap:7px;flex-wrap:wrap}
+.dp-btn{flex:1;min-width:110px;padding:11px 12px;text-align:center;font-family:'Montserrat',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:none;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.dp-btn-g{background:#C9A96E;color:#0A0A0A}
+.dp-btn-g:hover{background:#E8C98A}
+.dp-btn-w{background:#25D366;color:#fff}
+.dp-btn-o{background:none;border:1px solid rgba(201,169,110,.2);color:rgba(245,240,232,.45)}
+.dp-btn-o:hover{border-color:#C9A96E;color:#C9A96E}
+.dp-gal{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px}
+.dp-gal img{width:100%;aspect-ratio:16/9;object-fit:cover;cursor:pointer;display:block}
+.dp-gal img.full{grid-column:1/-1;aspect-ratio:16/7}
+.dp-type{background:#141414;border:1px solid rgba(201,169,110,.1);margin:0 14px 7px;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start}
+.dp-tn{font-family:'Cormorant Garamond',serif;font-size:19px;color:#C9A96E}
+.dp-tm{font-size:10px;color:rgba(245,240,232,.3);margin:1px 0 5px}
+.dp-tp{font-family:'Cormorant Garamond',serif;font-size:17px;color:#F5F0E8;text-align:right}
+.dp-ta{font-size:10px;color:rgba(245,240,232,.35);text-align:right}
+.dp-st{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+.dp-sp{font-size:8px;letter-spacing:.7px;padding:2px 7px;border:1px solid}
+.dp-ams{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:8px 14px 16px}
+.dp-am{background:#141414;border:1px solid rgba(201,169,110,.09);padding:9px 10px;font-size:11px;color:rgba(245,240,232,.45);text-align:center}
+.dp-mmap{height:170px;background:#141414;margin:0 14px 10px;border:1px solid rgba(201,169,110,.1)}
+.dp-3dbox{margin:14px;background:#141414;border:1px solid rgba(201,169,110,.12);padding:24px;text-align:center}
+.dp-3dt{font-family:'Cormorant Garamond',serif;font-size:20px;color:#C9A96E;margin-bottom:6px}
+.dp-3ds{font-size:11px;color:rgba(245,240,232,.35);line-height:1.7;margin-bottom:12px}
+.dp-3d-iframe{width:100%;height:440px;border:none;display:block;margin-top:10px}
+.dp-cf{padding:0 18px 16px;display:flex;flex-direction:column;gap:7px;max-width:380px}
+.dp-cf input,.dp-cf textarea{background:#141414;border:1px solid rgba(201,169,110,.13);color:#F5F0E8;padding:10px 12px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:300;outline:none}
+.dp-cf input::placeholder,.dp-cf textarea::placeholder{color:rgba(245,240,232,.2)}
+/* ══ ACENTA MODALİ ════════════════════════════════════ */
+#ac-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:850;display:none;align-items:center;justify-content:center}
+#ac-modal-bg.on{display:flex}
+#ac-modal{background:#111;border:1px solid rgba(201,169,110,.25);width:380px;max-width:95vw;padding:32px 28px}
+.ac-modal-logo{font-family:'Cormorant Garamond',serif;font-size:24px;color:#C9A96E;letter-spacing:4px;text-align:center;margin-bottom:4px}
+.ac-modal-sub{font-size:9px;letter-spacing:3px;color:rgba(245,240,232,.35);text-transform:uppercase;text-align:center;margin-bottom:24px}
+.ac-f{margin-bottom:14px}
+.ac-f label{display:block;font-size:8px;letter-spacing:2px;color:rgba(201,169,110,.5);text-transform:uppercase;margin-bottom:6px}
+.ac-f input{width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(201,169,110,.1);border-bottom-color:rgba(201,169,110,.25);color:#F5F0E8;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:300;padding:10px 12px;outline:none}
+.ac-btn{width:100%;background:#C9A96E;color:#0A0A0A;border:none;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:500;letter-spacing:3px;text-transform:uppercase;padding:13px;cursor:pointer;margin-top:4px}
+.ac-btn:hover{background:#E8C98A}
+.ac-msg{font-size:11px;text-align:center;margin-top:10px;min-height:14px;color:#E87070}
+.ac-close{float:right;background:none;border:none;color:rgba(245,240,232,.3);font-size:16px;cursor:pointer;margin-bottom:-8px}
+/* ══ LİGHTBOX ════════════════════════════════════════ */
+#dp-lb{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:900;display:none;align-items:center;justify-content:center}
+#dp-lb.on{display:flex}
+#dp-lb img{max-width:90vw;max-height:90vh;object-fit:contain}
+#dp-lb-x{position:absolute;top:14px;right:14px;background:none;border:1px solid rgba(201,169,110,.25);color:rgba(245,240,232,.5);width:32px;height:32px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center}
+/* ══ DETAY BUTONU ════════════════════════════════════ */
+#ib-detail-btn{display:block;width:100%;background:rgba(201,169,110,.06);border:none;border-top:1px solid rgba(201,169,110,.12);color:rgba(201,169,110,.65);font-family:'Montserrat',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;transition:background .2s}
+#ib-detail-btn:hover{background:rgba(201,169,110,.12);color:#C9A96E}
+
 </style>
 </head>
 <body>
@@ -312,24 +396,19 @@
 
   <!-- Sol panel alt — Giriş butonu -->
   <div style="padding:16px 20px;border-top:1px solid rgba(201,169,110,0.1);flex-shrink:0;">
-    <a href="/acenta.html" style="
-      display:flex;align-items:center;justify-content:center;gap:10px;
-      background:rgba(201,169,110,0.06);
-      border:1px solid rgba(201,169,110,0.18);
-      color:rgba(201,169,110,0.6);
-      font-family:'Montserrat',sans-serif;
+    <button id="acentaLoginBtn" onclick="acBtnClick()" style="
+      display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+      background:rgba(201,169,110,0.06);border:1px solid rgba(201,169,110,0.18);
+      color:rgba(201,169,110,0.6);font-family:'Montserrat',sans-serif;
       font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
-      padding:11px 16px;text-decoration:none;
-      transition:all .25s;
-      " onmouseover="this.style.background='rgba(201,169,110,0.1)';this.style.borderColor='rgba(201,169,110,0.35)';this.style.color='#C9A96E'"
-         onmouseout="this.style.background='rgba(201,169,110,0.06)';this.style.borderColor='rgba(201,169,110,0.18)';this.style.color='rgba(201,169,110,0.6)'">
+      padding:11px 16px;cursor:pointer;transition:all .25s;">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
         <polyline points="10 17 15 12 10 7"/>
         <line x1="15" y1="12" x2="3" y2="12"/>
       </svg>
-      Acenta Girişi
-    </a>
+      <span id="acentaBtnText">Acenta Girişi</span>
+    </button>
   </div>
 </div>
 
@@ -394,6 +473,7 @@
       <div style="font-size:9px;letter-spacing:2.5px;color:rgba(201,169,110,0.7);text-transform:uppercase;margin-bottom:8px">Olanaklar</div>
       <div id="ib-ozellikler" style="display:flex;flex-wrap:wrap;gap:5px"></div>
     </div>
+    <button id="ib-detail-btn" onclick="dpOpen(activeProject&&activeProject.id)">▸ Proje Detaylarını Gör</button>
     <div class="ibm">
       <div class="imd" id="ib-dot-p"></div>
       <span class="imt" id="ib-mtext-p">Hedef seçin → rota hesaplanır</span>
@@ -1162,36 +1242,23 @@ function showProjectInfo(project) {
   if (uts.length === 0) {
     unitsEl.innerHTML = '<div style="font-size:10px;color:rgba(245,240,232,0.35)">Henüz daire tipi girilmedi</div>';
   } else {
+    const loggedIn = !!window.acentaSession;
     unitsEl.innerHTML = uts.map(ut => {
       const us = uss.find(s => s.unit_type_id === ut.id) || { musait: ut.toplam_adet, opsiyonlu: 0, satildi: 0 };
       const tooltipId = 'tt-' + ut.id;
       return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(245,240,232,0.05);position:relative"
-        onmouseenter="document.getElementById('${tooltipId}').style.display='block'"
-        onmouseleave="document.getElementById('${tooltipId}').style.display='none'">
+        ${loggedIn ? `onmouseenter="document.getElementById('${tooltipId}').style.display='block'" onmouseleave="document.getElementById('${tooltipId}').style.display='none'"` : ''}>
         <span style="font-size:11px;color:rgba(245,240,232,0.55);min-width:36px">${ut.tip}</span>
         <span style="font-size:10px;color:rgba(245,240,232,0.35);flex:1">${ut.m2_min}–${ut.m2_max} m²</span>
-        <span style="font-family:'Cormorant Garamond',serif;font-size:13px;color:${project.color};margin-right:8px">${ut.fiyat||'—'}</span>
-        <span style="font-size:10px;color:rgba(245,240,232,0.5);cursor:default;border-bottom:1px dashed rgba(201,169,110,0.4);padding-bottom:1px"
-          title="Üzerine gelin">${ut.toplam_adet} ad.</span>
-        <div id="${tooltipId}" style="display:none;position:absolute;right:0;bottom:calc(100% + 4px);
-          background:rgba(10,10,10,0.97);border:1px solid rgba(201,169,110,0.4);
-          padding:10px 14px;white-space:nowrap;z-index:9;min-width:160px">
+        ${loggedIn ? `<span style="font-family:'Cormorant Garamond',serif;font-size:13px;color:${project.color};margin-right:8px">${ut.fiyat||'—'}</span>` : ''}
+        <span style="font-size:10px;color:rgba(245,240,232,0.5)">${ut.toplam_adet} ad.</span>
+        ${loggedIn ? `<div id="${tooltipId}" style="display:none;position:absolute;right:0;bottom:calc(100% + 4px);background:rgba(10,10,10,0.97);border:1px solid rgba(201,169,110,0.4);padding:10px 14px;white-space:nowrap;z-index:9;min-width:160px">
           <div style="font-size:9px;letter-spacing:2px;color:rgba(201,169,110,0.7);margin-bottom:8px;text-transform:uppercase">${ut.tip} Durum</div>
           <div style="display:flex;flex-direction:column;gap:5px">
-            <div style="display:flex;justify-content:space-between;gap:16px">
-              <span style="font-size:10px;color:#5DBD84">Müsait</span>
-              <span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#5DBD84">${us.musait}</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;gap:16px">
-              <span style="font-size:10px;color:#E8A96E">Opsiyonlu</span>
-              <span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#E8A96E">${us.opsiyonlu}</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;gap:16px">
-              <span style="font-size:10px;color:#E87070">Satıldı</span>
-              <span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#E87070">${us.satildi}</span>
-            </div>
-          </div>
-        </div>
+            <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:10px;color:#5DBD84">Müsait</span><span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#5DBD84">${us.musait}</span></div>
+            <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:10px;color:#E8A96E">Opsiyonlu</span><span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#E8A96E">${us.opsiyonlu}</span></div>
+            <div style="display:flex;justify-content:space-between;gap:16px"><span style="font-size:10px;color:#E87070">Satıldı</span><span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#E87070">${us.satildi}</span></div>
+          </div></div>` : ''}
       </div>`;
     }).join('');
   }
@@ -1587,6 +1654,220 @@ window.addEventListener('resize', () => {
   if (window.innerWidth > 900) document.body.classList.remove('panel-open');
 });
 
+
+// ══ ACENTA SESSION ══════════════════════════════════════════
+window.acentaSession = null;
+
+async function checkAcentaSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  const { data: au } = await sb.from('agency_users').select('agency_id').eq('id', session.user.id).maybeSingle();
+  if (!au) return;
+  const { data: ag } = await sb.from('agencies').select('firma_adi,durum').eq('id', au.agency_id).maybeSingle();
+  if (ag && ag.durum === 'aktif') {
+    window.acentaSession = { user: session.user, agency: ag };
+    const btn = document.getElementById('acentaLoginBtn');
+    const txt = document.getElementById('acentaBtnText');
+    if (txt) txt.textContent = '◉ ' + ag.firma_adi;
+    if (btn) { btn.style.color = '#C9A96E'; btn.style.borderColor = 'rgba(201,169,110,0.4)'; }
+  }
+}
+
+function acBtnClick() {
+  if (window.acentaSession) {
+    window.location.href = '/acenta.html';
+  } else {
+    document.getElementById('ac-modal-bg').classList.add('on');
+    setTimeout(() => document.getElementById('ac-email').focus(), 100);
+  }
+}
+
+function acModalClose() {
+  document.getElementById('ac-modal-bg').classList.remove('on');
+  document.getElementById('ac-msg').textContent = '';
+}
+
+async function acDoLogin() {
+  const email = document.getElementById('ac-email').value.trim();
+  const pass  = document.getElementById('ac-pass').value;
+  const msg   = document.getElementById('ac-msg');
+  if (!email || !pass) { msg.textContent = 'E-posta ve şifre giriniz.'; return; }
+  msg.textContent = 'Giriş yapılıyor...'; msg.style.color = 'rgba(245,240,232,.4)';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { msg.textContent = 'Hatalı e-posta veya şifre.'; msg.style.color = '#E87070'; return; }
+  // Check agency status
+  const { data: au } = await sb.from('agency_users').select('agency_id').eq('id', data.user.id).maybeSingle();
+  if (!au) { msg.textContent = 'Acenta kaydı bulunamadı.'; msg.style.color = '#E87070'; return; }
+  const { data: ag } = await sb.from('agencies').select('firma_adi,durum').eq('id', au.agency_id).maybeSingle();
+  if (!ag || ag.durum !== 'aktif') { msg.textContent = 'Hesabınız henüz onaylanmamış.'; msg.style.color = '#E8A96E'; return; }
+  window.acentaSession = { user: data.user, agency: ag };
+  const btn = document.getElementById('acentaLoginBtn');
+  const txt = document.getElementById('acentaBtnText');
+  if (txt) txt.textContent = '◉ ' + ag.firma_adi;
+  if (btn) { btn.style.color = '#C9A96E'; btn.style.borderColor = 'rgba(201,169,110,0.4)'; }
+  acModalClose();
+  // Refresh current project panel if open
+  if (activeProject) showProjectInfo(activeProject);
+}
+
+// ══ DETAY PANELİ ════════════════════════════════════════════
+let dpMiniMap = null, dpProject = null;
+
+function dpOpen(projectId) {
+  if (!projectId) return;
+  const p = PROJECTS.find(x => x.id === projectId);
+  if (!p) return;
+  dpProject = p;
+  document.getElementById('dp-hdr-name').textContent = p.name;
+  document.getElementById('dp-ov').classList.add('on');
+  document.getElementById('dp-panel').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  dpFill(p);
+  // Reset to first tab
+  document.querySelectorAll('.dp-tab').forEach((t,i) => { if(i===0) t.classList.add('on'); else t.classList.remove('on'); });
+  document.querySelectorAll('.dps').forEach((s,i) => { if(i===0) s.classList.add('on'); else s.classList.remove('on'); });
+}
+
+function dpClose() {
+  document.getElementById('dp-ov').classList.remove('on');
+  document.getElementById('dp-panel').classList.remove('on');
+  document.body.style.overflow = '';
+  if (dpMiniMap) { try { dpMiniMap.remove(); } catch(e){} dpMiniMap = null; }
+}
+
+function dpTab(el, sec) {
+  document.querySelectorAll('.dp-tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.dps').forEach(s => s.classList.remove('on'));
+  el.classList.add('on');
+  const s = document.getElementById('dps-' + sec);
+  if (s) s.classList.add('on');
+  if (sec === 'k' && dpProject && !dpMiniMap) setTimeout(() => dpInitMiniMap(dpProject), 120);
+}
+
+function dpFill(p) {
+  const uts = unitTypesMap[p.id] || [];
+  const uss = unitStatusMap[p.id] || [];
+  const li  = !!window.acentaSession;
+
+  // Hero
+  const hi = document.getElementById('dp-hi');
+  hi.src = p.render_url || ''; hi.style.display = p.render_url ? 'block' : 'none';
+  document.getElementById('dp-badge').textContent = (p.tip||'Proje') + (p.teslim ? ' · '+p.teslim : '');
+  document.getElementById('dp-title').textContent = p.name;
+  document.getElementById('dp-sub').textContent   = p.aciklama || '';
+  document.getElementById('dp-chips').innerHTML   = uts.map(ut => '<span class="dp-chip">'+ut.tip+'</span>').join('');
+
+  // Künye grid
+  const total = uts.reduce((a,ut) => a+(ut.toplam_adet||0), 0);
+  const pf    = uts.find(ut => ut.fiyat);
+  const gi = [
+    {l:'Toplam Alan', v:p.toplam_alan||'—'},
+    {l:'Teslim',      v:p.teslim||'—'},
+    {l:'Blok',        v:p.blok_sayisi?p.blok_sayisi+' blok':'—'},
+    {l:'Kat',         v:p.kat_sayisi?p.kat_sayisi+' kat':'—'},
+    {l:'Toplam Daire',v:total?total+' adet':'—'},
+    {l:li?'Başlangıç Fiyat':'Fiyat', v:li&&pf?pf.fiyat:'Bilgi için iletişim'},
+  ];
+  document.getElementById('dp-grid').innerHTML = gi.map(k =>
+    '<div class="dp-gi"><div class="dp-lbl">'+k.l+'</div><div class="dp-val">'+k.v+'</div></div>'
+  ).join('');
+  document.getElementById('dp-desc').textContent = p.aciklama || 'Proje hakkında detaylı bilgi için iletişime geçin.';
+
+  // CTA
+  const ph = p.telefon||'+90 312 000 00 00';
+  const wa = (p.whatsapp||ph).replace(/[^0-9]/g,'');
+  document.getElementById('dp-ctas').innerHTML =
+    '<a href="tel:'+ph+'" class="dp-btn dp-btn-g">📞 Bilgi Al</a>' +
+    '<a href="https://wa.me/'+wa+'?text='+encodeURIComponent(p.name+' projesi hakkında bilgi almak istiyorum.')+'" target="_blank" class="dp-btn dp-btn-w">WhatsApp</a>';
+
+  // Görseller
+  document.getElementById('dp-gal').innerHTML = p.render_url
+    ? '<img class="full" src="'+p.render_url+'" alt="'+p.name+'" onclick="dpLb(this.src)">'
+    : '<div style="grid-column:1/-1;padding:28px;text-align:center;color:rgba(245,240,232,.25);font-size:12px">Görsel henüz yüklenmedi.</div>';
+
+  // Daire tipleri
+  document.getElementById('dp-types').innerHTML = uts.length ? uts.map(ut => {
+    const us = uss.find(s => s.unit_type_id===ut.id)||{musait:ut.toplam_adet,opsiyonlu:0,satildi:0};
+    return '<div class="dp-type"><div>' +
+      '<div class="dp-tn">'+ut.tip+'</div>' +
+      '<div class="dp-tm">'+ut.m2_min+'–'+ut.m2_max+' m²</div>' +
+      (li ? '<div class="dp-st">' +
+        '<span class="dp-sp" style="color:#5DBD84;border-color:rgba(93,189,132,.3)">Müsait: '+us.musait+'</span>' +
+        '<span class="dp-sp" style="color:#E8A96E;border-color:rgba(232,169,110,.3)">Opsiyon: '+us.opsiyonlu+'</span>' +
+        '<span class="dp-sp" style="color:#E87070;border-color:rgba(232,112,112,.3)">Satıldı: '+us.satildi+'</span></div>' : '') +
+      '</div><div>' +
+      (li && ut.fiyat ? '<div class="dp-tp">'+ut.fiyat+'</div>' : '') +
+      '<div class="dp-ta">'+ut.toplam_adet+' ad.</div>' +
+      (li ? '<button onclick="dpOpenOffer(''+p.id+'','+ut.id+')" style="margin-top:8px;background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.2);color:rgba(201,169,110,.7);font-family:Montserrat,sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:5px 10px;cursor:pointer;width:100%">Teklif Oluştur →</button>' : '') +
+      '</div></div>';
+  }).join('') : '<div style="padding:16px;color:rgba(245,240,232,.25);font-size:12px">Daire tipi girilmedi.</div>';
+
+  // Olanaklar
+  const ozs = p.ozellikler||[];
+  const icons = {'Havuz':'🏊','Spor':'🏋','Otopark':'🅿','Sauna':'♨','Çocuk':'🎠','Kafeterya':'☕','Hamam':'🧖','Güvenlik':'🔒','Peyzaj':'🌿','Squash':'🎾','Tuz':'🧂'};
+  document.getElementById('dp-ams').innerHTML = ozs.length ? ozs.map(o => {
+    const ic = Object.entries(icons).find(([k]) => o.toLowerCase().includes(k.toLowerCase()));
+    return '<div class="dp-am">'+(ic?ic[1]+' ':'')+o+'</div>';
+  }).join('') : '<div style="grid-column:1/-1;padding:16px;color:rgba(245,240,232,.25);font-size:12px">Bilgi girilmedi.</div>';
+
+  // Konum
+  document.getElementById('dp-konum-txt').innerHTML =
+    '<strong style="color:#F5F0E8">'+p.name+'</strong><br>' +
+    (p.aciklama||'') + '<br><br><span style="color:#C9A96E">Koordinat:</span> '+p.lat?.toFixed(5)+', '+p.lng?.toFixed(5);
+
+  // 3D
+  const t3 = document.getElementById('dp-3d');
+  if (p.twinmotion_url) {
+    t3.innerHTML = '<iframe src="'+p.twinmotion_url+'" class="dp-3d-iframe" allowfullscreen></iframe>';
+  } else if (p.tour_url) {
+    t3.innerHTML = '<div class="dp-3dbox"><div class="dp-3dt">Sanal İç Mekan Turu</div><div class="dp-3ds">360° iç mekan turunu deneyimleyin.</div><a href="'+p.tour_url+'" target="_blank" class="dp-btn dp-btn-g" style="display:inline-flex;max-width:200px;text-decoration:none">Turu Başlat →</a></div>';
+  } else {
+    t3.innerHTML = '<div class="dp-3dbox"><div class="dp-3dt">3D Model Yakında</div><div class="dp-3ds">Bu proje için TwinMotion 3D modeli ve sanal tur yakında eklenecek.</div></div>';
+  }
+
+  // İletişim
+  document.getElementById('dp-il-btns').innerHTML =
+    '<a href="tel:'+ph+'" class="dp-btn dp-btn-g" style="text-decoration:none">📞 '+ph+'</a>' +
+    '<a href="https://wa.me/'+wa+'?text='+encodeURIComponent(p.name+' projesi hakkında bilgi almak istiyorum.')+'" target="_blank" class="dp-btn dp-btn-w" style="text-decoration:none">💬 WhatsApp</a>';
+  const nc = document.getElementById('cf-note');
+  if (nc) nc.placeholder = p.name+' projesi hakkında bilgi almak istiyorum...';
+}
+
+function dpInitMiniMap(p) {
+  if (!p || dpMiniMap) return;
+  try {
+    dpMiniMap = new maplibregl.Map({
+      container:'dp-mmap',
+      style:{version:8,sources:{o:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256}},layers:[{id:'o',type:'raster',source:'o'}]},
+      center:[p.lng,p.lat],zoom:14,interactive:false,attributionControl:false
+    });
+    new maplibregl.Marker({color:p.color||'#C9A96E'}).setLngLat([p.lng,p.lat]).addTo(dpMiniMap);
+  } catch(e){}
+}
+
+function dpLb(src) { document.getElementById('dp-lb-img').src=src; document.getElementById('dp-lb').classList.add('on'); }
+
+async function dpSendForm() {
+  const name = document.getElementById('cf-name').value.trim();
+  const phone= document.getElementById('cf-phone').value.trim();
+  if (!name||!phone) { alert('Ad ve telefon zorunludur.'); return; }
+  await sb.from('leads').insert({
+    ad_soyad:name, telefon:phone,
+    email:document.getElementById('cf-email').value.trim(),
+    proje_id:dpProject?.id,
+    mesaj:document.getElementById('cf-note').value.trim(),
+    kaynak:'harita-detay'
+  }).catch(()=>{});
+  document.getElementById('cf-ok').style.display='block';
+  ['cf-name','cf-phone','cf-email','cf-note'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function dpOpenOffer(projectId, unitTypeId) {
+  // Acenta portalını teklif sekmesiyle aç
+  window.location.href = '/acenta.html?tab=addoffer&proje='+projectId;
+}
+
+
 // Boot: load Supabase data first, then build UI
 (async () => {
   try {
@@ -1594,11 +1875,107 @@ window.addEventListener('resize', () => {
   } catch(e) {
     console.warn('Supabase load failed, using empty data', e);
   }
+  try { await checkAcentaSession(); } catch(e){}
   buildProjectList();
   buildPresetButtons(null);
   initMap();
 })();
 </script>
+
+
+<!-- ══ DETAY PANELİ ══ -->
+<div id="dp-ov" onclick="dpClose()"></div>
+<div id="dp-panel">
+  <div class="dp-hdr">
+    <div class="dp-hdr-name" id="dp-hdr-name">—</div>
+    <button class="dp-hdr-x" onclick="dpClose()">✕</button>
+  </div>
+  <div class="dp-tabs">
+    <div class="dp-tab on"  onclick="dpTab(this,'g')">Genel</div>
+    <div class="dp-tab" onclick="dpTab(this,'gv')">Görseller</div>
+    <div class="dp-tab" onclick="dpTab(this,'d')">Daire Tipleri</div>
+    <div class="dp-tab" onclick="dpTab(this,'ol')">Olanaklar</div>
+    <div class="dp-tab" onclick="dpTab(this,'k')">Konum</div>
+    <div class="dp-tab" onclick="dpTab(this,'t3')">3D / Tur</div>
+    <div class="dp-tab" onclick="dpTab(this,'il')">İletişim</div>
+  </div>
+  <div class="dp-body">
+    <!-- GENEL -->
+    <div class="dps on" id="dps-g">
+      <div class="dp-hero"><img id="dp-hi" src="" alt=""><div class="dp-hero-ov"><div class="dp-badge" id="dp-badge"></div><div class="dp-title" id="dp-title"></div><div class="dp-sub" id="dp-sub"></div><div class="dp-chips" id="dp-chips"></div></div></div>
+      <div class="dp-grid" id="dp-grid"></div>
+      <div class="dp-stl">Proje Hakkında</div>
+      <div class="dp-desc" id="dp-desc"></div>
+      <div class="dp-ctas" id="dp-ctas"></div>
+    </div>
+    <!-- GÖRSELLER -->
+    <div class="dps" id="dps-gv">
+      <div class="dp-stl">Proje Görselleri</div>
+      <div class="dp-gal" id="dp-gal"></div>
+    </div>
+    <!-- DAİRE TİPLERİ -->
+    <div class="dps" id="dps-d">
+      <div class="dp-stl">Daire Tipleri</div>
+      <div id="dp-types" style="padding-top:8px"></div>
+    </div>
+    <!-- OLANAKLAR -->
+    <div class="dps" id="dps-ol">
+      <div class="dp-stl">Sosyal Olanaklar</div>
+      <div class="dp-ams" id="dp-ams"></div>
+    </div>
+    <!-- KONUM -->
+    <div class="dps" id="dps-k">
+      <div class="dp-stl">Konum</div>
+      <div class="dp-mmap" id="dp-mmap"></div>
+      <div class="dp-desc" id="dp-konum-txt"></div>
+    </div>
+    <!-- 3D / TUR -->
+    <div class="dps" id="dps-t3">
+      <div class="dp-stl">3D Model / Sanal Tur</div>
+      <div id="dp-3d" style="padding:4px 0"></div>
+    </div>
+    <!-- İLETİŞİM -->
+    <div class="dps" id="dps-il">
+      <div class="dp-stl">Bilgi Alın</div>
+      <div class="dp-ctas" id="dp-il-btns"></div>
+      <div class="dp-stl" style="margin-top:4px">Hızlı Form</div>
+      <div class="dp-cf">
+        <input type="text"  id="cf-name"  placeholder="Ad Soyad">
+        <input type="tel"   id="cf-phone" placeholder="Telefon">
+        <input type="email" id="cf-email" placeholder="E-posta (opsiyonel)">
+        <textarea id="cf-note" rows="3" placeholder="Notunuz..."></textarea>
+        <button class="dp-btn dp-btn-g" onclick="dpSendForm()">Gönder</button>
+        <div id="cf-ok" style="display:none;font-size:11px;color:#5DBD84">✓ Mesajınız alındı.</div>
+      </div>
+      <div style="padding:12px 18px 20px;border-top:1px solid rgba(201,169,110,.09);margin-top:8px">
+        <div style="font-size:11px;color:rgba(245,240,232,.35);margin-bottom:10px">Acentanız üzerinden satış yapmak ister misiniz?</div>
+        <a href="/basvuru.html" class="dp-btn dp-btn-o" style="max-width:230px">Acenta Başvurusu →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ACENTA GİRİŞ MODALİ ══ -->
+<div id="ac-modal-bg">
+  <div id="ac-modal">
+    <button class="ac-close" onclick="acModalClose()">✕</button>
+    <div class="ac-modal-logo">ARSLANLAR</div>
+    <div class="ac-modal-sub">Acenta Girişi</div>
+    <div class="ac-f"><label>E-posta</label><input type="email" id="ac-email" placeholder="acenta@firma.com"></div>
+    <div class="ac-f"><label>Şifre</label><input type="password" id="ac-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')acDoLogin()"></div>
+    <button class="ac-btn" onclick="acDoLogin()">Giriş Yap</button>
+    <div class="ac-msg" id="ac-msg"></div>
+    <div style="text-align:center;margin-top:14px;font-size:10px;color:rgba(245,240,232,.25)">
+      Hesabınız yok mu? <a href="/acenta.html" style="color:rgba(201,169,110,.45);text-decoration:none">Üye Ol / Tam Panel →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LİGHTBOX ══ -->
+<div id="dp-lb">
+  <button id="dp-lb-x" onclick="document.getElementById('dp-lb').classList.remove('on')">✕</button>
+  <img id="dp-lb-img" src="" alt="">
+</div>
 
 </body>
 </html>

@@ -107,6 +107,19 @@ html,body{height:100%;background:var(--black);color:var(--white);font-family:'Mo
 .act-note{font-size:12px;color:var(--white);margin:3px 0;}
 .act-date{font-size:10px;color:var(--wd);}
 #toast{position:fixed;bottom:20px;right:20px;background:var(--b2);border:1px solid var(--borderhi);padding:10px 18px;font-size:12px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;}
+
+.plan-tbl{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px}
+.plan-tbl th{font-size:8px;letter-spacing:1.5px;color:rgba(201,169,110,.5);text-transform:uppercase;padding:7px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.plan-tbl td{padding:6px 8px;border-bottom:1px solid rgba(245,240,232,.04)}
+.plan-tbl input[type=number]{background:var(--b5);border:1px solid var(--border);color:var(--white);padding:5px 8px;font-family:'Montserrat',sans-serif;font-size:12px;width:120px;outline:none}
+.plan-tbl .changed{background:rgba(201,169,110,.06);border-color:rgba(201,169,110,.3)!important}
+.upload-btn{background:none;border:1px dashed rgba(201,169,110,.25);color:rgba(245,240,232,.4);font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:8px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;margin-top:8px}
+.upload-btn:hover{border-color:var(--gold);color:var(--gold)}
+.attach-list{margin-top:8px;display:flex;flex-direction:column;gap:5px}
+.attach-item{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--wd)}
+.attach-item a{color:var(--gold);text-decoration:none}
+.attach-item .del{background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;opacity:.5}
+.attach-item .del:hover{opacity:1}
 </style>
 </head>
 <body>
@@ -260,7 +273,14 @@ html,body{height:100%;background:var(--black);color:var(--white);font-family:'Mo
           <div class="f" style="width:160px"><label>Para Birimi</label>
             <select id="cDoviz"><option value="TRY">₺ TL</option><option value="USD">$ USD</option><option value="EUR">€ EUR</option></select>
           </div>
-          <div class="f"><label>Notlar</label><textarea id="cNot" rows="3" placeholder="Müşteri hakkında notlar..."></textarea></div>
+          <div class="f"><label>Notlar</label><textarea id="cNot" rows="3" placeholder="Müşteri hakkında notlar..."></textarea>
+          <label class="upload-btn" for="cus-file-inp" style="margin-top:6px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            Dosya / Ataç Ekle
+          </label>
+          <input type="file" id="cus-file-inp" style="display:none" multiple onchange="uploadAttach(this,'cus-attach-list',null)">
+          <div class="attach-list" id="cus-attach-list"></div>
+        </div>
         </div>
         <div class="btn-row">
           <button class="abtn p" onclick="addCustomer()">Müşteriyi Kaydet</button>
@@ -317,7 +337,29 @@ html,body{height:100%;background:var(--black);color:var(--white);font-family:'Mo
             <div class="plan-row"><span class="plan-lbl">Vade Dahil Toplam</span><span class="plan-val" id="prVT">—</span></div>
             <div class="plan-row"><span class="plan-lbl" style="font-size:13px;color:var(--white)">Aylık Taksit</span><span class="plan-val big" id="prA">—</span></div>
           </div>
-          <div class="f" style="margin-top:14px"><label>Notlar</label><textarea id="ofNot" rows="2" placeholder="Teklif notları..."></textarea></div>
+          <div style="margin-top:14px">
+            <div style="font-size:9px;letter-spacing:2px;color:rgba(201,169,110,.5);text-transform:uppercase;margin-bottom:6px">Ay Ay Ödeme Planı</div>
+            <div id="plan-monthly-wrap" style="display:none">
+              <div style="font-size:10px;color:var(--wd);margin-bottom:6px">Tutarları düzenleyebilirsiniz. Kilitlenen aylar sabit kalır, diğerleri otomatik yeniden hesaplanır.</div>
+              <table class="plan-tbl" id="plan-monthly-tbl">
+                <thead><tr><th>#</th><th>Tarih</th><th>Tutar</th><th></th></tr></thead>
+                <tbody id="plan-monthly-body"></tbody>
+              </table>
+              <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:11px;color:var(--wd);border-top:1px solid var(--border);margin-top:4px">
+                <span>Toplam Taksit Tutarı:</span>
+                <span id="plan-monthly-total" style="color:#5DBD84;font-family:'Cormorant Garamond',serif;font-size:16px">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="f" style="margin-top:14px"><label>Notlar</label>
+            <textarea id="ofNot" rows="2" placeholder="Teklif notları..."></textarea>
+            <label class="upload-btn" for="off-file-inp" style="margin-top:6px">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              Takas / Ek Belge Ekle
+            </label>
+            <input type="file" id="off-file-inp" style="display:none" multiple onchange="uploadAttach(this,'off-attach-list',null)">
+            <div class="attach-list" id="off-attach-list"></div>
+          </div>
         </div>
         <div class="btn-row">
           <button class="abtn p" onclick="addOffer()">Teklifi Gönder</button>
@@ -544,9 +586,11 @@ async function addOffer(){
   await loadData();
 }
 
+let monthlyPlan = []; // {month, date, amount, locked}
+
 function calcPlan(){
   const fiyat=parseFloat(document.getElementById('ofFiyat').value)||0;
-  if(!fiyat){document.getElementById('planBox').style.display='none';return;}
+  if(!fiyat){document.getElementById('planBox').style.display='none';document.getElementById('plan-monthly-wrap').style.display='none';return;}
   const pes=parseFloat(document.getElementById('ppPes').value)||30;
   const tak=parseInt(document.getElementById('ppTak').value)||24;
   const vade=parseFloat(document.getElementById('ppVade').value)||0;
@@ -561,6 +605,114 @@ function calcPlan(){
   document.getElementById('prVT').textContent=fmoney(vt,dov);
   document.getElementById('prA').textContent=fmoney(ay,dov);
   document.getElementById('planBox').style.display='block';
+  // Ay ay plan — kilitsiz ayları eşit dağıt
+  buildMonthlyPlan(Math.round(ay), tak, dov);
+}
+
+function buildMonthlyPlan(aylikTutar, taksitSayisi, dov) {
+  const now = new Date();
+  // Eğer zaten plan varsa ve kilit sayısı aynıysa, sadece kilitsizleri güncelle
+  if (monthlyPlan.length !== taksitSayisi) {
+    monthlyPlan = Array.from({length: taksitSayisi}, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() + i + 1, 1);
+      return { month: i+1, date: d.toLocaleDateString('tr-TR',{month:'short',year:'numeric'}), amount: aylikTutar, locked: false };
+    });
+  } else {
+    redistMonthly(aylikTutar, taksitSayisi);
+  }
+  renderMonthlyPlan(dov);
+}
+
+function redistMonthly(aylikTutar, taksitSayisi) {
+  const locked = monthlyPlan.filter(m => m.locked);
+  const lockedTotal = locked.reduce((a,m) => a+m.amount, 0);
+  const freeCount = taksitSayisi - locked.length;
+  if (freeCount <= 0) return;
+  const freeAmt = Math.round((aylikTutar * taksitSayisi - lockedTotal) / freeCount);
+  monthlyPlan.forEach(m => { if (!m.locked) m.amount = freeAmt; });
+}
+
+function renderMonthlyPlan(dov) {
+  const body = document.getElementById('plan-monthly-body');
+  if (!body) return;
+  body.innerHTML = monthlyPlan.map((m,i) => `
+    <tr>
+      <td style="color:var(--wd)">${m.month}</td>
+      <td style="color:var(--wd)">${m.date}</td>
+      <td>
+        <input type="number" class="plan-tbl-inp ${m.locked?'changed':''}" value="${m.amount}"
+          onchange="onMonthlyChange(${i}, this.value, this)"
+          style="background:var(--b5);border:1px solid ${m.locked?'rgba(201,169,110,.3)':'var(--border)'};color:var(--white);padding:5px 8px;font-family:'Montserrat',sans-serif;font-size:12px;width:130px;outline:none">
+      </td>
+      <td>
+        <button onclick="toggleMonthlyLock(${i})" style="background:none;border:none;color:${m.locked?'var(--gold)':'var(--wd)'};cursor:pointer;font-size:13px" title="${m.locked?'Kilidi Aç':'Kilitle'}">
+          ${m.locked?'🔒':'🔓'}
+        </button>
+      </td>
+    </tr>
+  `).join('');
+  const total = monthlyPlan.reduce((a,m) => a+m.amount, 0);
+  const dov2 = dov || document.getElementById('ofDoviz').value;
+  document.getElementById('plan-monthly-total').textContent = fmoney(total, dov2);
+  document.getElementById('plan-monthly-wrap').style.display = 'block';
+}
+
+function onMonthlyChange(idx, val, inp) {
+  monthlyPlan[idx].amount = parseFloat(val) || 0;
+  monthlyPlan[idx].locked = true;
+  inp.style.borderColor = 'rgba(201,169,110,.3)';
+  // Kilitsiz ayları yeniden dağıt
+  const fiyat = parseFloat(document.getElementById('ofFiyat').value)||0;
+  const pes = parseFloat(document.getElementById('ppPes').value)||30;
+  const tak = parseInt(document.getElementById('ppTak').value)||24;
+  const vade = parseFloat(document.getElementById('ppVade').value)||0;
+  const ind = parseFloat(document.getElementById('ppInd').value)||0;
+  const indF = fiyat*(1-ind/100);
+  const k = indF*(1-pes/100);
+  const vt = k*(1+vade/100);
+  const aylik = Math.round(vt/tak);
+  redistMonthly(aylik, tak);
+  renderMonthlyPlan(document.getElementById('ofDoviz').value);
+}
+
+function toggleMonthlyLock(idx) {
+  monthlyPlan[idx].locked = !monthlyPlan[idx].locked;
+  if (!monthlyPlan[idx].locked) {
+    // Kilidi kaldırılınca yeniden dağıt
+    const fiyat = parseFloat(document.getElementById('ofFiyat').value)||0;
+    const pes = parseFloat(document.getElementById('ppPes').value)||30;
+    const tak = parseInt(document.getElementById('ppTak').value)||24;
+    const vade = parseFloat(document.getElementById('ppVade').value)||0;
+    const ind = parseFloat(document.getElementById('ppInd').value)||0;
+    const indF = fiyat*(1-ind/100);
+    const k = indF*(1-pes/100);
+    const vt = k*(1+vade/100);
+    redistMonthly(Math.round(vt/tak), tak);
+  }
+  renderMonthlyPlan(document.getElementById('ofDoviz').value);
+}
+
+// Dosya yükleme
+let currentCustomerId = null;
+async function uploadAttach(input, listId, entityId) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const listEl = document.getElementById(listId);
+  for (const file of files) {
+    const path = 'attachments/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const { data, error } = await sb.storage.from('renders').upload(path, file, { upsert: true });
+    if (error) { console.warn('Upload err:', error); continue; }
+    const { data: urlData } = sb.storage.from('renders').getPublicUrl(path);
+    const url = urlData?.publicUrl || '';
+    // Listeye ekle
+    const item = document.createElement('div');
+    item.className = 'attach-item';
+    item.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+      '<a href="'+url+'" target="_blank">'+file.name+'</a>' +
+      '<button class="del" onclick="this.parentElement.remove()">✕</button>';
+    listEl.appendChild(item);
+  }
+  input.value = '';
 }
 
 async function openCusModal(id){
