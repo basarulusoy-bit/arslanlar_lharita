@@ -78,9 +78,9 @@
   .cats::-webkit-scrollbar{width:3px;}
   .cats::-webkit-scrollbar-thumb{background:var(--gold);}
   .pi{
-    display:flex;align-items:center;gap:12px;padding:13px 24px;cursor:pointer;
+    display:flex;align-items:flex-start;gap:12px;padding:14px 24px;cursor:pointer;
     transition:background .2s,border-color .2s; border-left:2px solid transparent;
-    border-bottom:1px solid rgba(245,240,232,.04);
+    border-bottom:1px solid rgba(245,240,232,.05);
   }
   .pi:hover{background:var(--wf);}
   .pi.active{background:rgba(201,169,110,.09);border-left-color:var(--gold);}
@@ -151,6 +151,25 @@
   @keyframes lb{to{width:100%;}}
   @keyframes pr{0%,100%{box-shadow:0 0 0 0 rgba(201,169,110,.42)}70%{box-shadow:0 0 0 16px rgba(201,169,110,0)}}
 
+  @keyframes barPulse {
+    0%,100%{opacity:1} 50%{opacity:.55}
+  }
+  @keyframes countUp {
+    0%{opacity:0;transform:translateY(4px)}
+    100%{opacity:1;transform:translateY(0)}
+  }
+  @keyframes loaderSlide {
+    0%   { translate: -200px 0; }
+    100% { translate: 400px 0; }
+  }
+  @keyframes flowBar {
+    0%{background-position:0% 50%}
+    100%{background-position:200% 50%}
+  }
+  @keyframes flowBarRed {
+    0%{background-position:0% 50%}
+    100%{background-position:200% 50%}
+  }
   .maplibregl-ctrl-attrib{background:rgba(0,0,0,0.6)!important;color:#555!important;}
   .maplibregl-ctrl-attrib a{color:#666!important;}
   .maplibregl-ctrl-group{background:rgba(8,8,8,0.92)!important;border:1px solid var(--border)!important;border-radius:0!important;}
@@ -227,177 +246,6 @@
     .sl{font-size:7px;}
     #compass{display:none;}
   }
-
-/* ── DETAY PANELİ ──────────────────────────────────────── */
-#detailOverlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:800;
-  opacity:0;pointer-events:none;transition:opacity .35s;
-}
-#detailOverlay.open{opacity:1;pointer-events:all;}
-#detailPanel{
-  position:fixed;top:0;right:0;bottom:0;width:min(780px,100vw);
-  background:var(--black);border-left:1px solid var(--border);
-  z-index:801;display:flex;flex-direction:column;
-  transform:translateX(100%);transition:transform .38s cubic-bezier(.4,0,.2,1);
-  overflow:hidden;
-}
-#detailPanel.open{transform:translateX(0);}
-
-/* Panel header */
-.dp-header{
-  flex-shrink:0;height:56px;background:var(--b2);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;padding:0 24px;
-}
-.dp-brand{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);letter-spacing:2px;}
-.dp-close{background:none;border:1px solid var(--border);color:var(--wd);
-  width:32px;height:32px;cursor:pointer;font-size:14px;transition:all .2s;display:flex;align-items:center;justify-content:center;}
-.dp-close:hover{border-color:var(--gold);color:var(--gold);}
-
-/* Tabs */
-.dp-tabs{
-  flex-shrink:0;display:flex;background:var(--b2);
-  border-bottom:1px solid var(--border);overflow-x:auto;
-}
-.dp-tabs::-webkit-scrollbar{display:none;}
-.dp-tab{
-  flex-shrink:0;padding:12px 18px;font-size:9px;letter-spacing:2px;
-  color:var(--wd);cursor:pointer;text-transform:uppercase;border-bottom:2px solid transparent;
-  transition:all .2s;white-space:nowrap;
-}
-.dp-tab:hover{color:var(--white);}
-.dp-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
-
-/* Content */
-.dp-content{flex:1;overflow-y:auto;}
-.dp-content::-webkit-scrollbar{width:3px;}
-.dp-content::-webkit-scrollbar-thumb{background:var(--border);}
-
-.dp-section{display:none;padding:0 0 48px;}
-.dp-section.active{display:block;}
-
-/* Hero */
-.dp-hero{position:relative;height:320px;background:#111;overflow:hidden;}
-.dp-hero-img{width:100%;height:100%;object-fit:cover;}
-.dp-hero-overlay{
-  position:absolute;inset:0;
-  background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.7) 100%);
-  display:flex;flex-direction:column;justify-content:flex-end;padding:28px 28px 24px;
-}
-.dp-hero-badge{
-  font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;
-}
-.dp-hero-title{
-  font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;color:var(--white);
-  line-height:1.1;margin-bottom:6px;
-}
-.dp-hero-sub{font-size:11px;color:rgba(245,240,232,0.65);letter-spacing:.5px;}
-.dp-hero-chips{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
-.dp-chip{
-  background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);
-  color:var(--gold);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 12px;
-}
-
-/* Section titles */
-.dp-sec-title{
-  font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;
-  padding:20px 24px 12px;border-bottom:1px solid var(--border);
-}
-
-/* Künye grid */
-.dp-kunye{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:0;
-  border-bottom:1px solid var(--border);
-}
-.dp-kunye-item{
-  padding:16px 20px;border-right:1px solid var(--border);
-}
-.dp-kunye-item:last-child,.dp-kunye-item:nth-child(3n){border-right:none;}
-.dp-kunye-lbl{font-size:8px;letter-spacing:2px;color:rgba(201,169,110,0.5);text-transform:uppercase;margin-bottom:4px;}
-.dp-kunye-val{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--white);}
-
-/* Gallery */
-.dp-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin:2px;}
-.dp-gallery-img{
-  aspect-ratio:16/9;object-fit:cover;cursor:pointer;
-  transition:opacity .2s;display:block;width:100%;
-}
-.dp-gallery-img:hover{opacity:0.85;}
-.dp-gallery-img.hero-img{grid-column:1/-1;aspect-ratio:16/7;}
-
-/* Daire tipleri */
-.dp-types{padding:0 20px 20px;}
-.dp-type-card{
-  background:var(--b3);border:1px solid var(--border);padding:16px 20px;
-  margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:12px;
-  align-items:start;transition:border-color .2s;
-}
-.dp-type-card:hover{border-color:rgba(201,169,110,0.3);}
-.dp-type-name{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);margin-bottom:4px;}
-.dp-type-m2{font-size:10px;color:var(--wd);margin-bottom:8px;}
-.dp-type-desc{font-size:11px;color:rgba(245,240,232,0.45);line-height:1.6;}
-.dp-type-price{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--white);text-align:right;}
-.dp-type-adet{font-size:10px;color:var(--wd);text-align:right;margin-top:4px;}
-.dp-type-status{display:flex;gap:8px;margin-top:8px;justify-content:flex-end;flex-wrap:wrap;}
-.dp-status-pill{font-size:8px;letter-spacing:1px;padding:3px 10px;border:1px solid;}
-
-/* Olanaklar */
-.dp-amenities{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 20px 20px;}
-.dp-amenity{
-  background:var(--b3);border:1px solid var(--border);padding:12px 14px;
-  font-size:11px;color:rgba(245,240,232,0.6);text-align:center;
-}
-
-/* Açıklama */
-.dp-desc{padding:16px 24px;font-size:13px;color:rgba(245,240,232,0.65);line-height:1.9;}
-
-/* 3D bölümü */
-.dp-3d-placeholder{
-  margin:16px 20px;background:var(--b3);border:1px solid var(--border);
-  padding:32px;text-align:center;
-}
-.dp-3d-title{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);margin-bottom:8px;}
-.dp-3d-sub{font-size:11px;color:var(--wd);line-height:1.7;margin-bottom:16px;}
-.dp-3d-embed{width:100%;height:480px;border:none;}
-
-/* CTA butonu */
-.dp-cta-section{
-  padding:20px 20px;background:var(--b2);border-top:1px solid var(--border);
-  display:flex;gap:10px;flex-wrap:wrap;
-}
-.dp-cta-btn{
-  flex:1;min-width:140px;padding:13px 16px;text-align:center;cursor:pointer;
-  font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;
-  border:none;transition:all .2s;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;
-}
-.dp-cta-primary{background:var(--gold);color:#0A0A0A;}
-.dp-cta-primary:hover{background:var(--gold-l);}
-.dp-cta-outline{background:none;border:1px solid var(--border);color:var(--wd);}
-.dp-cta-outline:hover{border-color:var(--gold);color:var(--gold);}
-.dp-cta-wa{background:#25D366;color:#fff;}
-.dp-cta-wa:hover{background:#1fba57;}
-
-/* Konum mini map */
-.dp-mini-map{height:200px;background:var(--b3);margin:0 20px 16px;border:1px solid var(--border);}
-
-/* Plan görseller */
-.dp-plans{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px 20px 20px;}
-.dp-plan-item{background:var(--b3);border:1px solid var(--border);overflow:hidden;cursor:pointer;}
-.dp-plan-img{width:100%;aspect-ratio:4/3;object-fit:contain;background:#111;display:block;}
-.dp-plan-lbl{font-size:10px;color:var(--wd);padding:8px 10px;text-align:center;}
-
-/* Lightbox */
-#dpLightbox{
-  position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:900;
-  display:none;align-items:center;justify-content:center;
-}
-#dpLightbox.open{display:flex;}
-#dpLightbox img{max-width:90vw;max-height:90vh;object-fit:contain;}
-#dpLightboxClose{
-  position:absolute;top:20px;right:20px;background:none;border:1px solid var(--border);
-  color:var(--wd);width:36px;height:36px;cursor:pointer;font-size:16px;
-  display:flex;align-items:center;justify-content:center;
-}
-
 </style>
 </head>
 <body>
@@ -431,11 +279,18 @@
     padding:14px 24px 10px;border-bottom:1px solid var(--border);font-weight:500;
     display:flex;align-items:center;justify-content:space-between;
   ">Projeler
-    <button onclick="toggleRouteBox()" id="routeToggleBtn" style="
-      background:rgba(201,169,110,.1);border:1px solid var(--border);color:var(--gold);
-      font-family:'Montserrat',sans-serif;font-size:8px;letter-spacing:1.5px;
-      padding:4px 10px;cursor:pointer;text-transform:uppercase;transition:all .2s;
-    ">📍 Rota</button>
+    <div style="display:flex;gap:6px;">
+      <button onclick="toggleProjectLabels()" id="labelToggleBtn" style="
+        background:rgba(201,169,110,.1);border:1px solid var(--border);color:var(--gold);
+        font-family:'Montserrat',sans-serif;font-size:8px;letter-spacing:1.5px;
+        padding:4px 10px;cursor:pointer;text-transform:uppercase;transition:all .2s;
+      ">🏷 Etiketler</button>
+      <button onclick="toggleRouteBox()" id="routeToggleBtn" style="
+        background:rgba(201,169,110,.1);border:1px solid var(--border);color:var(--gold);
+        font-family:'Montserrat',sans-serif;font-size:8px;letter-spacing:1.5px;
+        padding:4px 10px;cursor:pointer;text-transform:uppercase;transition:all .2s;
+      ">📍 Rota</button>
+    </div>
   </div>
   <div class="cats" id="cats"></div>
 
@@ -453,6 +308,28 @@
     </div>
     <div class="preset-grid" id="presetGrid"></div>
     <div class="route-status" id="routeStatus">Proje seçin, ardından hedef belirleyin.</div>
+  </div>
+
+  <!-- Sol panel alt — Giriş butonu -->
+  <div style="padding:16px 20px;border-top:1px solid rgba(201,169,110,0.1);flex-shrink:0;">
+    <a href="/acenta.html" style="
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      background:rgba(201,169,110,0.06);
+      border:1px solid rgba(201,169,110,0.18);
+      color:rgba(201,169,110,0.6);
+      font-family:'Montserrat',sans-serif;
+      font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
+      padding:11px 16px;text-decoration:none;
+      transition:all .25s;
+      " onmouseover="this.style.background='rgba(201,169,110,0.1)';this.style.borderColor='rgba(201,169,110,0.35)';this.style.color='#C9A96E'"
+         onmouseout="this.style.background='rgba(201,169,110,0.06)';this.style.borderColor='rgba(201,169,110,0.18)';this.style.color='rgba(201,169,110,0.6)'">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+        <polyline points="10 17 15 12 10 7"/>
+        <line x1="15" y1="12" x2="3" y2="12"/>
+      </svg>
+      Acenta Girişi
+    </a>
   </div>
 </div>
 
@@ -517,16 +394,6 @@
       <div style="font-size:9px;letter-spacing:2.5px;color:rgba(201,169,110,0.7);text-transform:uppercase;margin-bottom:8px">Olanaklar</div>
       <div id="ib-ozellikler" style="display:flex;flex-wrap:wrap;gap:5px"></div>
     </div>
-    <button id="ib-detail-btn" style="
-      display:block;width:100%;background:rgba(201,169,110,0.08);
-      border:none;border-top:1px solid rgba(201,169,110,0.15);
-      color:var(--gold);font-family:'Montserrat',sans-serif;font-size:9px;
-      letter-spacing:2px;text-transform:uppercase;padding:13px;cursor:pointer;
-      transition:background .2s;
-    " onmouseover="this.style.background='rgba(201,169,110,0.14)'"
-       onmouseout="this.style.background='rgba(201,169,110,0.08)'">
-      ▸ Proje Detaylarını Gör
-    </button>
     <div class="ibm">
       <div class="imd" id="ib-dot-p"></div>
       <span class="imt" id="ib-mtext-p">Hedef seçin → rota hesaplanır</span>
@@ -555,6 +422,7 @@
 
 <script>
 // ── SUPABASE ──────────────────────────────────────────────
+const GOOGLE_API_KEY = 'AIzaSyD4JLGCE71U1n9YmhLFQRv7CDCjmrUigkA';
 const SUPABASE_URL = 'https://lbmzjhvgunkitpatijut.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_59-PLGkxMNiaL_lKUXyDbQ_ubzKmEcY';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -618,6 +486,25 @@ const ROUTE_MODES = {
 };
 
 const INITIAL_CENTER = [32.9685, 40.0845];
+
+function calcConstructionPct(teslim) {
+  if (!teslim) return 50;
+  // Parse "2026 Q2" format
+  const match = teslim.match(/(\d{4})\s*Q?(\d)?/i);
+  if (!match) return 50;
+  const year = parseInt(match[1]);
+  const quarter = match[2] ? parseInt(match[2]) : 2;
+  const endDate = new Date(year, (quarter - 1) * 3, 1);
+  // Assume project starts 2 years before delivery
+  const startDate = new Date(endDate);
+  startDate.setFullYear(startDate.getFullYear() - 2);
+  const now = new Date();
+  if (now >= endDate) return 100;
+  if (now <= startDate) return 5;
+  const total = endDate - startDate;
+  const elapsed = now - startDate;
+  return Math.round(elapsed / total * 100);
+}
 const INITIAL_ZOOM = 12.2;
 let map, activeProject = null, orbitTimer = null, orbiting = false;
 let activeRouteMode = 'drive';
@@ -1015,45 +902,182 @@ function buildProjectList() {
   PROJECTS.forEach((project, idx) => {
     const item = document.createElement('div');
     item.className = 'pi';
-    item.id = `pi-${project.id}`;
-    item.innerHTML = `<span class="pd" style="background:${project.color}; color:${project.color};"></span><span class="pn">${idx + 1}. ${project.name}</span>`;
+    item.id = 'pi-' + project.id;
+    
+    // Calculate sales progress from unit_status
+    const uss = unitStatusMap[project.id] || [];
+    const uts = unitTypesMap[project.id] || [];
+    const totalUnits = uts.reduce((a, ut) => a + (ut.toplam_adet || 0), 0);
+    const soldUnits  = uss.reduce((a, us) => a + (us.satildi || 0) + (us.opsiyonlu || 0), 0);
+    const salesPct   = totalUnits > 0 ? Math.round(soldUnits / totalUnits * 100) : 0;
+    
+    // Calculate construction progress from teslim date
+    const constrPct = calcConstructionPct(project.teslim);
+    
+
+
+    // İNŞAAT: 0%=kırmızı → 100%=yeşil
+    const cPctN = constrPct / 100;
+    const cRed   = Math.round(232 - (232-40)  * cPctN);
+    const cGreen = Math.round(60  + (174-60)  * cPctN);
+    const cBlue  = Math.round(60  + (96-60)   * cPctN);
+    const constrBarColor = '#' + cRed.toString(16).padStart(2,'0') + cGreen.toString(16).padStart(2,'0') + cBlue.toString(16).padStart(2,'0');
+    // SATIŞ: 0%=yeşil → 100%=kırmızı
+    const sPctN = salesPct / 100;
+    const sRed   = Math.round(40  + (232-40)  * sPctN);
+    const sGreen = Math.round(174 - (174-60)  * sPctN);
+    const sBlue  = Math.round(96  - (96-60)   * sPctN);
+    const salesBarColor = '#' + sRed.toString(16).padStart(2,'0') + sGreen.toString(16).padStart(2,'0') + sBlue.toString(16).padStart(2,'0');
+
+    item.innerHTML = '<span class="pd" style="background:' + project.color + '"></span>' +
+      '<div style="flex:1;min-width:0">' +
+        '<span class="pn">' + (idx+1) + '. ' + project.name + '</span>' +
+        '<div style="margin-top:7px;display:flex;flex-direction:column;gap:6px">' +
+
+          // === İNŞAAT BARI: 0%=yeşil → 100%=kırmızı ===
+          '<div>' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:3px">' +
+              '<span style="font-size:8px;letter-spacing:1px;color:rgba(245,240,232,.4);text-transform:uppercase">İnşaat</span>' +
+              '<span style="font-size:8px;color:' + constrBarColor + '">' + constrPct + '%</span>' +
+            '</div>' +
+            '<div style="position:relative;width:100%;height:3px;background:linear-gradient(to right,transparent,' + constrBarColor + ',transparent);overflow:hidden;border-radius:2px;">' +
+              '<div style="position:absolute;translate:-150px 0;width:120px;height:100%;background:linear-gradient(to right,transparent,#1a1a1a,transparent);animation:loaderSlide 1.2s infinite;"></div>' +
+            '</div>' +
+          '</div>' +
+
+          // === SATIŞ BARI: sabit yeşil #28AE60 ===
+          '<div>' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:3px">' +
+              '<span style="font-size:8px;letter-spacing:1px;color:rgba(245,240,232,.4);text-transform:uppercase">Satış</span>' +
+              '<span style="font-size:8px;color:' + salesBarColor + '">' + soldUnits + '/' + totalUnits + '</span>' +
+            '</div>' +
+            '<div style="position:relative;width:100%;height:3px;background:linear-gradient(to right,transparent,' + salesBarColor + ',transparent);overflow:hidden;border-radius:2px;">' +
+              '<div style="position:absolute;translate:-150px 0;width:120px;height:100%;background:linear-gradient(to right,transparent,#1a1a1a,transparent);animation:loaderSlide 1.4s infinite;"></div>' +
+            '</div>' +
+          '</div>' +
+
+        '</div>' +
+      '</div>';
     item.addEventListener('click', () => focusProject(project.id));
     c.appendChild(item);
   });
 }
 
-function buildPresetButtons() {
+function buildPresetButtons(projectId) {
   const grid = document.getElementById('presetGrid');
   grid.innerHTML = '';
-  PRESET_DESTINATIONS.forEach(dest => {
-    const btn = document.createElement('button');
-    btn.className = 'preset-btn';
-    btn.textContent = dest.name;
-    btn.addEventListener('click', () => routeToDestination(dest));
-    grid.appendChild(btn);
-  });
+  
+  // If project selected, show that project's POIs
+  if (projectId && projectPoisMap[projectId] && projectPoisMap[projectId].length > 0) {
+    const pois = projectPoisMap[projectId];
+    pois.forEach(poi => {
+      const btn = document.createElement('button');
+      btn.className = 'preset-btn';
+      btn.innerHTML = (poi.icon || '📍') + ' ' + poi.name;
+      btn.addEventListener('click', () => routeToDestination({ name: poi.name, lat: poi.lat, lng: poi.lng }));
+      grid.appendChild(btn);
+    });
+  } else {
+    // Fallback: show default destinations
+    PRESET_DESTINATIONS.forEach(dest => {
+      const btn = document.createElement('button');
+      btn.className = 'preset-btn';
+      btn.textContent = dest.name;
+      btn.addEventListener('click', () => routeToDestination(dest));
+      grid.appendChild(btn);
+    });
+  }
 }
 
 function addProjectMarkers() {
   PROJECTS.forEach(project => {
     const wrap = document.createElement('div');
     wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);cursor:pointer;';
+
+    // İnşaat bar rengi: 0%=kırmızı → 100%=yeşil
+    const cPct = calcConstructionPct(project.teslim);
+    const mRed   = Math.round(232 - (232-40)  * cPct/100);
+    const mGreen = Math.round(60  + (174-60)  * cPct/100);
+    const mBlue  = Math.round(60  + (96-60)   * cPct/100);
+    const barColor = '#' + mRed.toString(16).padStart(2,'0') + mGreen.toString(16).padStart(2,'0') + mBlue.toString(16).padStart(2,'0');
+
+    // Satış tamamlandı mı? (project.satis_tamamlandi alanına bakıyoruz)
+    const completed = project.satis_tamamlandi === true;
+    const bgColor   = completed ? '#28AE60' : project.color;
+    const txtColor  = '#0A0A0A';
+
+    const markerId = 'marker-' + project.id;
+
     wrap.innerHTML = `
-      <div class="marker-label" style="
-        background:${project.color};color:#0A0A0A;font-family:'Montserrat',sans-serif;font-size:9px;font-weight:600;
-        letter-spacing:1.8px;padding:7px 12px;white-space:nowrap;position:relative;box-shadow:0 10px 24px rgba(0,0,0,.28);
-        border:1px solid rgba(255,255,255,.18); transition:transform .2s, box-shadow .2s, border-color .2s;">
-        ${project.name}
-        <div style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);border:8px solid transparent;border-top-color:${project.color};border-bottom:none;"></div>
+      <div id="${markerId}" class="marker-label" style="
+        background:${bgColor};color:${txtColor};
+        font-family:'Montserrat',sans-serif;font-size:9px;font-weight:600;
+        letter-spacing:1.8px;padding:7px 14px 11px;white-space:nowrap;position:relative;
+        border-radius:4px;
+        box-shadow:0 10px 24px rgba(0,0,0,.3);
+        border:1px solid rgba(255,255,255,.2);
+        transition:transform .2s,box-shadow .2s;">
+        ${completed ? '✓ ' : ''}${project.name}
+        <div style="position:absolute;bottom:3px;left:8px;right:8px;height:3px;
+          background:linear-gradient(to right,transparent,${completed ? '#fff' : barColor},transparent);
+          overflow:hidden;border-radius:2px;">
+          <div style="position:absolute;translate:-100px 0;width:80px;height:100%;
+            background:linear-gradient(to right,transparent,rgba(0,0,0,0.3),transparent);
+            animation:loaderSlide ${completed ? '0.8' : '1.3'}s infinite;"></div>
+        </div>
+        <div style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);
+          border:8px solid transparent;border-top-color:${bgColor};border-bottom:none;"></div>
       </div>
-      <div style="width:14px;height:14px;background:${project.color};border:2px solid rgba(255,255,255,.45);border-radius:50%;margin-top:9px;animation:pr 2.2s infinite;"></div>`;
+      <div style="width:14px;height:14px;background:${bgColor};
+        border:2px solid rgba(255,255,255,.5);border-radius:50%;
+        margin-top:9px;animation:pr 2.2s infinite;"></div>`;
+
     wrap.addEventListener('click', () => focusProject(project.id));
     const marker = new maplibregl.Marker({ element: wrap, anchor: 'bottom' })
       .setLngLat([project.lng, project.lat])
       .addTo(map);
     projectMarkers.push({ id: project.id, marker, el: wrap });
+
+    // Havai fişek efekti - satış tamamlanmış projeler için
+    if (completed) {
+      setTimeout(() => launchFireworks(markerId), 800 + Math.random() * 1200);
+    }
   });
 }
+
+function launchFireworks(markerId) {
+  const el = document.getElementById(markerId);
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  for (let i = 0; i < 18; i++) {
+    const spark = document.createElement('div');
+    const angle = (i / 18) * Math.PI * 2;
+    const dist  = 28 + Math.random() * 22;
+    const size  = 3 + Math.random() * 3;
+    const colors = ['#FFD700','#28AE60','#5DBD84','#fff','#ADFF2F','#00FF7F'];
+    const color  = colors[Math.floor(Math.random() * colors.length)];
+    spark.style.cssText = `
+      position:fixed;z-index:9999;
+      width:${size}px;height:${size}px;border-radius:50%;
+      background:${color};
+      left:${cx}px;top:${cy}px;
+      pointer-events:none;
+      transition:all 0.7s cubic-bezier(0.1,0.8,0.3,1);
+      opacity:1;
+    `;
+    document.body.appendChild(spark);
+    requestAnimationFrame(() => {
+      spark.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
+      spark.style.opacity = '0';
+    });
+    setTimeout(() => spark.remove(), 800);
+  }
+  // tekrar ateşle
+  setTimeout(() => launchFireworks(markerId), 3000 + Math.random() * 2000);
+}
+
 
 function fitProjects() {
   const bounds = new maplibregl.LngLatBounds();
@@ -1069,7 +1093,8 @@ function focusProject(projectId) {
   document.querySelectorAll('.pi').forEach(e => e.classList.remove('active'));
   const activeItem = document.getElementById(`pi-${project.id}`);
   if (activeItem) activeItem.classList.add('active');
-  document.getElementById('selectedProjectLabel').textContent = `${project.name} seçili. Hızlı hedeflerden birine basın veya aşağıya bir yer adı/adres yazın.`;
+  document.getElementById('selectedProjectLabel').textContent = project.name + ' seçili. Hızlı hedeflerden birine basın veya aşağıya bir yer adı/adres yazın.';
+  buildPresetButtons(project.id);
   setRouteStatus('Hedef seçebilirsiniz. Rota aktif proje konumundan hesaplanacaktır.', false);
 
   projectMarkers.forEach(pm => {
@@ -1185,12 +1210,17 @@ function showProjectInfo(project) {
 
   document.getElementById('hint').style.display = 'none';
   document.getElementById('ib').classList.add('vis');
+}
 
-  // Detay butonu
-  const detailBtnWrap = document.getElementById('ib-detail-btn');
-  if (detailBtnWrap) {
-    detailBtnWrap.onclick = () => openDetailPanel(project.id);
-  }
+let projectLabelsVisible = true;
+function toggleProjectLabels() {
+  projectLabelsVisible = !projectLabelsVisible;
+  const btn = document.getElementById('labelToggleBtn');
+  btn.style.opacity = projectLabelsVisible ? '1' : '0.4';
+  projectMarkers.forEach(pm => {
+    const label = pm.el.querySelector('.marker-label');
+    if (label) label.style.display = projectLabelsVisible ? '' : 'none';
+  });
 }
 
 function toggleRouteBox() {
@@ -1240,16 +1270,23 @@ async function searchAndRoute() {
 }
 
 async function geocodePlace(query) {
-  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=tr&q=${encodeURIComponent(query + ', Ankara')}`;
-  const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
-  if (!r.ok) throw new Error('Geocode başarısız');
-  const d = await r.json();
-  if (!Array.isArray(d) || !d.length) return null;
-  return {
-    name: d[0].display_name.split(',').slice(0, 3).join(', '),
-    lat: parseFloat(d[0].lat),
-    lng: parseFloat(d[0].lon)
-  };
+  // Google Geocoding via Netlify proxy
+  try {
+    const r = await fetch('/.netlify/functions/geocode?q=' + encodeURIComponent(query));
+    const d = await r.json();
+    if (d.status === 'OK' && d.results && d.results.length) {
+      const res = d.results[0];
+      return { name: res.formatted_address.split(',').slice(0,2).join(', '), lat: res.geometry.location.lat, lng: res.geometry.location.lng };
+    }
+  } catch(e) {}
+  // Fallback: Nominatim
+  try {
+    const q = /ankara/i.test(query) ? query : query + ', Ankara, Türkiye';
+    const r2 = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&countrycodes=tr&q=' + encodeURIComponent(q), { headers: {'Accept':'application/json','User-Agent':'ArslanlarProjects/1.0'} });
+    const d2 = await r2.json();
+    if (Array.isArray(d2) && d2.length) return { name: d2[0].display_name.split(',').slice(0,2).join(', '), lat: parseFloat(d2[0].lat), lng: parseFloat(d2[0].lon) };
+  } catch(e) {}
+  return null;
 }
 
 function drawRouteToTarget(target) {
@@ -1262,33 +1299,68 @@ function drawRouteToTarget(target) {
 }
 
 async function drawRouteBetween(project, target) {
-  setRouteStatus(project.name + ' → ' + target.name + ' rotası hesaplanıyor...');
+  setRouteStatus(project.name + ' → ' + target.name + ' rotaı hesaplanıyor...');
   const mode = ROUTE_MODES[activeRouteMode];
-  const isWalk = activeRouteMode === 'walk';
-  const profile = isWalk ? 'foot' : 'car';
-  const url = 'https://router.project-osrm.org/route/v1/' + profile + '/' +
-    project.lng + ',' + project.lat + ';' + target.lng + ',' + target.lat +
-    '?overview=full&geometries=geojson';
+
+  // Try Google Directions via Netlify proxy
   try {
-    const r = await fetch(url);
+    const proxyUrl = '/.netlify/functions/directions?' +
+      'origin_lat=' + project.lat + '&origin_lng=' + project.lng +
+      '&dest_lat=' + target.lat + '&dest_lng=' + target.lng +
+      '&mode=' + activeRouteMode;
+    const r = await fetch(proxyUrl);
     const d = await r.json();
-    if (d.code !== 'Ok' || !d.routes || !d.routes.length) throw new Error('Rota yok');
-    const dist = d.routes[0].distance;
-    const dur = isWalk ? (dist / 1.39) : d.routes[0].duration;
-    renderRoute(d.routes[0].geometry, mode.color, false);
-    renderTargetMarker(target, mode.color);
-    fitRoute(project, target);
-    showRouteInfo(project, target, dist, dur, mode);
-    setRouteStatus(project.name + ' → ' + target.name + ' rotası hazır.');
-  } catch (err) {
-    const sd = getDistance(project.lat, project.lng, target.lat, target.lng);
-    const fs = isWalk ? sd / 1.39 : sd / 8.33;
-    renderRoute({ type:'LineString', coordinates:[[project.lng,project.lat],[target.lng,target.lat]] }, mode.color, true);
-    renderTargetMarker(target, mode.color);
-    fitRoute(project, target);
-    showRouteInfo(project, target, sd, fs, mode, true);
-    setRouteStatus('Yaklaşık rota gösterildi.', true);
+    if (d.status === 'OK' && d.routes && d.routes.length) {
+      const leg = d.routes[0].legs[0];
+      const coords = decodePolyline(d.routes[0].overview_polyline.points);
+      const geojson = { type: 'LineString', coordinates: coords.map(p => [p[1], p[0]]) };
+      renderRoute(geojson, mode.color, false);
+      renderTargetMarker(target, mode.color);
+      fitRoute(project, target);
+      showRouteInfo(project, target, leg.distance.value, leg.duration.value, mode);
+      setRouteStatus(project.name + ' → ' + target.name + ' rotaı hazır. (' + leg.distance.text + ' / ' + leg.duration.text + ')');
+      return;
+    }
+  } catch(e) { console.warn('Google proxy hata:', e); }
+
+  // Fallback: OSRM
+  try {
+    const profile = activeRouteMode === 'walk' ? 'foot' : 'car';
+    const osrmUrl = 'https://router.project-osrm.org/route/v1/' + profile + '/' +
+      project.lng + ',' + project.lat + ';' + target.lng + ',' + target.lat +
+      '?overview=full&geometries=geojson';
+    const r2 = await fetch(osrmUrl);
+    const d2 = await r2.json();
+    if (d2.code === 'Ok' && d2.routes && d2.routes.length) {
+      renderRoute(d2.routes[0].geometry, mode.color, false);
+      renderTargetMarker(target, mode.color);
+      fitRoute(project, target);
+      showRouteInfo(project, target, d2.routes[0].distance, d2.routes[0].duration, mode);
+      setRouteStatus(project.name + ' → ' + target.name + ' rotaı hazır.');
+      return;
+    }
+  } catch(e2) {}
+
+  // Final fallback: straight line
+  const dist = getDistance(project.lat, project.lng, target.lat, target.lng);
+  const spd = activeRouteMode === 'walk' ? 1.39 : 8.33;
+  renderRoute({ type:'LineString', coordinates:[[project.lng,project.lat],[target.lng,target.lat]] }, mode.color, true);
+  renderTargetMarker(target, mode.color);
+  fitRoute(project, target);
+  showRouteInfo(project, target, dist, dist / spd, mode, true);
+  setRouteStatus('Yaklaşık rota gösterildi.', true);
+}
+
+function decodePolyline(encoded) {
+  const pts = []; let i = 0, lat = 0, lng = 0;
+  while (i < encoded.length) {
+    let s=0,r=0,b; do{b=encoded.charCodeAt(i++)-63;r|=(b&0x1f)<<s;s+=5;}while(b>=0x20);
+    lat+=(r&1)?~(r>>1):(r>>1); s=0;r=0;
+    do{b=encoded.charCodeAt(i++)-63;r|=(b&0x1f)<<s;s+=5;}while(b>=0x20);
+    lng+=(r&1)?~(r>>1):(r>>1);
+    pts.push([lat/1e5,lng/1e5]);
   }
+  return pts;
 }
 
 function renderRoute(geometry, color, dashed = false) {
@@ -1415,6 +1487,7 @@ function clearSelection() {
   document.getElementById('selectedProjectLabel').textContent = 'Önce bir proje seçin.';
   document.getElementById('destinationInput').value = '';
   setRouteStatus('Hazır hedefler aşağıda. Serbest aramayla da rota alabilirsiniz.');
+  buildPresetButtons(null);
   document.querySelectorAll('.pi').forEach(e => e.classList.remove('active'));
   projectMarkers.forEach(pm => {
     const label = pm.el.querySelector('.marker-label');
@@ -1521,287 +1594,11 @@ window.addEventListener('resize', () => {
   } catch(e) {
     console.warn('Supabase load failed, using empty data', e);
   }
-  await checkAcentaSession();
   buildProjectList();
-  buildPresetButtons();
+  buildPresetButtons(null);
   initMap();
 })();
-
-// ═══════════════════════════════════════════════════════════
-// DETAY PANELİ FONKSİYONLARI
-// ═══════════════════════════════════════════════════════════
-let detailMiniMap = null;
-let currentDetailProject = null;
-
-function openDetailPanel(projectId) {
-  const project = PROJECTS.find(p => p.id === projectId);
-  if (!project) return;
-  currentDetailProject = project;
-  document.getElementById('dpBrand').textContent = project.name;
-  document.getElementById('detailOverlay').classList.add('open');
-  document.getElementById('detailPanel').classList.add('open');
-  dpTab(document.querySelector('.dp-tab'), 'genel');
-  dpFillGenel(project);
-  dpFillDaireler(project);
-  dpFillOlanaklar(project);
-  dpFillKonum(project);
-  dpFill3D(project);
-  dpFillIletisim(project);
-  dpFillGorseller(project);
-  document.body.style.overflow = 'hidden';
-}
-
-function closeDetailPanel() {
-  document.getElementById('detailOverlay').classList.remove('open');
-  document.getElementById('detailPanel').classList.remove('open');
-  document.body.style.overflow = '';
-  if (detailMiniMap) { detailMiniMap.remove(); detailMiniMap = null; }
-}
-
-function dpTab(el, section) {
-  document.querySelectorAll('.dp-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.dp-section').forEach(s => s.classList.remove('active'));
-  if (el) el.classList.add('active');
-  const sec = document.getElementById('dps-' + section);
-  if (sec) sec.classList.add('active');
-  if (section === 'konum' && currentDetailProject && !detailMiniMap) {
-    setTimeout(() => initDpMiniMap(currentDetailProject), 150);
-  }
-}
-
-function dpFillGenel(p) {
-  const img = document.getElementById('dpHeroImg');
-  img.src = p.render_url || '';
-  img.style.display = p.render_url ? 'block' : 'none';
-  document.getElementById('dpHeroBadge').textContent = (p.tip||'Proje') + (p.teslim ? ' · '+p.teslim : '');
-  document.getElementById('dpHeroTitle').textContent = p.name;
-  document.getElementById('dpHeroSub').textContent = p.aciklama || '';
-  const uts = unitTypesMap[p.id] || [];
-  document.getElementById('dpHeroChips').innerHTML = uts.map(ut => '<span class="dp-chip">'+ut.tip+'</span>').join('');
-  const totalUnits = uts.reduce((a,ut) => a+(ut.toplam_adet||0), 0);
-  const priceFrom = uts.find(ut => ut.fiyat);
-  const items = [
-    {l:'Toplam Alan', v:p.toplam_alan||'—'},
-    {l:'Teslim', v:p.teslim||'—'},
-    {l:'Blok', v:p.blok_sayisi ? p.blok_sayisi+' blok':'—'},
-    {l:'Kat Sayısı', v:p.kat_sayisi ? p.kat_sayisi+' kat':'—'},
-    {l:'Toplam Daire', v:totalUnits ? totalUnits+' daire':'—'},
-    {l:acentaSession?'Başlangıç Fiyatı':'Fiyat', v:acentaSession&&priceFrom?priceFrom.fiyat:'Bilgi için iletişim'},
-  ];
-  document.getElementById('dpKunye').innerHTML = items.map(k =>
-    '<div class="dp-kunye-item"><div class="dp-kunye-lbl">'+k.l+'</div><div class="dp-kunye-val">'+k.v+'</div></div>'
-  ).join('');
-  document.getElementById('dpDesc').textContent = p.aciklama || 'Proje hakkında detaylı bilgi için iletişime geçin.';
-  const phone = p.telefon||'+90 312 000 00 00';
-  const wa = (p.whatsapp||phone).replace(/[^0-9]/g,'');
-  document.getElementById('dpCtaGenel').innerHTML =
-    '<a href="tel:'+phone+'" class="dp-cta-btn dp-cta-primary">📞 Ara</a>' +
-    '<a href="https://wa.me/'+wa+'?text=Merhaba, '+p.name+' projesi hakkında bilgi almak istiyorum." target="_blank" class="dp-cta-btn dp-cta-wa">WhatsApp</a>' +
-    '<a href="/basvuru.html" class="dp-cta-btn dp-cta-outline">Acenta Başvurusu</a>';
-}
-
-function dpFillGorseller(p) {
-  const g = document.getElementById('dpGallery');
-  g.innerHTML = p.render_url
-    ? '<img class="dp-gallery-img hero-img" src="'+p.render_url+'" alt="'+p.name+'" onclick="dpLightbox(this.src)">'
-    : '<div style="grid-column:1/-1;padding:32px;text-align:center;color:var(--wd);font-size:12px">Henüz görsel yüklenmedi.</div>';
-}
-
-function dpFillDaireler(p) {
-  const uts = unitTypesMap[p.id] || [];
-  const uss = unitStatusMap[p.id] || [];
-  const isLoggedIn = !!acentaSession;
-  const el = document.getElementById('dpTypes');
-  if (!uts.length) { el.innerHTML = '<div style="padding:20px;color:var(--wd);font-size:12px">Daire tipleri henüz girilmedi.</div>'; return; }
-  el.innerHTML = uts.map(ut => {
-    const us = uss.find(s => s.unit_type_id===ut.id) || {musait:ut.toplam_adet,opsiyonlu:0,satildi:0};
-    const statusHtml = isLoggedIn
-      ? '<div class="dp-type-status">' +
-        '<span class="dp-status-pill" style="color:#5DBD84;border-color:rgba(93,189,132,0.3)">Müsait: '+us.musait+'</span>' +
-        '<span class="dp-status-pill" style="color:#E8A96E;border-color:rgba(232,169,110,0.3)">Opsiyon: '+us.opsiyonlu+'</span>' +
-        '<span class="dp-status-pill" style="color:#E87070;border-color:rgba(232,112,112,0.3)">Satıldı: '+us.satildi+'</span></div>'
-      : '';
-    return '<div class="dp-type-card"><div>' +
-      '<div class="dp-type-name">'+ut.tip+'</div>' +
-      '<div class="dp-type-m2">'+ut.m2_min+'–'+ut.m2_max+' m²</div>' +
-      '<div class="dp-type-desc">'+ut.toplam_adet+' adet</div>' +
-      statusHtml + '</div><div>' +
-      (isLoggedIn&&ut.fiyat ? '<div class="dp-type-price">'+ut.fiyat+'</div>' : '') +
-      '<div class="dp-type-adet">'+ut.toplam_adet+' ad.</div></div></div>';
-  }).join('');
-}
-
-function dpFillOlanaklar(p) {
-  const ozs = p.ozellikler||[];
-  const el = document.getElementById('dpAmenities');
-  const icons = {'Havuz':'🏊','Spor':'🏋️','Otopark':'🅿️','Sauna':'♨️','Çocuk':'🎠','Kafeterya':'☕','Hamam':'🧖','Güvenlik':'🔒','Peyzaj':'🌿','Squash':'🎾','Tuz':'🧂'};
-  if (!ozs.length) { el.innerHTML = '<div style="grid-column:1/-1;padding:20px;color:var(--wd);font-size:12px">Olanak bilgisi henüz girilmedi.</div>'; return; }
-  el.innerHTML = ozs.map(o => {
-    const icon = Object.entries(icons).find(([k]) => o.toLowerCase().includes(k.toLowerCase()));
-    return '<div class="dp-amenity">'+(icon?icon[1]+' ':'')+o+'</div>';
-  }).join('');
-}
-
-function dpFillKonum(p) {
-  document.getElementById('dpKonumInfo').innerHTML =
-    '<strong style="color:var(--white)">'+p.name+'</strong><br>' +
-    (p.aciklama||'') + '<br><br>' +
-    '<span style="color:var(--gold)">Konum:</span> Enlem '+p.lat?.toFixed(5)+', Boylam '+p.lng?.toFixed(5);
-}
-
-function initDpMiniMap(p) {
-  const c = document.getElementById('dpMiniMap');
-  if (!c || !maplibregl || detailMiniMap) return;
-  try {
-    detailMiniMap = new maplibregl.Map({
-      container:'dpMiniMap',
-      style:{version:8,sources:{osm:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256}},layers:[{id:'osm',type:'raster',source:'osm'}]},
-      center:[p.lng,p.lat],zoom:14,interactive:false,attributionControl:false
-    });
-    new maplibregl.Marker({color:p.color||'#C9A96E'}).setLngLat([p.lng,p.lat]).addTo(detailMiniMap);
-  } catch(e){}
-}
-
-function dpFill3D(p) {
-  const el = document.getElementById('dp3dContent');
-  if (p.twinmotion_url) {
-    el.innerHTML = '<iframe src="'+p.twinmotion_url+'" class="dp-3d-embed" allowfullscreen></iframe>';
-  } else if (p.tour_url) {
-    el.innerHTML = '<div class="dp-3d-placeholder"><div class="dp-3d-title">Sanal İç Mekan Turu</div><div class="dp-3d-sub">360° iç mekan turunu deneyimleyin.</div><a href="'+p.tour_url+'" target="_blank" class="dp-cta-btn dp-cta-primary" style="display:inline-flex;max-width:240px;text-decoration:none">Turu Başlat →</a></div>';
-  } else {
-    el.innerHTML = '<div class="dp-3d-placeholder"><div class="dp-3d-title">3D Model Yakında</div><div class="dp-3d-sub">Bu proje için TwinMotion 3D modeli ve sanal tur yakında yayına alınacak.</div></div>';
-  }
-}
-
-function dpFillIletisim(p) {
-  const phone = p.telefon||'+90 312 000 00 00';
-  const wa = (p.whatsapp||phone).replace(/[^0-9]/g,'');
-  document.getElementById('dpIletisimText').textContent = p.name+' projesi hakkında bilgi almak, randevu oluşturmak veya ödeme planı görüşmek için bizimle iletişime geçin.';
-  document.getElementById('dpIletisimBtns').innerHTML =
-    '<a href="tel:'+phone+'" class="dp-cta-btn dp-cta-primary" style="text-decoration:none">📞 '+phone+'</a>' +
-    '<a href="https://wa.me/'+wa+'?text=Merhaba, '+p.name+' projesi hakkında bilgi almak istiyorum." target="_blank" class="dp-cta-btn dp-cta-wa" style="text-decoration:none">💬 WhatsApp</a>';
-  const noteEl = document.getElementById('contactNote');
-  if (noteEl) noteEl.placeholder = p.name+' projesi hakkında bilgi almak istiyorum...';
-}
-
-function dpLightbox(src) {
-  document.getElementById('dpLightboxImg').src = src;
-  document.getElementById('dpLightbox').classList.add('open');
-}
-
-async function sendContactForm() {
-  const name = document.getElementById('contactName').value.trim();
-  const phone = document.getElementById('contactPhone').value.trim();
-  if (!name||!phone) { alert('Ad ve telefon zorunludur.'); return; }
-  if (!currentDetailProject) return;
-  await sb.from('leads').insert({ad_soyad:name,telefon:phone,email:document.getElementById('contactEmail').value.trim(),proje_id:currentDetailProject.id,not:document.getElementById('contactNote').value.trim(),kaynak:'harita-panel'}).catch(()=>{});
-  document.getElementById('contactResult').style.display = 'block';
-  ['contactName','contactPhone','contactEmail','contactNote'].forEach(id => document.getElementById(id).value='');
-}
 </script>
-
-<!-- ── DETAY PANELİ ─────────────────────────────────────── -->
-<div id="detailOverlay" onclick="closeDetailPanel()"></div>
-
-<div id="detailPanel">
-  <div class="dp-header">
-    <div class="dp-brand" id="dpBrand">ARSLANLAR</div>
-    <button class="dp-close" onclick="closeDetailPanel()">✕</button>
-  </div>
-  <div class="dp-tabs">
-    <div class="dp-tab active" onclick="dpTab(this,'genel')">Genel Bilgi</div>
-    <div class="dp-tab" onclick="dpTab(this,'gorseller')">Görseller</div>
-    <div class="dp-tab" onclick="dpTab(this,'daireler')">Daire Tipleri</div>
-    <div class="dp-tab" onclick="dpTab(this,'olanaklar')">Olanaklar</div>
-    <div class="dp-tab" onclick="dpTab(this,'konum')">Konum</div>
-    <div class="dp-tab" onclick="dpTab(this,'3d')">3D / Sanal Tur</div>
-    <div class="dp-tab" onclick="dpTab(this,'iletisim')">İletişim</div>
-  </div>
-  <div class="dp-content">
-
-    <!-- GENEL BİLGİ -->
-    <div class="dp-section active" id="dps-genel">
-      <div class="dp-hero" id="dpHero">
-        <img class="dp-hero-img" id="dpHeroImg" src="" alt="">
-        <div class="dp-hero-overlay">
-          <div class="dp-hero-badge" id="dpHeroBadge"></div>
-          <div class="dp-hero-title" id="dpHeroTitle"></div>
-          <div class="dp-hero-sub" id="dpHeroSub"></div>
-          <div class="dp-hero-chips" id="dpHeroChips"></div>
-        </div>
-      </div>
-      <div class="dp-kunye" id="dpKunye"></div>
-      <div class="dp-sec-title">Proje Hakkında</div>
-      <div class="dp-desc" id="dpDesc"></div>
-      <div class="dp-cta-section" id="dpCtaGenel"></div>
-    </div>
-
-    <!-- GÖRSELLER -->
-    <div class="dp-section" id="dps-gorseller">
-      <div class="dp-sec-title">Proje Görselleri</div>
-      <div class="dp-gallery" id="dpGallery">
-        <div style="padding:32px;text-align:center;color:var(--wd);font-size:12px;grid-column:1/-1">Görsel yükleniyor...</div>
-      </div>
-    </div>
-
-    <!-- DAİRE TİPLERİ -->
-    <div class="dp-section" id="dps-daireler">
-      <div class="dp-sec-title">Daire Tipleri</div>
-      <div class="dp-types" id="dpTypes"></div>
-    </div>
-
-    <!-- OLANAKLAR -->
-    <div class="dp-section" id="dps-olanaklar">
-      <div class="dp-sec-title">Sosyal Olanaklar</div>
-      <div class="dp-amenities" id="dpAmenities"></div>
-    </div>
-
-    <!-- KONUM -->
-    <div class="dp-section" id="dps-konum">
-      <div class="dp-sec-title">Konum ve Ulaşım</div>
-      <div class="dp-mini-map" id="dpMiniMap"></div>
-      <div id="dpKonumInfo" style="padding:0 20px 20px;font-size:12px;color:var(--wd);line-height:1.9"></div>
-    </div>
-
-    <!-- 3D / SANAL TUR -->
-    <div class="dp-section" id="dps-3d">
-      <div class="dp-sec-title">3D Model / Sanal Tur</div>
-      <div id="dp3dContent" style="padding:16px 20px;"></div>
-    </div>
-
-    <!-- İLETİŞİM -->
-    <div class="dp-section" id="dps-iletisim">
-      <div class="dp-sec-title">Bilgi Alın</div>
-      <div style="padding:20px 24px;">
-        <div style="margin-bottom:20px;font-size:13px;color:var(--wd);line-height:1.8" id="dpIletisimText"></div>
-        <div style="display:flex;flex-direction:column;gap:10px;max-width:400px" id="dpIletisimBtns"></div>
-        <div style="margin-top:28px;border-top:1px solid var(--border);padding-top:20px;">
-          <div class="dp-sec-title" style="padding:0 0 12px">Hızlı İletişim Formu</div>
-          <div style="display:flex;flex-direction:column;gap:10px;max-width:400px">
-            <input type="text" id="contactName" placeholder="Ad Soyad" style="background:var(--b3);border:1px solid var(--border);color:var(--white);padding:11px 14px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none;">
-            <input type="tel" id="contactPhone" placeholder="Telefon" style="background:var(--b3);border:1px solid var(--border);color:var(--white);padding:11px 14px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none;">
-            <input type="email" id="contactEmail" placeholder="E-posta (opsiyonel)" style="background:var(--b3);border:1px solid var(--border);color:var(--white);padding:11px 14px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none;">
-            <textarea id="contactNote" rows="3" placeholder="Notunuz..." style="background:var(--b3);border:1px solid var(--border);color:var(--white);padding:11px 14px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none;resize:vertical;"></textarea>
-            <button onclick="sendContactForm()" style="background:var(--gold);color:#0A0A0A;border:none;padding:13px;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Gönder</button>
-            <div id="contactResult" style="font-size:11px;color:var(--green);display:none">✓ Mesajınız alındı. En kısa sürede dönüş yapılacaktır.</div>
-          </div>
-        </div>
-        <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px;">
-          <div class="dp-sec-title" style="padding:0 0 12px">Acenta mısınız?</div>
-          <p style="font-size:12px;color:var(--wd);line-height:1.8;margin-bottom:14px">Arslanlar projelerini acentanız aracılığıyla satmak için başvuruda bulunun.</p>
-          <a href="/basvuru.html" style="display:inline-block;background:none;border:1px solid var(--border);color:var(--wd);padding:11px 24px;font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--wd)'">Acenta Başvurusu →</a>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- LİGHTBOX -->
-<div id="dpLightbox">
-  <button id="dpLightboxClose" onclick="document.getElementById('dpLightbox').classList.remove('open')">✕</button>
-  <img id="dpLightboxImg" src="" alt="">
-</div>
 
 </body>
 </html>
