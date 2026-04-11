@@ -428,6 +428,29 @@ const SUPABASE_URL = 'https://lbmzjhvgunkitpatijut.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_59-PLGkxMNiaL_lKUXyDbQ_ubzKmEcY';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+let acentaSession = null;
+
+async function checkAcentaSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { acentaSession = null; return; }
+  // Check if user is an agency user (not admin)
+  const { data: au } = await sb.from('agency_users').select('agency_id').eq('id', session.user.id).single();
+  if (au) {
+    const { data: ag } = await sb.from('agencies').select('durum,firma_adi').eq('id', au.agency_id).single();
+    if (ag && ag.durum === 'aktif') {
+      acentaSession = { user: session.user, agency: ag };
+      // Update login button in left panel
+      const loginBtn = document.getElementById('acentaLoginBtn');
+      if (loginBtn) {
+        loginBtn.innerHTML = '◉ ' + ag.firma_adi;
+        loginBtn.style.color = 'var(--gold)';
+        loginBtn.style.borderColor = 'rgba(201,169,110,0.3)';
+        loginBtn.onclick = () => { window.location.href = '/acenta.html'; };
+      }
+    }
+  }
+}
+
 // Runtime data — loaded from Supabase
 let PROJECTS = [];
 let unitTypesMap = {};   // project_id → [unit_types]
@@ -1163,14 +1186,16 @@ function showProjectInfo(project) {
   if (uts.length === 0) {
     unitsEl.innerHTML = '<div style="font-size:10px;color:rgba(245,240,232,0.35)">Henüz daire tipi girilmedi</div>';
   } else {
+    const isLoggedIn = !!acentaSession;
     unitsEl.innerHTML = uts.map(ut => {
       const us = uss.find(s => s.unit_type_id === ut.id) || { musait: ut.toplam_adet, opsiyonlu: 0, satildi: 0 };
       const tooltipId = 'tt-' + ut.id;
       return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(245,240,232,0.05);position:relative"
-        onmouseenter="document.getElementById('${tooltipId}').style.display='block'"
-        onmouseleave="document.getElementById('${tooltipId}').style.display='none'">
+        ${isLoggedIn ? `onmouseenter="document.getElementById('${tooltipId}').style.display='block'"
+        onmouseleave="document.getElementById('${tooltipId}').style.display='none'"` : ''}>
         <span style="font-size:11px;color:rgba(245,240,232,0.55);min-width:36px">${ut.tip}</span>
         <span style="font-size:10px;color:rgba(245,240,232,0.35);flex:1">${ut.m2_min}–${ut.m2_max} m²</span>
+        ${isLoggedIn ? `
         <span style="font-family:'Cormorant Garamond',serif;font-size:13px;color:${project.color};margin-right:8px">${ut.fiyat||'—'}</span>
         <span style="font-size:10px;color:rgba(245,240,232,0.5);cursor:default;border-bottom:1px dashed rgba(201,169,110,0.4);padding-bottom:1px"
           title="Üzerine gelin">${ut.toplam_adet} ad.</span>
@@ -1192,7 +1217,7 @@ function showProjectInfo(project) {
               <span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#E87070">${us.satildi}</span>
             </div>
           </div>
-        </div>
+        </div>` : `<span style="font-size:10px;color:rgba(245,240,232,0.3)">${ut.toplam_adet} ad.</span>`}
       </div>`;
     }).join('');
   }
