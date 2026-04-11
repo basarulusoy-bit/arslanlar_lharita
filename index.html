@@ -227,6 +227,177 @@
     .sl{font-size:7px;}
     #compass{display:none;}
   }
+
+/* ── DETAY PANELİ ──────────────────────────────────────── */
+#detailOverlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:800;
+  opacity:0;pointer-events:none;transition:opacity .35s;
+}
+#detailOverlay.open{opacity:1;pointer-events:all;}
+#detailPanel{
+  position:fixed;top:0;right:0;bottom:0;width:min(780px,100vw);
+  background:var(--black);border-left:1px solid var(--border);
+  z-index:801;display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .38s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+}
+#detailPanel.open{transform:translateX(0);}
+
+/* Panel header */
+.dp-header{
+  flex-shrink:0;height:56px;background:var(--b2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 24px;
+}
+.dp-brand{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);letter-spacing:2px;}
+.dp-close{background:none;border:1px solid var(--border);color:var(--wd);
+  width:32px;height:32px;cursor:pointer;font-size:14px;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+.dp-close:hover{border-color:var(--gold);color:var(--gold);}
+
+/* Tabs */
+.dp-tabs{
+  flex-shrink:0;display:flex;background:var(--b2);
+  border-bottom:1px solid var(--border);overflow-x:auto;
+}
+.dp-tabs::-webkit-scrollbar{display:none;}
+.dp-tab{
+  flex-shrink:0;padding:12px 18px;font-size:9px;letter-spacing:2px;
+  color:var(--wd);cursor:pointer;text-transform:uppercase;border-bottom:2px solid transparent;
+  transition:all .2s;white-space:nowrap;
+}
+.dp-tab:hover{color:var(--white);}
+.dp-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+/* Content */
+.dp-content{flex:1;overflow-y:auto;}
+.dp-content::-webkit-scrollbar{width:3px;}
+.dp-content::-webkit-scrollbar-thumb{background:var(--border);}
+
+.dp-section{display:none;padding:0 0 48px;}
+.dp-section.active{display:block;}
+
+/* Hero */
+.dp-hero{position:relative;height:320px;background:#111;overflow:hidden;}
+.dp-hero-img{width:100%;height:100%;object-fit:cover;}
+.dp-hero-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.7) 100%);
+  display:flex;flex-direction:column;justify-content:flex-end;padding:28px 28px 24px;
+}
+.dp-hero-badge{
+  font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;
+}
+.dp-hero-title{
+  font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;color:var(--white);
+  line-height:1.1;margin-bottom:6px;
+}
+.dp-hero-sub{font-size:11px;color:rgba(245,240,232,0.65);letter-spacing:.5px;}
+.dp-hero-chips{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.dp-chip{
+  background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);
+  color:var(--gold);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 12px;
+}
+
+/* Section titles */
+.dp-sec-title{
+  font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;
+  padding:20px 24px 12px;border-bottom:1px solid var(--border);
+}
+
+/* Künye grid */
+.dp-kunye{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:0;
+  border-bottom:1px solid var(--border);
+}
+.dp-kunye-item{
+  padding:16px 20px;border-right:1px solid var(--border);
+}
+.dp-kunye-item:last-child,.dp-kunye-item:nth-child(3n){border-right:none;}
+.dp-kunye-lbl{font-size:8px;letter-spacing:2px;color:rgba(201,169,110,0.5);text-transform:uppercase;margin-bottom:4px;}
+.dp-kunye-val{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--white);}
+
+/* Gallery */
+.dp-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin:2px;}
+.dp-gallery-img{
+  aspect-ratio:16/9;object-fit:cover;cursor:pointer;
+  transition:opacity .2s;display:block;width:100%;
+}
+.dp-gallery-img:hover{opacity:0.85;}
+.dp-gallery-img.hero-img{grid-column:1/-1;aspect-ratio:16/7;}
+
+/* Daire tipleri */
+.dp-types{padding:0 20px 20px;}
+.dp-type-card{
+  background:var(--b3);border:1px solid var(--border);padding:16px 20px;
+  margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:12px;
+  align-items:start;transition:border-color .2s;
+}
+.dp-type-card:hover{border-color:rgba(201,169,110,0.3);}
+.dp-type-name{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);margin-bottom:4px;}
+.dp-type-m2{font-size:10px;color:var(--wd);margin-bottom:8px;}
+.dp-type-desc{font-size:11px;color:rgba(245,240,232,0.45);line-height:1.6;}
+.dp-type-price{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--white);text-align:right;}
+.dp-type-adet{font-size:10px;color:var(--wd);text-align:right;margin-top:4px;}
+.dp-type-status{display:flex;gap:8px;margin-top:8px;justify-content:flex-end;flex-wrap:wrap;}
+.dp-status-pill{font-size:8px;letter-spacing:1px;padding:3px 10px;border:1px solid;}
+
+/* Olanaklar */
+.dp-amenities{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 20px 20px;}
+.dp-amenity{
+  background:var(--b3);border:1px solid var(--border);padding:12px 14px;
+  font-size:11px;color:rgba(245,240,232,0.6);text-align:center;
+}
+
+/* Açıklama */
+.dp-desc{padding:16px 24px;font-size:13px;color:rgba(245,240,232,0.65);line-height:1.9;}
+
+/* 3D bölümü */
+.dp-3d-placeholder{
+  margin:16px 20px;background:var(--b3);border:1px solid var(--border);
+  padding:32px;text-align:center;
+}
+.dp-3d-title{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);margin-bottom:8px;}
+.dp-3d-sub{font-size:11px;color:var(--wd);line-height:1.7;margin-bottom:16px;}
+.dp-3d-embed{width:100%;height:480px;border:none;}
+
+/* CTA butonu */
+.dp-cta-section{
+  padding:20px 20px;background:var(--b2);border-top:1px solid var(--border);
+  display:flex;gap:10px;flex-wrap:wrap;
+}
+.dp-cta-btn{
+  flex:1;min-width:140px;padding:13px 16px;text-align:center;cursor:pointer;
+  font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  border:none;transition:all .2s;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.dp-cta-primary{background:var(--gold);color:#0A0A0A;}
+.dp-cta-primary:hover{background:var(--gold-l);}
+.dp-cta-outline{background:none;border:1px solid var(--border);color:var(--wd);}
+.dp-cta-outline:hover{border-color:var(--gold);color:var(--gold);}
+.dp-cta-wa{background:#25D366;color:#fff;}
+.dp-cta-wa:hover{background:#1fba57;}
+
+/* Konum mini map */
+.dp-mini-map{height:200px;background:var(--b3);margin:0 20px 16px;border:1px solid var(--border);}
+
+/* Plan görseller */
+.dp-plans{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px 20px 20px;}
+.dp-plan-item{background:var(--b3);border:1px solid var(--border);overflow:hidden;cursor:pointer;}
+.dp-plan-img{width:100%;aspect-ratio:4/3;object-fit:contain;background:#111;display:block;}
+.dp-plan-lbl{font-size:10px;color:var(--wd);padding:8px 10px;text-align:center;}
+
+/* Lightbox */
+#dpLightbox{
+  position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:900;
+  display:none;align-items:center;justify-content:center;
+}
+#dpLightbox.open{display:flex;}
+#dpLightbox img{max-width:90vw;max-height:90vh;object-fit:contain;}
+#dpLightboxClose{
+  position:absolute;top:20px;right:20px;background:none;border:1px solid var(--border);
+  color:var(--wd);width:36px;height:36px;cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+}
+
 </style>
 </head>
 <body>
@@ -346,6 +517,16 @@
       <div style="font-size:9px;letter-spacing:2.5px;color:rgba(201,169,110,0.7);text-transform:uppercase;margin-bottom:8px">Olanaklar</div>
       <div id="ib-ozellikler" style="display:flex;flex-wrap:wrap;gap:5px"></div>
     </div>
+    <button id="ib-detail-btn" style="
+      display:block;width:100%;background:rgba(201,169,110,0.08);
+      border:none;border-top:1px solid rgba(201,169,110,0.15);
+      color:var(--gold);font-family:'Montserrat',sans-serif;font-size:9px;
+      letter-spacing:2px;text-transform:uppercase;padding:13px;cursor:pointer;
+      transition:background .2s;
+    " onmouseover="this.style.background='rgba(201,169,110,0.14)'"
+       onmouseout="this.style.background='rgba(201,169,110,0.08)'">
+      ▸ Proje Detaylarını Gör
+    </button>
     <div class="ibm">
       <div class="imd" id="ib-dot-p"></div>
       <span class="imt" id="ib-mtext-p">Hedef seçin → rota hesaplanır</span>
@@ -1004,6 +1185,12 @@ function showProjectInfo(project) {
 
   document.getElementById('hint').style.display = 'none';
   document.getElementById('ib').classList.add('vis');
+
+  // Detay butonu
+  const detailBtnWrap = document.getElementById('ib-detail-btn');
+  if (detailBtnWrap) {
+    detailBtnWrap.onclick = () => openDetailPanel(project.id);
+  }
 }
 
 function toggleRouteBox() {
@@ -1334,10 +1521,287 @@ window.addEventListener('resize', () => {
   } catch(e) {
     console.warn('Supabase load failed, using empty data', e);
   }
+  await checkAcentaSession();
   buildProjectList();
   buildPresetButtons();
   initMap();
 })();
+
+// ═══════════════════════════════════════════════════════════
+// DETAY PANELİ FONKSİYONLARI
+// ═══════════════════════════════════════════════════════════
+let detailMiniMap = null;
+let currentDetailProject = null;
+
+function openDetailPanel(projectId) {
+  const project = PROJECTS.find(p => p.id === projectId);
+  if (!project) return;
+  currentDetailProject = project;
+  document.getElementById('dpBrand').textContent = project.name;
+  document.getElementById('detailOverlay').classList.add('open');
+  document.getElementById('detailPanel').classList.add('open');
+  dpTab(document.querySelector('.dp-tab'), 'genel');
+  dpFillGenel(project);
+  dpFillDaireler(project);
+  dpFillOlanaklar(project);
+  dpFillKonum(project);
+  dpFill3D(project);
+  dpFillIletisim(project);
+  dpFillGorseller(project);
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetailPanel() {
+  document.getElementById('detailOverlay').classList.remove('open');
+  document.getElementById('detailPanel').classList.remove('open');
+  document.body.style.overflow = '';
+  if (detailMiniMap) { detailMiniMap.remove(); detailMiniMap = null; }
+}
+
+function dpTab(el, section) {
+  document.querySelectorAll('.dp-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.dp-section').forEach(s => s.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const sec = document.getElementById('dps-' + section);
+  if (sec) sec.classList.add('active');
+  if (section === 'konum' && currentDetailProject && !detailMiniMap) {
+    setTimeout(() => initDpMiniMap(currentDetailProject), 150);
+  }
+}
+
+function dpFillGenel(p) {
+  const img = document.getElementById('dpHeroImg');
+  img.src = p.render_url || '';
+  img.style.display = p.render_url ? 'block' : 'none';
+  document.getElementById('dpHeroBadge').textContent = (p.tip||'Proje') + (p.teslim ? ' · '+p.teslim : '');
+  document.getElementById('dpHeroTitle').textContent = p.name;
+  document.getElementById('dpHeroSub').textContent = p.aciklama || '';
+  const uts = unitTypesMap[p.id] || [];
+  document.getElementById('dpHeroChips').innerHTML = uts.map(ut => '<span class="dp-chip">'+ut.tip+'</span>').join('');
+  const totalUnits = uts.reduce((a,ut) => a+(ut.toplam_adet||0), 0);
+  const priceFrom = uts.find(ut => ut.fiyat);
+  const items = [
+    {l:'Toplam Alan', v:p.toplam_alan||'—'},
+    {l:'Teslim', v:p.teslim||'—'},
+    {l:'Blok', v:p.blok_sayisi ? p.blok_sayisi+' blok':'—'},
+    {l:'Kat Sayısı', v:p.kat_sayisi ? p.kat_sayisi+' kat':'—'},
+    {l:'Toplam Daire', v:totalUnits ? totalUnits+' daire':'—'},
+    {l:acentaSession?'Başlangıç Fiyatı':'Fiyat', v:acentaSession&&priceFrom?priceFrom.fiyat:'Bilgi için iletişim'},
+  ];
+  document.getElementById('dpKunye').innerHTML = items.map(k =>
+    '<div class="dp-kunye-item"><div class="dp-kunye-lbl">'+k.l+'</div><div class="dp-kunye-val">'+k.v+'</div></div>'
+  ).join('');
+  document.getElementById('dpDesc').textContent = p.aciklama || 'Proje hakkında detaylı bilgi için iletişime geçin.';
+  const phone = p.telefon||'+90 312 000 00 00';
+  const wa = (p.whatsapp||phone).replace(/[^0-9]/g,'');
+  document.getElementById('dpCtaGenel').innerHTML =
+    '<a href="tel:'+phone+'" class="dp-cta-btn dp-cta-primary">📞 Ara</a>' +
+    '<a href="https://wa.me/'+wa+'?text=Merhaba, '+p.name+' projesi hakkında bilgi almak istiyorum." target="_blank" class="dp-cta-btn dp-cta-wa">WhatsApp</a>' +
+    '<a href="/basvuru.html" class="dp-cta-btn dp-cta-outline">Acenta Başvurusu</a>';
+}
+
+function dpFillGorseller(p) {
+  const g = document.getElementById('dpGallery');
+  g.innerHTML = p.render_url
+    ? '<img class="dp-gallery-img hero-img" src="'+p.render_url+'" alt="'+p.name+'" onclick="dpLightbox(this.src)">'
+    : '<div style="grid-column:1/-1;padding:32px;text-align:center;color:var(--wd);font-size:12px">Henüz görsel yüklenmedi.</div>';
+}
+
+function dpFillDaireler(p) {
+  const uts = unitTypesMap[p.id] || [];
+  const uss = unitStatusMap[p.id] || [];
+  const isLoggedIn = !!acentaSession;
+  const el = document.getElementById('dpTypes');
+  if (!uts.length) { el.innerHTML = '<div style="padding:20px;color:var(--wd);font-size:12px">Daire tipleri henüz girilmedi.</div>'; return; }
+  el.innerHTML = uts.map(ut => {
+    const us = uss.find(s => s.unit_type_id===ut.id) || {musait:ut.toplam_adet,opsiyonlu:0,satildi:0};
+    const statusHtml = isLoggedIn
+      ? '<div class="dp-type-status">' +
+        '<span class="dp-status-pill" style="color:#5DBD84;border-color:rgba(93,189,132,0.3)">Müsait: '+us.musait+'</span>' +
+        '<span class="dp-status-pill" style="color:#E8A96E;border-color:rgba(232,169,110,0.3)">Opsiyon: '+us.opsiyonlu+'</span>' +
+        '<span class="dp-status-pill" style="color:#E87070;border-color:rgba(232,112,112,0.3)">Satıldı: '+us.satildi+'</span></div>'
+      : '';
+    return '<div class="dp-type-card"><div>' +
+      '<div class="dp-type-name">'+ut.tip+'</div>' +
+      '<div class="dp-type-m2">'+ut.m2_min+'–'+ut.m2_max+' m²</div>' +
+      '<div class="dp-type-desc">'+ut.toplam_adet+' adet</div>' +
+      statusHtml + '</div><div>' +
+      (isLoggedIn&&ut.fiyat ? '<div class="dp-type-price">'+ut.fiyat+'</div>' : '') +
+      '<div class="dp-type-adet">'+ut.toplam_adet+' ad.</div></div></div>';
+  }).join('');
+}
+
+function dpFillOlanaklar(p) {
+  const ozs = p.ozellikler||[];
+  const el = document.getElementById('dpAmenities');
+  const icons = {'Havuz':'🏊','Spor':'🏋️','Otopark':'🅿️','Sauna':'♨️','Çocuk':'🎠','Kafeterya':'☕','Hamam':'🧖','Güvenlik':'🔒','Peyzaj':'🌿','Squash':'🎾','Tuz':'🧂'};
+  if (!ozs.length) { el.innerHTML = '<div style="grid-column:1/-1;padding:20px;color:var(--wd);font-size:12px">Olanak bilgisi henüz girilmedi.</div>'; return; }
+  el.innerHTML = ozs.map(o => {
+    const icon = Object.entries(icons).find(([k]) => o.toLowerCase().includes(k.toLowerCase()));
+    return '<div class="dp-amenity">'+(icon?icon[1]+' ':'')+o+'</div>';
+  }).join('');
+}
+
+function dpFillKonum(p) {
+  document.getElementById('dpKonumInfo').innerHTML =
+    '<strong style="color:var(--white)">'+p.name+'</strong><br>' +
+    (p.aciklama||'') + '<br><br>' +
+    '<span style="color:var(--gold)">Konum:</span> Enlem '+p.lat?.toFixed(5)+', Boylam '+p.lng?.toFixed(5);
+}
+
+function initDpMiniMap(p) {
+  const c = document.getElementById('dpMiniMap');
+  if (!c || !maplibregl || detailMiniMap) return;
+  try {
+    detailMiniMap = new maplibregl.Map({
+      container:'dpMiniMap',
+      style:{version:8,sources:{osm:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256}},layers:[{id:'osm',type:'raster',source:'osm'}]},
+      center:[p.lng,p.lat],zoom:14,interactive:false,attributionControl:false
+    });
+    new maplibregl.Marker({color:p.color||'#C9A96E'}).setLngLat([p.lng,p.lat]).addTo(detailMiniMap);
+  } catch(e){}
+}
+
+function dpFill3D(p) {
+  const el = document.getElementById('dp3dContent');
+  if (p.twinmotion_url) {
+    el.innerHTML = '<iframe src="'+p.twinmotion_url+'" class="dp-3d-embed" allowfullscreen></iframe>';
+  } else if (p.tour_url) {
+    el.innerHTML = '<div class="dp-3d-placeholder"><div class="dp-3d-title">Sanal İç Mekan Turu</div><div class="dp-3d-sub">360° iç mekan turunu deneyimleyin.</div><a href="'+p.tour_url+'" target="_blank" class="dp-cta-btn dp-cta-primary" style="display:inline-flex;max-width:240px;text-decoration:none">Turu Başlat →</a></div>';
+  } else {
+    el.innerHTML = '<div class="dp-3d-placeholder"><div class="dp-3d-title">3D Model Yakında</div><div class="dp-3d-sub">Bu proje için TwinMotion 3D modeli ve sanal tur yakında yayına alınacak.</div></div>';
+  }
+}
+
+function dpFillIletisim(p) {
+  const phone = p.telefon||'+90 312 000 00 00';
+  const wa = (p.whatsapp||phone).replace(/[^0-9]/g,'');
+  document.getElementById('dpIletisimText').textContent = p.name+' projesi hakkında bilgi almak, randevu oluşturmak veya ödeme planı görüşmek için bizimle iletişime geçin.';
+  document.getElementById('dpIletisimBtns').innerHTML =
+    '<a href="tel:'+phone+'" class="dp-cta-btn dp-cta-primary" style="text-decoration:none">📞 '+phone+'</a>' +
+    '<a href="https://wa.me/'+wa+'?text=Merhaba, '+p.name+' projesi hakkında bilgi almak istiyorum." target="_blank" class="dp-cta-btn dp-cta-wa" style="text-decoration:none">💬 WhatsApp</a>';
+  const noteEl = document.getElementById('contactNote');
+  if (noteEl) noteEl.placeholder = p.name+' projesi hakkında bilgi almak istiyorum...';
+}
+
+function dpLightbox(src) {
+  document.getElementById('dpLightboxImg').src = src;
+  document.getElementById('dpLightbox').classList.add('open');
+}
+
+async function sendContactForm() {
+  const name = document.getElementById('contactName').value.trim();
+  const phone = document.getElementById('contactPhone').value.trim();
+  if (!name||!phone) { alert('Ad ve telefon zorunludur.'); return; }
+  if (!currentDetailProject) return;
+  await sb.from('leads').insert({ad_soyad:name,telefon:phone,email:document.getElementById('contactEmail').value.trim(),proje_id:currentDetailProject.id,not:document.getElementById('contactNote').value.trim(),kaynak:'harita-panel'}).catch(()=>{});
+  document.getElementById('contactResult').style.display = 'block';
+  ['contactName','contactPhone','contactEmail','contactNote'].forEach(id => document.getElementById(id).value='');
+}
 </script>
+
+<!-- ── DETAY PANELİ ─────────────────────────────────────── -->
+<div id="detailOverlay" onclick="closeDetailPanel()"></div>
+
+<div id="detailPanel">
+  <div class="dp-header">
+    <div class="dp-brand" id="dpBrand">ARSLANLAR</div>
+    <button class="dp-close" onclick="closeDetailPanel()">✕</button>
+  </div>
+  <div class="dp-tabs">
+    <div class="dp-tab active" onclick="dpTab(this,'genel')">Genel Bilgi</div>
+    <div class="dp-tab" onclick="dpTab(this,'gorseller')">Görseller</div>
+    <div class="dp-tab" onclick="dpTab(this,'daireler')">Daire Tipleri</div>
+    <div class="dp-tab" onclick="dpTab(this,'olanaklar')">Olanaklar</div>
+    <div class="dp-tab" onclick="dpTab(this,'konum')">Konum</div>
+    <div class="dp-tab" onclick="dpTab(this,'3d')">3D / Sanal Tur</div>
+    <div class="dp-tab" onclick="dpTab(this,'iletisim')">İletişim</div>
+  </div>
+  <div class="dp-content">
+
+    <!-- GENEL BİLGİ -->
+    <div class="dp-section active" id="dps-genel">
+      <div class="dp-hero" id="dpHero">
+        <img class="dp-hero-img" id="dpHeroImg" src="" alt="">
+        <div class="dp-hero-overlay">
+          <div class="dp-hero-badge" id="dpHeroBadge"></div>
+          <div class="dp-hero-title" id="dpHeroTitle"></div>
+          <div class="dp-hero-sub" id="dpHeroSub"></div>
+          <div class="dp-hero-chips" id="dpHeroChips"></div>
+        </div>
+      </div>
+      <div class="dp-kunye" id="dpKunye"></div>
+      <div class="dp-sec-title">Proje Hakkında</div>
+      <div class="dp-desc" id="dpDesc"></div>
+      <div class="dp-cta-section" id="dpCtaGenel"></div>
+    </div>
+
+    <!-- GÖRSELLER -->
+    <div class="dp-section" id="dps-gorseller">
+      <div class="dp-sec-title">Proje Görselleri</div>
+      <div class="dp-gallery" id="dpGallery">
+        <div style="padding:32px;text-align:center;color:var(--wd);font-size:12px;grid-column:1/-1">Görsel yükleniyor...</div>
+      </div>
+    </div>
+
+    <!-- DAİRE TİPLERİ -->
+    <div class="dp-section" id="dps-daireler">
+      <div class="dp-sec-title">Daire Tipleri</div>
+      <div class="dp-types" id="dpTypes"></div>
+    </div>
+
+    <!-- OLANAKLAR -->
+    <div class="dp-section" id="dps-olanaklar">
+      <div class="dp-sec-title">Sosyal Olanaklar</div>
+      <div class="dp-amenities" id="dpAmenities"></div>
+    </div>
+
+    <!-- KONUM -->
+    <div class="dp-section" id="dps-konum">
+      <div class="dp-sec-title">Konum ve Ulaşım</div>
+      <div class="dp-mini-map" id="dpMiniMap"></div>
+      <div id="dpKonumInfo" style="padding:0 20px 20px;font-size:12px;color:var(--wd);line-height:1.9"></div>
+    </div>
+
+    <!-- 3D / SANAL TUR -->
+    <div class="dp-section" id="dps-3d">
+      <div class="dp-sec-title">3D Model / Sanal Tur</div>
+      <div id="dp3dContent" style="padding:16px 20px;"></div>
+    </div>
+
+    <!-- İLETİŞİM -->
+    <div class="dp-section" id="dps-iletisim">
+      <div class="dp-sec-title">Bilgi Alın</div>
+      <div style="padding:20px 24px;">
+        <div style="margin-bottom:20px;font-size:13px;color:var(--wd);line-height:1.8" id="dpIletisimText"></div>
+        <div style="display:flex;flex-direction:column;gap:10px;max-width:400px" id="dpIletisimBtns"></div>
+        <div style="margin-top:28px;border-top:1px solid var(--border);padding-top:20px;">
+          <div class="dp-sec-title" style="padding:0 0 12px">Hızlı İletişim Formu</div>
+          <div style="display:flex;flex-direction:column;gap:10px;max-width:400px">
+            <input type="text" id="contactName" placeholder="Ad Soyad" style="background:var(--b3);border:1px solid var(--border);color:var(--white);padding:11px 14px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none;">
+            <input type="tel" id="contactPhone" placeholder="Telefon" style="background:var(--b3);border:1px solid var(--border);color:var(--white);padding:11px 14px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none;">
+            <input type="email" id="contactEmail" placeholder="E-posta (opsiyonel)" style="background:var(--b3);border:1px solid var(--border);color:var(--white);padding:11px 14px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none;">
+            <textarea id="contactNote" rows="3" placeholder="Notunuz..." style="background:var(--b3);border:1px solid var(--border);color:var(--white);padding:11px 14px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none;resize:vertical;"></textarea>
+            <button onclick="sendContactForm()" style="background:var(--gold);color:#0A0A0A;border:none;padding:13px;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Gönder</button>
+            <div id="contactResult" style="font-size:11px;color:var(--green);display:none">✓ Mesajınız alındı. En kısa sürede dönüş yapılacaktır.</div>
+          </div>
+        </div>
+        <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px;">
+          <div class="dp-sec-title" style="padding:0 0 12px">Acenta mısınız?</div>
+          <p style="font-size:12px;color:var(--wd);line-height:1.8;margin-bottom:14px">Arslanlar projelerini acentanız aracılığıyla satmak için başvuruda bulunun.</p>
+          <a href="/basvuru.html" style="display:inline-block;background:none;border:1px solid var(--border);color:var(--wd);padding:11px 24px;font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--wd)'">Acenta Başvurusu →</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- LİGHTBOX -->
+<div id="dpLightbox">
+  <button id="dpLightboxClose" onclick="document.getElementById('dpLightbox').classList.remove('open')">✕</button>
+  <img id="dpLightboxImg" src="" alt="">
+</div>
+
 </body>
 </html>
