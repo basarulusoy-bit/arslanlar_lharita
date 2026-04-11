@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Arslanlar Projeleri — 3D Harita</title>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD4JLGCE71U1n9YmhLFQRv7CDCjmrUigkA&libraries=places"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD4JLGCE71U1n9YmhLFQRv7CDCjmrUigkA&libraries=places&loading=async&callback=initGoogleMaps"></script>
 <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet"/>
@@ -424,6 +424,11 @@
 <script>
 // ── SUPABASE ──────────────────────────────────────────────
 const GOOGLE_API_KEY = 'AIzaSyD4JLGCE71U1n9YmhLFQRv7CDCjmrUigkA';
+// Google Maps callback
+window.initGoogleMaps = function() {
+  window.googleMapsReady = true;
+};
+
 const SUPABASE_URL = 'https://lbmzjhvgunkitpatijut.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_59-PLGkxMNiaL_lKUXyDbQ_ubzKmEcY';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1353,7 +1358,7 @@ async function drawRouteBetween(project, target) {
   const mode = ROUTE_MODES[activeRouteMode];
   const isWalk = activeRouteMode === 'walk';
 
-  if (window.google && window.google.maps && window.google.maps.DirectionsService) {
+  if (window.googleMapsReady && window.google && window.google.maps && window.google.maps.DirectionsService) {
     try {
       const svc = new google.maps.DirectionsService();
       const travelMode = isWalk ? google.maps.TravelMode.WALKING : google.maps.TravelMode.DRIVING;
