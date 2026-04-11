@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arslanlar Projeleri — 3D Harita</title>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD4JLGCE71U1n9YmhLFQRv7CDCjmrUigkA&libraries=places"></script>
+<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A96E; --gold-l: #E8C98A; --gold-d: #9B7A45;
+    --black: #0A0A0A; --b2: #111; --b3: #1A1A1A; --b4: #222;
+    --white: #F5F0E8; --wd: rgba(245,240,232,0.6); --wf: rgba(245,240,232,0.07);
+    --border: rgba(201,169,110,0.18); --borderhi: rgba(201,169,110,0.45);
+    --pw: 390px;
+    --walk:#5DBD84; --drive:#C9A96E;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;font-family:'Montserrat',sans-serif;background:var(--black);color:var(--white);}
+  #map{position:absolute;inset:0;z-index:0;}
+
+  #panel{
+    position:absolute;top:0;left:0;bottom:0;width:var(--pw);
+    background:rgba(8,8,8,0.94);border-right:1px solid var(--border);
+    z-index:500;display:flex;flex-direction:column;backdrop-filter:blur(16px);
+  }
+  .ph{padding:28px 24px 18px;border-bottom:1px solid var(--border);}
+  .eyebrow{font-size:9px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
+  .ptitle{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;line-height:1.1;}
+  .ptitle em{font-style:italic;color:var(--gold);}
+  .psub{margin-top:6px;font-size:11px;color:var(--wd);letter-spacing:0.8px;line-height:1.5;}
+
+  .view-controls{display:flex;gap:8px;padding:14px 24px;border-bottom:1px solid var(--border);}
+  .vc-btn{
+    flex:1;background:var(--wf);border:1px solid var(--border);color:var(--wd);
+    font-family:'Montserrat',sans-serif;font-size:9px;letter-spacing:1.5px;
+    padding:8px 4px;cursor:pointer;transition:all .25s;text-transform:uppercase;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+  }
+  .vc-btn .vi{font-size:13px;}
+  .vc-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .vc-btn.active{background:rgba(201,169,110,0.12);border-color:var(--gold);color:var(--gold);}
+
+  .route-box{padding:18px 24px 16px;border-bottom:1px solid var(--border);}
+  .module-title{font-size:9px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
+  .selected-project{font-size:11px;color:var(--white);line-height:1.5;padding:10px 12px;border:1px solid var(--border);background:var(--wf);margin-bottom:10px;min-height:39px;}
+  .route-row{display:flex;gap:8px;margin-bottom:8px;}
+  .route-input{
+    flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--white);
+    padding:11px 12px;font-size:11px;outline:none;transition:border-color .2s, box-shadow .2s;
+  }
+  .route-input::placeholder{color:rgba(245,240,232,.38);}
+  .route-input:focus{border-color:var(--borderhi);box-shadow:0 0 0 1px rgba(201,169,110,.15) inset;}
+  .action-btn{
+    background:rgba(201,169,110,.12);border:1px solid var(--borderhi);color:var(--gold-l);
+    padding:0 12px;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;cursor:pointer;transition:.2s;
+  }
+  .action-btn:hover{background:rgba(201,169,110,.18);}
+  .mode-row{display:flex;gap:8px;margin:8px 0 10px;}
+  .mode-btn{
+    flex:1;background:var(--wf);border:1px solid var(--border);color:var(--wd);
+    padding:9px 8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:.2s;
+  }
+  .mode-btn.active[data-mode="walk"]{background:rgba(93,189,132,.14);border-color:var(--walk);color:var(--walk);}
+  .mode-btn.active[data-mode="drive"]{background:rgba(201,169,110,.14);border-color:var(--drive);color:var(--drive);}
+  .preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .preset-btn{
+    background:var(--wf);border:1px solid var(--border);color:var(--white);padding:10px 10px;font-size:10px;
+    line-height:1.35;cursor:pointer;transition:.2s;text-align:left;min-height:42px;
+  }
+  .preset-btn:hover{border-color:var(--borderhi);background:rgba(201,169,110,.08);}
+  .route-status{margin-top:10px;font-size:10px;color:var(--wd);line-height:1.5;min-height:16px;}
+
+  .project-head{padding:14px 24px 10px;font-size:10px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;}
+  .cats{flex:1;overflow-y:auto;padding:0 0 16px;}
+  .cats::-webkit-scrollbar{width:3px;}
+  .cats::-webkit-scrollbar-thumb{background:var(--gold);}
+  .pi{
+    display:flex;align-items:flex-start;gap:12px;padding:14px 24px;cursor:pointer;
+    transition:background .2s,border-color .2s; border-left:2px solid transparent;
+    border-bottom:1px solid rgba(245,240,232,.05);
+  }
+  .pi:hover{background:var(--wf);}
+  .pi.active{background:rgba(201,169,110,.09);border-left-color:var(--gold);}
+  .pd{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 12px currentColor;}
+  .pn{font-size:12px;color:var(--white);flex:1;line-height:1.4;letter-spacing:.4px;font-weight:500;}
+
+  #ib{
+    position:absolute;bottom:28px;right:28px;z-index:500;
+    background:rgba(8,8,8,0.95);border:1px solid var(--borderhi);
+    width:360px;max-width:calc(100vw - 40px);backdrop-filter:blur(16px);
+    display:none;max-height:calc(100vh - 120px);overflow-y:auto;
+  }
+  #ib::-webkit-scrollbar{width:2px}
+  #ib::-webkit-scrollbar-thumb{background:var(--gold)}
+  #ib.vis{display:block;}
+  .ibh{padding:14px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;}
+  .ibn{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--white);line-height:1.1;}
+  .ibc{font-size:9px;letter-spacing:2px;color:var(--gold);margin-top:3px;text-transform:uppercase;}
+  .ibx{background:none;border:none;color:var(--wd);font-size:14px;cursor:pointer;padding:2px 4px;transition:color .2s;margin-left:10px;flex-shrink:0;}
+  .ibx:hover{color:var(--gold);}
+  .ibs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;}
+  .ibs-c{padding:12px 14px;border-right:1px solid var(--border);text-align:center;}
+  .ibs-c:last-child{border-right:none;}
+  .sv{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--gold);display:block;line-height:1;}
+  .sl{font-size:8px;letter-spacing:1.5px;color:var(--wd);text-transform:uppercase;margin-top:3px;display:block;}
+  .ibm{padding:9px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:7px;}
+  .imd{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .imt{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;}
+
+  #hint{
+    position:absolute;bottom:28px;right:28px;z-index:500;
+    background:rgba(8,8,8,.85);border:1px solid var(--border);
+    padding:12px 18px;font-size:10px;color:var(--wd);letter-spacing:1px;
+    backdrop-filter:blur(8px);display:flex;align-items:center;gap:8px;
+  }
+  #hint .arr{color:var(--gold);font-size:12px;}
+
+
+  #layerToggle{
+    position:absolute;top:20px;right:100px;z-index:500;
+    background:rgba(8,8,8,.88);border:1px solid var(--border);color:var(--white);
+    padding:10px 12px;backdrop-filter:blur(8px);cursor:pointer;
+    font-size:10px;letter-spacing:1.2px;text-transform:uppercase;
+    display:flex;align-items:center;gap:8px;transition:all .2s;
+  }
+  #layerToggle:hover{border-color:var(--borderhi);color:var(--gold);}
+  #layerToggle .dot{width:8px;height:8px;border-radius:50%;background:var(--gold);opacity:.9;}
+  #layerToggle.off .dot{background:rgba(245,240,232,.35);}
+  #compass{
+    position:absolute;top:20px;right:20px;z-index:500;
+    background:rgba(8,8,8,.88);border:1px solid var(--border);
+    padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;
+    backdrop-filter:blur(8px);
+  }
+  .comp-ring{width:44px;height:44px;border:1px solid var(--border);border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;}
+  .comp-n{position:absolute;top:50%;left:50%;width:3px;height:18px;background:linear-gradient(to top,var(--border) 50%,var(--gold) 50%);transform-origin:bottom center;transform:translate(-50%,-100%);border-radius:2px;transition:transform .3s;}
+  .comp-label{font-size:9px;letter-spacing:1px;color:var(--wd);}
+  .pitch-bar-wrap{width:44px;height:4px;background:var(--wf);border:1px solid var(--border);border-radius:2px;position:relative;}
+  .pitch-bar{height:100%;background:var(--gold);border-radius:2px;transition:width .3s;}
+  .pitch-label{font-size:9px;color:var(--wd);letter-spacing:1px;}
+
+  #loading{position:fixed;inset:0;background:var(--black);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .8s;}
+  #loading.done{opacity:0;pointer-events:none;}
+  .ll{font-family:'Cormorant Garamond',serif;font-size:34px;color:var(--gold);letter-spacing:6px;margin-bottom:16px;text-align:center;}
+  .ls{font-size:9px;letter-spacing:4px;color:var(--wd);margin-bottom:22px;text-align:center;}
+  .lb-w{width:180px;height:1px;background:var(--border);overflow:hidden;}
+  .lb{height:100%;width:0;background:var(--gold);animation:lb 2s ease forwards;}
+  @keyframes lb{to{width:100%;}}
+  @keyframes pr{0%,100%{box-shadow:0 0 0 0 rgba(201,169,110,.42)}70%{box-shadow:0 0 0 16px rgba(201,169,110,0)}}
+
+  @keyframes barPulse {
+    0%,100%{opacity:1} 50%{opacity:.55}
+  }
+  @keyframes countUp {
+    0%{opacity:0;transform:translateY(4px)}
+    100%{opacity:1;transform:translateY(0)}
+  }
+  @keyframes loaderSlide {
+    0%   { translate: -200px 0; }
+    100% { translate: 400px 0; }
+  }
+  @keyframes flowBar {
+    0%{background-position:0% 50%}
+    100%{background-position:200% 50%}
+  }
+  @keyframes flowBarRed {
+    0%{background-position:0% 50%}
+    100%{background-position:200% 50%}
+  }
+  .maplibregl-ctrl-attrib{background:rgba(0,0,0,0.6)!important;color:#555!important;}
+  .maplibregl-ctrl-attrib a{color:#666!important;}
+  .maplibregl-ctrl-group{background:rgba(8,8,8,0.92)!important;border:1px solid var(--border)!important;border-radius:0!important;}
+  .maplibregl-ctrl-group button{background:transparent!important;border-bottom:1px solid var(--border)!important;}
+  .maplibregl-ctrl-group button:last-child{border-bottom:none!important;}
+  .maplibregl-ctrl-icon{filter:invert(0.7) sepia(1) saturate(2) hue-rotate(5deg)!important;}
+
+  #mobileToggle{
+    display:none;position:absolute;left:14px;top:14px;z-index:650;
+    background:rgba(8,8,8,.88);border:1px solid var(--borderhi);color:var(--gold-l);
+    padding:10px 14px;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;
+    backdrop-filter:blur(10px);box-shadow:0 10px 24px rgba(0,0,0,.25);cursor:pointer;
+  }
+  #mobileToggle:hover{background:rgba(201,169,110,.14);}
+  .sat-badge{
+    position:absolute;left:50%;bottom:24px;transform:translateX(-50%);
+    z-index:520;background:rgba(8,8,8,.92);border:1px solid var(--border);
+    padding:10px 16px;font-size:9px;backdrop-filter:blur(8px);
+    display:flex;flex-direction:row;align-items:center;gap:20px;
+    white-space:nowrap;
+  }
+  .sat-divider{width:1px;height:24px;background:var(--border);}
+  .sat-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .sat-label{font-size:9px;letter-spacing:1.5px;color:var(--wd);text-transform:uppercase;}
+  .sat-slider{-webkit-appearance:none;width:90px;height:2px;background:var(--border);outline:none;cursor:pointer;}
+  .sat-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--gold);border-radius:50%;cursor:pointer;}
+  .poi-marker{
+    background:rgba(10,10,10,.88);border:1px solid rgba(255,255,255,.12);
+    color:rgba(245,240,232,.75);font-size:9px;letter-spacing:.5px;
+    padding:3px 7px;white-space:nowrap;border-radius:2px;cursor:default;
+    transition:all .2s;pointer-events:none;
+  }
+  .poi-marker:hover{border-color:var(--gold);color:var(--white);}
+  .transit-stop-marker{
+    background:rgba(10,10,10,.9);color:#fff;
+    font-size:8px;letter-spacing:.8px;padding:3px 7px;
+    white-space:nowrap;border-radius:2px;border-left:3px solid var(--stop-color, #6B9FD4);
+  }
+
+  @media (max-width: 900px){
+    :root{--pw: min(100vw, 100%);}
+    html,body{overflow:hidden;}
+    #mobileToggle{display:block;}
+    #panel{
+      top:auto;left:0;right:0;bottom:0;width:100%;max-height:68vh;
+      border-right:none;border-top:1px solid var(--border);
+      border-radius:18px 18px 0 0;transform:translateY(calc(100% - 72px));
+      transition:transform .35s ease, max-height .35s ease;
+      background:rgba(8,8,8,.96);
+    }
+    body.panel-open #panel{transform:translateY(0);max-height:84vh;}
+    .ph{padding:18px 18px 12px;}
+    .ptitle{font-size:24px;}
+    .psub{font-size:10px;line-height:1.45;}
+    .view-controls{padding:10px 14px;gap:6px;}
+    .vc-btn{font-size:8px;padding:8px 2px;}
+    .route-box{padding:14px 16px 14px;}
+    .route-row{flex-direction:column;}
+    .action-btn{height:42px;}
+    .preset-grid{grid-template-columns:1fr 1fr;gap:6px;}
+    .preset-btn{min-height:40px;padding:9px 9px;font-size:9px;}
+    .project-head{padding:12px 16px 8px;}
+    .pi{padding:12px 16px;}
+    .pn{font-size:11px;}
+    #compass{top:64px;right:12px;padding:10px;}
+    #ib{left:12px;right:12px;bottom:84px;min-width:0;max-width:none;width:auto;}
+    #hint{left:12px;right:12px;bottom:84px;justify-content:center;}
+    .sat-badge{left:50%;transform:translateX(-50%);bottom:54px;font-size:8px;padding:7px 12px;flex-direction:row;gap:12px;}
+  }
+  @media (max-width: 640px){
+    .preset-grid{grid-template-columns:1fr;}
+    .ibs{grid-template-columns:1fr 1fr 1fr;}
+    .sv{font-size:22px;}
+    .sl{font-size:7px;}
+    #compass{display:none;}
+  }
+</style>
+</head>
+<body>
+<div id="loading">
+  <div>
+    <div class="ll">ARSLANLAR</div>
+    <div class="ls">3D PROJE HARİTASI</div>
+    <div class="lb-w"><div class="lb"></div></div>
+  </div>
+</div>
+
+<div id="map"></div>
+<button id="mobileToggle" onclick="toggleMobilePanel()">☰ Projeler & Rota</button>
+
+<div id="panel">
+  <div class="ph">
+    <div class="eyebrow">3D Proje Sunumu</div>
+    <div class="ptitle">Projeler <em>Haritası</em></div>
+    <div class="psub">Projeyi seçin. Ardından hazır önemli noktaları tek tıkla sorgulayın ya da herhangi bir sokak, cadde, AVM, hastane veya adres yazarak rota oluşturun.</div>
+  </div>
+
+  <div class="view-controls">
+    <button class="vc-btn active" id="vc-drone" onclick="setView('drone',this)"><span class="vi">🛸</span><span>Drone</span></button>
+    <button class="vc-btn" id="vc-top" onclick="setView('top',this)"><span class="vi">🗺️</span><span>Top</span></button>
+    <button class="vc-btn" id="vc-street" onclick="setView('street',this)"><span class="vi">🧍</span><span>Yakın</span></button>
+    <button class="vc-btn" id="vc-orbit" onclick="startOrbit()"><span class="vi">🔄</span><span>Çevir</span></button>
+  </div>
+
+  <div class="project-head" style="
+    font-size:11px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;
+    padding:14px 24px 10px;border-bottom:1px solid var(--border);font-weight:500;
+    display:flex;align-items:center;justify-content:space-between;
+  ">Projeler
+    <div style="display:flex;gap:6px;">
+      <button onclick="toggleProjectLabels()" id="labelToggleBtn" style="
+        background:rgba(201,169,110,.1);border:1px solid var(--border);color:var(--gold);
+        font-family:'Montserrat',sans-serif;font-size:8px;letter-spacing:1.5px;
+        padding:4px 10px;cursor:pointer;text-transform:uppercase;transition:all .2s;
+      ">🏷 Etiketler</button>
+      <button onclick="toggleRouteBox()" id="routeToggleBtn" style="
+        background:rgba(201,169,110,.1);border:1px solid var(--border);color:var(--gold);
+        font-family:'Montserrat',sans-serif;font-size:8px;letter-spacing:1.5px;
+        padding:4px 10px;cursor:pointer;text-transform:uppercase;transition:all .2s;
+      ">📍 Rota</button>
+    </div>
+  </div>
+  <div class="cats" id="cats"></div>
+
+  <!-- Rota kutusu — toggle ile açılır -->
+  <div id="routeBox" class="route-box" style="border-top:1px solid var(--border)">
+    <div class="module-title">Uzaklık Sorgulama</div>
+    <div class="selected-project" id="selectedProjectLabel">Önce bir proje seçin.</div>
+    <div class="route-row">
+      <input id="destinationInput" class="route-input" type="text" placeholder="Örn: Armada AVM, Esenboğa Havalimanı...">
+      <button class="action-btn" onclick="searchAndRoute()">Git</button>
+    </div>
+    <div class="mode-row">
+      <button class="mode-btn active" data-mode="drive" onclick="setRouteMode('drive',this)">Araç</button>
+      <button class="mode-btn" data-mode="walk" onclick="setRouteMode('walk',this)">Yürüyüş</button>
+    </div>
+    <div class="preset-grid" id="presetGrid"></div>
+    <div class="route-status" id="routeStatus">Proje seçin, ardından hedef belirleyin.</div>
+  </div>
+
+  <!-- Sol panel alt — Giriş butonu -->
+  <div style="padding:16px 20px;border-top:1px solid rgba(201,169,110,0.1);flex-shrink:0;">
+    <a href="/acenta.html" style="
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      background:rgba(201,169,110,0.06);
+      border:1px solid rgba(201,169,110,0.18);
+      color:rgba(201,169,110,0.6);
+      font-family:'Montserrat',sans-serif;
+      font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
+      padding:11px 16px;text-decoration:none;
+      transition:all .25s;
+      " onmouseover="this.style.background='rgba(201,169,110,0.1)';this.style.borderColor='rgba(201,169,110,0.35)';this.style.color='#C9A96E'"
+         onmouseout="this.style.background='rgba(201,169,110,0.06)';this.style.borderColor='rgba(201,169,110,0.18)';this.style.color='rgba(201,169,110,0.6)'">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+        <polyline points="10 17 15 12 10 7"/>
+        <line x1="15" y1="12" x2="3" y2="12"/>
+      </svg>
+      Acenta Girişi
+    </a>
+  </div>
+</div>
+
+<div id="compass">
+  <div class="comp-ring"><div class="comp-n" id="compNeedle"></div></div>
+  <div class="comp-label" id="compBearing">N 0°</div>
+  <div class="pitch-bar-wrap"><div class="pitch-bar" id="pitchBar" style="width:65%"></div></div>
+  <div class="pitch-label" id="pitchLabel">↕ 62°</div>
+</div>
+<div class="sat-badge">
+  <div class="sat-row" style="display:flex;align-items:center;gap:8px">
+    <span class="sat-label">Uydu</span>
+    <input type="range" class="sat-slider" min="0" max="100" value="35" id="satSlider" oninput="setSatOpacity(this.value)">
+  </div>
+  <div class="sat-divider"></div>
+  <div class="sat-row" style="display:flex;align-items:center;gap:8px">
+    <span class="sat-label">Etiketler</span>
+    <label style="position:relative;width:32px;height:16px;cursor:pointer;display:inline-block;flex-shrink:0">
+      <input type="checkbox" id="poiToggle" checked onchange="togglePOI(this.checked)" style="opacity:0;width:0;height:0">
+      <span style="position:absolute;inset:0;background:rgba(201,169,110,.3);border:1px solid var(--gold);border-radius:8px;"></span>
+      <span id="poiThumb" style="position:absolute;top:2px;left:2px;width:10px;height:10px;background:var(--gold);border-radius:50%;transition:transform .25s;"></span>
+    </label>
+  </div>
+  <div class="sat-divider"></div>
+  <div class="sat-row" style="display:flex;align-items:center;gap:8px">
+    <span class="sat-label">Metro</span>
+    <label style="position:relative;width:32px;height:16px;cursor:pointer;display:inline-block;flex-shrink:0">
+      <input type="checkbox" id="transitToggle" checked onchange="toggleTransitLayers(this.checked)" style="opacity:0;width:0;height:0">
+      <span style="position:absolute;inset:0;background:rgba(227,6,19,.25);border:1px solid #E30613;border-radius:8px;"></span>
+      <span id="transitThumb" style="position:absolute;top:2px;left:2px;width:10px;height:10px;background:#E30613;border-radius:50%;transition:transform .25s;"></span>
+    </label>
+  </div>
+</div>
+
+<div id="hint"><span class="arr">←</span><span>Listeden veya harita üzerinden bir proje seçin</span></div>
+
+<div id="ib">
+  <!-- Project detail view -->
+  <div id="ib-project-view" style="display:none">
+    <div id="ib-render" style="width:100%;aspect-ratio:16/9;background:#111;overflow:hidden;position:relative;display:none">
+      <img id="ib-render-img" style="width:100%;height:100%;object-fit:cover" src="" alt="">
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:linear-gradient(transparent,rgba(0,0,0,0.7))">
+        <span id="ib-render-badge" style="font-size:9px;letter-spacing:2px;color:rgba(201,169,110,0.9);text-transform:uppercase"></span>
+      </div>
+    </div>
+    <div class="ibh">
+      <div>
+        <div class="ibn" id="ib-name">—</div>
+        <div class="ibc" id="ib-cat">—</div>
+      </div>
+      <button class="ibx" onclick="clearSelection()">✕</button>
+    </div>
+    <!-- Proje künyesi -->
+    <div id="ib-kunye" style="padding:10px 14px;border-bottom:1px solid rgba(201,169,110,0.18);display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;"></div>
+    <!-- Daire tipleri -->
+    <div id="ib-units-wrap" style="padding:12px 14px;border-bottom:1px solid rgba(201,169,110,0.18);">
+      <div style="font-size:9px;letter-spacing:2.5px;color:rgba(201,169,110,0.7);text-transform:uppercase;margin-bottom:10px">Daire Tipleri</div>
+      <div id="ib-units"></div>
+    </div>
+    <!-- Olanaklar -->
+    <div id="ib-ozellikler-wrap" style="padding:10px 14px 12px;border-bottom:1px solid rgba(201,169,110,0.18);">
+      <div style="font-size:9px;letter-spacing:2.5px;color:rgba(201,169,110,0.7);text-transform:uppercase;margin-bottom:8px">Olanaklar</div>
+      <div id="ib-ozellikler" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+    </div>
+    <div class="ibm">
+      <div class="imd" id="ib-dot-p"></div>
+      <span class="imt" id="ib-mtext-p">Hedef seçin → rota hesaplanır</span>
+    </div>
+  </div>
+  <!-- Route result view -->
+  <div id="ib-route-view" style="display:none">
+    <div class="ibh">
+      <div>
+        <div class="ibn" id="ib-name-r">—</div>
+        <div class="ibc" id="ib-cat-r">—</div>
+      </div>
+      <button class="ibx" onclick="clearSelection()">✕</button>
+    </div>
+    <div class="ibs">
+      <div class="ibs-c"><span class="sv" id="ib-dist">—</span><span class="sl">mesafe</span></div>
+      <div class="ibs-c"><span class="sv" id="ib-time">—</span><span class="sl">süre</span></div>
+      <div class="ibs-c"><span class="sv" id="ib-icon">🚗</span><span class="sl" id="ib-ml">ulaşım</span></div>
+    </div>
+    <div class="ibm">
+      <div class="imd" id="ib-dot"></div>
+      <span class="imt" id="ib-mtext">—</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── SUPABASE ──────────────────────────────────────────────
+const GOOGLE_API_KEY = 'AIzaSyD4JLGCE71U1n9YmhLFQRv7CDCjmrUigkA';
+const SUPABASE_URL = 'https://lbmzjhvgunkitpatijut.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_59-PLGkxMNiaL_lKUXyDbQ_ubzKmEcY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Runtime data — loaded from Supabase
+let PROJECTS = [];
+let unitTypesMap = {};   // project_id → [unit_types]
+let unitStatusMap = {};  // project_id → [unit_status]
+
+let projectPoisMap = {};   // project_id → [pois]
+let transitLines = [];
+let transitStops = [];
+let poiEnabled = true;
+let transitEnabled = true;
+
+async function loadSupabaseData() {
+  const [pRes, utRes, usRes, poisRes, linesRes, stopsRes] = await Promise.all([
+    sb.from('projects').select('*').order('sira'),
+    sb.from('unit_types').select('*').order('sira'),
+    sb.from('unit_status').select('*'),
+    sb.from('project_pois').select('*').eq('visible', true).order('sira'),
+    sb.from('transit_lines').select('*').eq('visible', true),
+    sb.from('transit_stops').select('*'),
+  ]);
+  PROJECTS = pRes.data || [];
+  unitTypesMap = {};
+  (utRes.data || []).forEach(ut => {
+    if (!unitTypesMap[ut.project_id]) unitTypesMap[ut.project_id] = [];
+    unitTypesMap[ut.project_id].push(ut);
+  });
+  unitStatusMap = {};
+  (usRes.data || []).forEach(us => {
+    if (!unitStatusMap[us.project_id]) unitStatusMap[us.project_id] = [];
+    unitStatusMap[us.project_id].push(us);
+  });
+  projectPoisMap = {};
+  (poisRes.data || []).forEach(poi => {
+    if (!projectPoisMap[poi.project_id]) projectPoisMap[poi.project_id] = [];
+    projectPoisMap[poi.project_id].push(poi);
+  });
+  transitLines = linesRes.data || [];
+  transitStops = stopsRes.data || [];
+}
+
+const PRESET_DESTINATIONS = [
+  { name:'Esenboğa Havalimanı', lat:40.1281, lng:32.9951 },
+  { name:'Otonomi', lat:40.0769, lng:32.9998 },
+  { name:'Armada AVM', lat:39.9130, lng:32.8099 },
+  { name:'Ankamall AVM', lat:39.9493, lng:32.8127 },
+  { name:'Kentpark AVM', lat:39.9349, lng:32.7984 },
+  { name:'Pursaklar Devlet Hastanesi', lat:40.0985, lng:32.9058 },
+  { name:'Ankara Bilkent Şehir Hastanesi', lat:39.8826, lng:32.7600 },
+  { name:'Etlik Şehir Hastanesi', lat:39.9788, lng:32.8444 },
+  { name:'Yıldırım Beyazıt Üniversitesi', lat:40.0057, lng:32.8741 },
+  { name:'Kızılay', lat:39.9208, lng:32.8541 }
+];
+
+const ROUTE_MODES = {
+  drive: { profile:'car', color:'#FF5A36', glow:'#FFB199', accent:'#FFF1EC', icon:'🚗', label:'araç' },
+  walk:  { profile:'foot', color:'#00E5FF', glow:'#8AF5FF', accent:'#F2FEFF', icon:'🚶', label:'yürüyüş' }
+};
+
+const INITIAL_CENTER = [32.9685, 40.0845];
+
+function calcConstructionPct(teslim) {
+  if (!teslim) return 50;
+  // Parse "2026 Q2" format
+  const match = teslim.match(/(\d{4})\s*Q?(\d)?/i);
+  if (!match) return 50;
+  const year = parseInt(match[1]);
+  const quarter = match[2] ? parseInt(match[2]) : 2;
+  const endDate = new Date(year, (quarter - 1) * 3, 1);
+  // Assume project starts 2 years before delivery
+  const startDate = new Date(endDate);
+  startDate.setFullYear(startDate.getFullYear() - 2);
+  const now = new Date();
+  if (now >= endDate) return 100;
+  if (now <= startDate) return 5;
+  const total = endDate - startDate;
+  const elapsed = now - startDate;
+  return Math.round(elapsed / total * 100);
+}
+const INITIAL_ZOOM = 12.2;
+let map, activeProject = null, orbitTimer = null, orbiting = false;
+let activeRouteMode = 'drive';
+let routeTarget = null;
+let routeMarker = null;
+let routeLayer = false;
+let routeAnimTimer = null;
+let routeAnimPhase = 0;
+const projectMarkers = [];
+let satelliteVisible = true;
+let livePOIMarkers = [];
+let projectPoiMarkers = [];
+let transitLineMarkers = [];
+let transitStopMarkers = [];
+let poiLoadTimer = null;
+
+function applyDark(style) {
+  style.layers = style.layers.map(layer => {
+    const sl = layer['source-layer'] || '';
+    const id = layer.id || '';
+    const p  = layer.paint || {};
+    if (layer.type === 'background') return { ...layer, paint: { ...p, 'background-color': '#0A0A0A', 'background-opacity': 0 } };
+    if (sl === 'water' || id.includes('water')) {
+      const np = { ...p };
+      if (np['fill-color']) np['fill-color'] = '#0C1824';
+      if (np['line-color']) np['line-color'] = '#0C1824';
+      return { ...layer, paint: np };
+    }
+    if (['landcover','landuse','park','pitch'].includes(sl)) {
+      const np = { ...p };
+      if (np['fill-color']) np['fill-color'] = '#0D110D';
+      np['fill-opacity'] = 0.18; // lower so satellite shows through
+      return { ...layer, paint: np };
+    }
+    if (sl === 'transportation') {
+      const np = { ...p };
+      if (np['line-color']) {
+        const f = JSON.stringify(layer.filter || '');
+        const major = ['motorway','trunk','primary','secondary'].some(c => f.includes(c));
+        np['line-color'] = major ? '#313147' : '#1C1C28';
+        np['line-opacity'] = major ? 0.92 : 0.75;
+      }
+      return { ...layer, paint: np };
+    }
+    if (sl === 'transportation_name') {
+      const np = { ...p };
+      if (np['text-color']) np['text-color'] = '#3A3A4A';
+      if (np['text-halo-color']) np['text-halo-color'] = '#0A0A0A';
+      return { ...layer, paint: np };
+    }
+    if (sl === 'building' && layer.type === 'fill') return { ...layer, paint: { ...p, 'fill-opacity': 0 } };
+    if (sl === 'building' && layer.type === 'line') return { ...layer, paint: { ...p, 'line-opacity': 0 } };
+    if (layer.type === 'symbol') {
+      const np = { ...p, 'text-color': '#50505E', 'text-halo-color': '#0A0A0A', 'text-halo-width': 1 };
+      if (np['icon-color']) np['icon-color'] = '#404050';
+      return { ...layer, paint: np };
+    }
+    if (sl === 'boundary') {
+      const np = { ...p };
+      if (np['line-color']) np['line-color'] = '#252530';
+      return { ...layer, paint: np };
+    }
+    return layer;
+  });
+  return style;
+}
+
+function findBuildingSource() {
+  const style = map.getStyle();
+  const bl = (style.layers || []).find(l => l['source-layer'] === 'building');
+  return bl ? bl.source : null;
+}
+
+function findFirstLabelLayer() {
+  const style = map.getStyle();
+  const lbl = (style.layers || []).find(l => l.type === 'symbol');
+  return lbl ? lbl.id : undefined;
+}
+
+
+function finishLoading() {
+  const el = document.getElementById('loading');
+  if (el) el.classList.add('done');
+}
+function failSoft(message) {
+  finishLoading();
+  try { setRouteStatus(message || 'Harita kısmen yüklendi.'); } catch(e) {}
+}
+setTimeout(() => failSoft('Yükleme uzun sürdü. Harita gelirse kullanmaya devam edebilirsiniz.'), 5000);
+
+async function initMap() {
+  try {
+    map = new maplibregl.Map({
+      container: 'map',
+      style: 'https://tiles.openfreemap.org/styles/liberty',
+      center: INITIAL_CENTER,
+      zoom: INITIAL_ZOOM,
+      pitch: 62,
+      bearing: -18,
+      antialias: true,
+      maxPitch: 85,
+    });
+  } catch(err) {
+    failSoft('Harita başlatılamadı.');
+    console.error(err);
+    return;
+  }
+
+  map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
+
+  map.on('error', (e) => { console.warn('Map error', e); });
+  map.on('styleimagemissing', () => {});
+  map.on('load', () => {
+    finishLoading();
+
+    try {
+      if (!map.getSource('terrain-dem')) {
+        map.addSource('terrain-dem', {
+          type: 'raster-dem',
+          url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+          tileSize: 256,
+          encoding: 'terrarium'
+        });
+      }
+      map.setTerrain({ source: 'terrain-dem', exaggeration: 1.4 });
+    } catch(e) {}
+
+    try {
+      map.setSky({
+        'sky-color': '#040408',
+        'sky-horizon-blend': 0.3,
+        'horizon-color': '#0D0D18',
+        'horizon-fog-blend': 0.7,
+        'fog-color': '#05050C',
+        'fog-ground-blend': 0.95,
+      });
+    } catch(e) {}
+
+
+    try {
+      if (!map.getSource('satellite-underlay')) {
+        map.addSource('satellite-underlay', {
+          type: 'raster',
+          tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+          tileSize: 256,
+          attribution: '© Esri World Imagery',
+          maxzoom: 19
+        });
+        // Add satellite as the very first layer (bottom of stack)
+        const firstLayerId = (map.getStyle().layers || [])[0]?.id;
+        map.addLayer({
+          id: 'satellite-underlay',
+          type: 'raster',
+          source: 'satellite-underlay',
+          paint: {
+            'raster-opacity': 0.35,
+            'raster-saturation': -0.2,
+            'raster-contrast': 0.1,
+            'raster-brightness-min': 0.05
+          }
+        }, firstLayerId);
+      }
+    } catch(e) { console.warn('satellite underlay failed', e); }
+
+    const buildSource = findBuildingSource();
+    if (buildSource) {
+      try {
+        map.addLayer({
+          id: 'buildings-3d',
+          type: 'fill-extrusion',
+          source: buildSource,
+          'source-layer': 'building',
+          paint: {
+            'fill-extrusion-color': ['interpolate', ['linear'], ['get', 'render_height'], 0, '#161618', 20, '#1C1C20', 50, '#202026', 100, '#26262E'],
+            'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 14, 0, 15, ['coalesce', ['get', 'render_height'], 6]],
+            'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
+            'fill-extrusion-opacity': 0.9,
+          },
+        }, findFirstLabelLayer());
+      } catch(e) {}
+    }
+
+    addProjectMarkers();
+    renderTransitLines();
+    renderTransitStops();
+    renderAllProjectPOIs();
+    fitProjects();
+    updateCompass();
+    map.on('rotate', updateCompass);
+    map.on('pitch',  updateCompass);
+    map.on('move',   updateCompass);
+    // Live OSM POI loading on moveend at high zoom
+    map.on('moveend', () => {
+      if (!poiEnabled) return;
+      clearTimeout(poiLoadTimer);
+      poiLoadTimer = setTimeout(() => {
+        if (map.getZoom() >= 15.4) loadLivePOIs();
+        else clearLivePOIs();
+      }, 600);
+    });
+    finishLoading();
+  });
+}
+
+// ── SATELLITE OPACITY ────────────────────────────────────────────────────
+function setSatOpacity(val) {
+  const opacity = parseInt(val) / 100;
+  if (map && map.getLayer('satellite-underlay')) {
+    map.setPaintProperty('satellite-underlay', 'raster-opacity', opacity);
+  }
+  // Also adjust vector tile opacity for true hybrid feel
+  // When satellite is strong, make road/label layers slightly more transparent
+  const roadOpacity = Math.max(0.4, 1 - opacity * 0.4);
+  try {
+    map.getStyle().layers.forEach(layer => {
+      if (layer.type === 'fill' && (layer['source-layer'] === 'landcover' || layer['source-layer'] === 'landuse')) {
+        map.setPaintProperty(layer.id, 'fill-opacity', opacity > 0.1 ? 0 : 0.32);
+      }
+    });
+  } catch(e) {}
+}
+
+// ── LIVE OSM POIs (Overpass API) ─────────────────────────────────────────
+const POI_ICONS = {
+  supermarket:'🛒', convenience:'🏪', bakery:'🥖', cafe:'☕', restaurant:'🍽️',
+  pharmacy:'💊', hospital:'🏥', bank:'🏦', atm:'💳', school:'🎓',
+  fuel:'⛽', parking:'🅿️', hotel:'🏨', post_office:'📮',
+  clothes:'👗', electronics:'📱', hairdresser:'✂️', gym:'💪',
+  kindergarten:'🧒', library:'📚', place_of_worship:'🕌',
+  fast_food:'🍔', bar:'🍺', pub:'🍻', ice_cream:'🍦',
+  doctors:'🩺', dentist:'🦷', veterinary:'🐾',
+  office:'🏢', company:'🏢', government:'🏛️'
+};
+
+function getPOIIcon(tags) {
+  const k = tags.amenity || tags.shop || tags.office || '';
+  return POI_ICONS[k] || (tags.amenity ? '📍' : tags.shop ? '🛍️' : tags.office ? '🏢' : '📍');
+}
+
+async function loadLivePOIs() {
+  const center = map.getCenter();
+  const lat = center.lat.toFixed(5);
+  const lng = center.lng.toFixed(5);
+  const radius = 400;
+  const query = `[out:json][timeout:10];
+(
+  node["amenity"~"restaurant|cafe|supermarket|pharmacy|bank|atm|hospital|school|fuel|parking|hotel|fast_food|bar|doctors|dentist|bakery|post_office|gym|kindergarten|library"](around:${radius},${lat},${lng});
+  node["shop"~"supermarket|convenience|bakery|clothes|electronics|hairdresser|butcher|florist"](around:${radius},${lat},${lng});
+  node["office"](around:${radius},${lat},${lng});
+);
+out body;`;
+
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: query,
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    const data = await res.json();
+    clearLivePOIs();
+    (data.elements || []).slice(0, 80).forEach(el => {
+      if (!el.lat || !el.lon) return;
+      const tags = el.tags || {};
+      const name = tags.name || tags['name:tr'] || '';
+      if (!name) return;
+      const icon = getPOIIcon(tags);
+      const div = document.createElement('div');
+      div.className = 'poi-marker';
+      div.textContent = icon + ' ' + name;
+      div.style.pointerEvents = 'none';
+      const m = new maplibregl.Marker({ element: div, anchor: 'left' })
+        .setLngLat([el.lon, el.lat])
+        .addTo(map);
+      livePOIMarkers.push(m);
+    });
+  } catch(e) { /* silent fail */ }
+}
+
+function clearLivePOIs() {
+  livePOIMarkers.forEach(m => m.remove());
+  livePOIMarkers = [];
+}
+
+function togglePOI(on) {
+  poiEnabled = on;
+  const thumb = document.getElementById('poiThumb');
+  if (thumb) thumb.style.transform = on ? 'translateX(16px)' : '';
+  if (!on) clearLivePOIs();
+  else if (map.getZoom() >= 15.4) loadLivePOIs();
+}
+
+// ── PROJECT CUSTOM POIs ──────────────────────────────────────────────────
+function renderAllProjectPOIs() {
+  projectPoiMarkers.forEach(m => m.remove());
+  projectPoiMarkers = [];
+  Object.values(projectPoisMap).flat().forEach(poi => {
+    const div = document.createElement('div');
+    div.style.cssText = `
+      display:flex;flex-direction:column;align-items:center;cursor:default;
+    `;
+    div.innerHTML = `
+      <div style="background:rgba(10,10,10,.92);border:1px solid ${poi.color||'#C9A96E'};
+        color:rgba(245,240,232,.85);font-size:9px;letter-spacing:.8px;padding:3px 8px;
+        white-space:nowrap;display:flex;align-items:center;gap:5px;">
+        <span>${poi.icon||'📍'}</span><span>${poi.name}</span>
+      </div>
+      <div style="width:1px;height:8px;background:${poi.color||'#C9A96E'};opacity:.7;"></div>
+      <div style="width:5px;height:5px;border-radius:50%;background:${poi.color||'#C9A96E'};"></div>
+    `;
+    const m = new maplibregl.Marker({ element: div, anchor: 'bottom' })
+      .setLngLat([poi.lng, poi.lat])
+      .addTo(map);
+    projectPoiMarkers.push(m);
+  });
+}
+
+// ── TRANSIT LINES ────────────────────────────────────────────────────────
+function renderTransitLines() {
+  // Remove existing
+  ['transit-line-fill','transit-line-casing'].forEach(id => {
+    try { map.removeLayer(id); } catch(e){}
+  });
+  try { map.removeSource('transit-lines-src'); } catch(e){}
+
+  if (!transitLines.length) return;
+  const features = transitLines.map(line => {
+    // coordinates may come as JSON string or array from Supabase
+    let coords = line.coordinates;
+    if (typeof coords === 'string') {
+      try { coords = JSON.parse(coords); } catch(e) { return null; }
+    }
+    return {
+      type: 'Feature',
+      properties: { color: line.color, name: line.name, type: line.type },
+      geometry: { type: 'LineString', coordinates: coords }
+    };
+  }).filter(Boolean);
+
+  map.addSource('transit-lines-src', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features }
+  });
+  map.addLayer({
+    id: 'transit-line-casing', type: 'line', source: 'transit-lines-src',
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#000', 'line-width': 6, 'line-opacity': 0.5 }
+  });
+  map.addLayer({
+    id: 'transit-line-fill', type: 'line', source: 'transit-lines-src',
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: {
+      'line-color': ['get', 'color'],
+      'line-width': 3.5,
+      'line-opacity': 0.9
+    }
+  });
+}
+
+function renderTransitStops() {
+  transitStopMarkers.forEach(m => m.remove());
+  transitStopMarkers = [];
+  const lineColorMap = {};
+  transitLines.forEach(l => lineColorMap[l.id] = l.color);
+
+  transitStops.forEach(stop => {
+    const color = lineColorMap[stop.line_id] || '#6B9FD4';
+    const div = document.createElement('div');
+    div.className = 'transit-stop-marker';
+    div.style.setProperty('--stop-color', color);
+    const typeIcon = stop.type === 'metro' ? '🚇' : stop.type === 'tram' ? '🚋' : '🚌';
+    div.textContent = typeIcon + ' ' + stop.name;
+    const m = new maplibregl.Marker({ element: div, anchor: 'left' })
+      .setLngLat([stop.lng, stop.lat])
+      .addTo(map);
+    transitStopMarkers.push(m);
+  });
+}
+
+function toggleTransitLayers(on) {
+  transitEnabled = on;
+  const thumb = document.getElementById('transitThumb');
+  if (thumb) thumb.style.transform = on ? 'translateX(16px)' : '';
+  const opacity = on ? 0.9 : 0;
+  try {
+    if (map.getLayer('transit-line-fill'))  map.setPaintProperty('transit-line-fill',  'line-opacity', opacity);
+    if (map.getLayer('transit-line-casing')) map.setPaintProperty('transit-line-casing','line-opacity', on ? 0.5 : 0);
+  } catch(e){}
+  transitStopMarkers.forEach(m => m.getElement().style.display = on ? '' : 'none');
+  projectPoiMarkers.forEach(m => m.getElement().style.display = on ? '' : 'none');
+}
+
+function buildProjectList() {
+  const c = document.getElementById('cats');
+  c.innerHTML = '';
+  PROJECTS.forEach((project, idx) => {
+    const item = document.createElement('div');
+    item.className = 'pi';
+    item.id = 'pi-' + project.id;
+    
+    // Calculate sales progress from unit_status
+    const uss = unitStatusMap[project.id] || [];
+    const uts = unitTypesMap[project.id] || [];
+    const totalUnits = uts.reduce((a, ut) => a + (ut.toplam_adet || 0), 0);
+    const soldUnits  = uss.reduce((a, us) => a + (us.satildi || 0) + (us.opsiyonlu || 0), 0);
+    const salesPct   = totalUnits > 0 ? Math.round(soldUnits / totalUnits * 100) : 0;
+    
+    // Calculate construction progress from teslim date
+    const constrPct = calcConstructionPct(project.teslim);
+    
+
+
+    // İNŞAAT: 0%=kırmızı → 100%=yeşil
+    const cPctN = constrPct / 100;
+    const cRed   = Math.round(232 - (232-40)  * cPctN);
+    const cGreen = Math.round(60  + (174-60)  * cPctN);
+    const cBlue  = Math.round(60  + (96-60)   * cPctN);
+    const constrBarColor = '#' + cRed.toString(16).padStart(2,'0') + cGreen.toString(16).padStart(2,'0') + cBlue.toString(16).padStart(2,'0');
+    // SATIŞ: 0%=yeşil → 100%=kırmızı
+    const sPctN = salesPct / 100;
+    const sRed   = Math.round(40  + (232-40)  * sPctN);
+    const sGreen = Math.round(174 - (174-60)  * sPctN);
+    const sBlue  = Math.round(96  - (96-60)   * sPctN);
+    const salesBarColor = '#' + sRed.toString(16).padStart(2,'0') + sGreen.toString(16).padStart(2,'0') + sBlue.toString(16).padStart(2,'0');
+
+    item.innerHTML = '<span class="pd" style="background:' + project.color + '"></span>' +
+      '<div style="flex:1;min-width:0">' +
+        '<span class="pn">' + (idx+1) + '. ' + project.name + '</span>' +
+        '<div style="margin-top:7px;display:flex;flex-direction:column;gap:6px">' +
+
+          // === İNŞAAT BARI: 0%=yeşil → 100%=kırmızı ===
+          '<div>' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:3px">' +
+              '<span style="font-size:8px;letter-spacing:1px;color:rgba(245,240,232,.4);text-transform:uppercase">İnşaat</span>' +
+              '<span style="font-size:8px;color:' + constrBarColor + '">' + constrPct + '%</span>' +
+            '</div>' +
+            '<div style="position:relative;width:100%;height:3px;background:linear-gradient(to right,transparent,' + constrBarColor + ',transparent);overflow:hidden;border-radius:2px;">' +
+              '<div style="position:absolute;translate:-150px 0;width:120px;height:100%;background:linear-gradient(to right,transparent,#1a1a1a,transparent);animation:loaderSlide 1.2s infinite;"></div>' +
+            '</div>' +
+          '</div>' +
+
+          // === SATIŞ BARI: sabit yeşil #28AE60 ===
+          '<div>' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:3px">' +
+              '<span style="font-size:8px;letter-spacing:1px;color:rgba(245,240,232,.4);text-transform:uppercase">Satış</span>' +
+              '<span style="font-size:8px;color:' + salesBarColor + '">' + soldUnits + '/' + totalUnits + '</span>' +
+            '</div>' +
+            '<div style="position:relative;width:100%;height:3px;background:linear-gradient(to right,transparent,' + salesBarColor + ',transparent);overflow:hidden;border-radius:2px;">' +
+              '<div style="position:absolute;translate:-150px 0;width:120px;height:100%;background:linear-gradient(to right,transparent,#1a1a1a,transparent);animation:loaderSlide 1.4s infinite;"></div>' +
+            '</div>' +
+          '</div>' +
+
+        '</div>' +
+      '</div>';
+    item.addEventListener('click', () => focusProject(project.id));
+    c.appendChild(item);
+  });
+}
+
+function buildPresetButtons(projectId) {
+  const grid = document.getElementById('presetGrid');
+  grid.innerHTML = '';
+  
+  // If project selected, show that project's POIs
+  if (projectId && projectPoisMap[projectId] && projectPoisMap[projectId].length > 0) {
+    const pois = projectPoisMap[projectId];
+    pois.forEach(poi => {
+      const btn = document.createElement('button');
+      btn.className = 'preset-btn';
+      btn.innerHTML = (poi.icon || '📍') + ' ' + poi.name;
+      btn.addEventListener('click', () => routeToDestination({ name: poi.name, lat: poi.lat, lng: poi.lng }));
+      grid.appendChild(btn);
+    });
+  } else {
+    // Fallback: show default destinations
+    PRESET_DESTINATIONS.forEach(dest => {
+      const btn = document.createElement('button');
+      btn.className = 'preset-btn';
+      btn.textContent = dest.name;
+      btn.addEventListener('click', () => routeToDestination(dest));
+      grid.appendChild(btn);
+    });
+  }
+}
+
+function addProjectMarkers() {
+  PROJECTS.forEach(project => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);cursor:pointer;';
+
+    // İnşaat bar rengi: 0%=kırmızı → 100%=yeşil
+    const cPct = calcConstructionPct(project.teslim);
+    const mRed   = Math.round(232 - (232-40)  * cPct/100);
+    const mGreen = Math.round(60  + (174-60)  * cPct/100);
+    const mBlue  = Math.round(60  + (96-60)   * cPct/100);
+    const barColor = '#' + mRed.toString(16).padStart(2,'0') + mGreen.toString(16).padStart(2,'0') + mBlue.toString(16).padStart(2,'0');
+
+    // Satış tamamlandı mı? (project.satis_tamamlandi alanına bakıyoruz)
+    const completed = project.satis_tamamlandi === true;
+    const bgColor   = completed ? '#28AE60' : project.color;
+    const txtColor  = '#0A0A0A';
+
+    const markerId = 'marker-' + project.id;
+
+    wrap.innerHTML = `
+      <div id="${markerId}" class="marker-label" style="
+        background:${bgColor};color:${txtColor};
+        font-family:'Montserrat',sans-serif;font-size:9px;font-weight:600;
+        letter-spacing:1.8px;padding:7px 14px 11px;white-space:nowrap;position:relative;
+        border-radius:4px;
+        box-shadow:0 10px 24px rgba(0,0,0,.3);
+        border:1px solid rgba(255,255,255,.2);
+        transition:transform .2s,box-shadow .2s;">
+        ${completed ? '✓ ' : ''}${project.name}
+        <div style="position:absolute;bottom:3px;left:8px;right:8px;height:3px;
+          background:linear-gradient(to right,transparent,${completed ? '#fff' : barColor},transparent);
+          overflow:hidden;border-radius:2px;">
+          <div style="position:absolute;translate:-100px 0;width:80px;height:100%;
+            background:linear-gradient(to right,transparent,rgba(0,0,0,0.3),transparent);
+            animation:loaderSlide ${completed ? '0.8' : '1.3'}s infinite;"></div>
+        </div>
+        <div style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);
+          border:8px solid transparent;border-top-color:${bgColor};border-bottom:none;"></div>
+      </div>
+      <div style="width:14px;height:14px;background:${bgColor};
+        border:2px solid rgba(255,255,255,.5);border-radius:50%;
+        margin-top:9px;animation:pr 2.2s infinite;"></div>`;
+
+    wrap.addEventListener('click', () => focusProject(project.id));
+    const marker = new maplibregl.Marker({ element: wrap, anchor: 'bottom' })
+      .setLngLat([project.lng, project.lat])
+      .addTo(map);
+    projectMarkers.push({ id: project.id, marker, el: wrap });
+
+    // Havai fişek efekti - satış tamamlanmış projeler için
+    if (completed) {
+      setTimeout(() => launchFireworks(markerId), 800 + Math.random() * 1200);
+    }
+  });
+}
+
+function launchFireworks(markerId) {
+  const el = document.getElementById(markerId);
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  for (let i = 0; i < 18; i++) {
+    const spark = document.createElement('div');
+    const angle = (i / 18) * Math.PI * 2;
+    const dist  = 28 + Math.random() * 22;
+    const size  = 3 + Math.random() * 3;
+    const colors = ['#FFD700','#28AE60','#5DBD84','#fff','#ADFF2F','#00FF7F'];
+    const color  = colors[Math.floor(Math.random() * colors.length)];
+    spark.style.cssText = `
+      position:fixed;z-index:9999;
+      width:${size}px;height:${size}px;border-radius:50%;
+      background:${color};
+      left:${cx}px;top:${cy}px;
+      pointer-events:none;
+      transition:all 0.7s cubic-bezier(0.1,0.8,0.3,1);
+      opacity:1;
+    `;
+    document.body.appendChild(spark);
+    requestAnimationFrame(() => {
+      spark.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
+      spark.style.opacity = '0';
+    });
+    setTimeout(() => spark.remove(), 800);
+  }
+  // tekrar ateşle
+  setTimeout(() => launchFireworks(markerId), 3000 + Math.random() * 2000);
+}
+
+
+function fitProjects() {
+  const bounds = new maplibregl.LngLatBounds();
+  PROJECTS.forEach(p => bounds.extend([p.lng, p.lat]));
+  map.fitBounds(bounds, { padding: { top: 80, right: 80, bottom: 80, left: 450 }, duration: 0, maxZoom: 12.6 });
+}
+
+function focusProject(projectId) {
+  const project = PROJECTS.find(p => p.id === projectId);
+  if (!project) return;
+  activeProject = project;
+  document.getElementById('hint').style.display = 'none';
+  document.querySelectorAll('.pi').forEach(e => e.classList.remove('active'));
+  const activeItem = document.getElementById(`pi-${project.id}`);
+  if (activeItem) activeItem.classList.add('active');
+  document.getElementById('selectedProjectLabel').textContent = project.name + ' seçili. Hızlı hedeflerden birine basın veya aşağıya bir yer adı/adres yazın.';
+  buildPresetButtons(project.id);
+  setRouteStatus('Hedef seçebilirsiniz. Rota aktif proje konumundan hesaplanacaktır.', false);
+
+  projectMarkers.forEach(pm => {
+    const label = pm.el.querySelector('.marker-label');
+    if (!label) return;
+    const isActive = pm.id === project.id;
+    label.style.transform = isActive ? 'scale(1.08)' : 'scale(1)';
+    label.style.boxShadow = isActive ? '0 16px 34px rgba(0,0,0,.45)' : '0 10px 24px rgba(0,0,0,.28)';
+    label.style.borderColor = isActive ? 'rgba(255,255,255,.45)' : 'rgba(255,255,255,.18)';
+  });
+
+  map.flyTo({
+    center: [project.lng, project.lat],
+    zoom: 15.7,
+    pitch: 68,
+    bearing: -18,
+    duration: 1500,
+    essential: true,
+  });
+
+  if (window.innerWidth <= 900) toggleMobilePanel(true);
+  if (!routeTarget) {
+    showProjectInfo(project);
+  }
+}
+
+function showProjectInfo(project) {
+  // Switch to project view
+  document.getElementById('ib-project-view').style.display = 'block';
+  document.getElementById('ib-route-view').style.display = 'none';
+
+  // Header
+  document.getElementById('ib-name').textContent = project.name;
+  document.getElementById('ib-cat').textContent = (project.tip||'Proje') + (project.teslim ? ' · ' + project.teslim : '');
+
+  // Render image
+  const renderWrap = document.getElementById('ib-render');
+  const renderImg  = document.getElementById('ib-render-img');
+  if (project.render_url) {
+    renderWrap.style.display = 'block';
+    renderImg.src = project.render_url;
+    document.getElementById('ib-render-badge').textContent = project.name;
+  } else {
+    renderWrap.style.display = 'none';
+  }
+
+  // Künye
+  const kunye = document.getElementById('ib-kunye');
+  const kunyeItems = [
+    { label:'Toplam Alan', val: project.toplam_alan || '—' },
+    { label:'Teslim',      val: project.teslim || '—' },
+    { label:'Blok',        val: project.blok_sayisi ? project.blok_sayisi + ' blok' : '—' },
+    { label:'Kat',         val: project.kat_sayisi  ? project.kat_sayisi  + ' kat'  : '—' },
+  ];
+  kunye.innerHTML = kunyeItems.map(k => `
+    <div>
+      <div style="font-size:8px;letter-spacing:2px;color:rgba(201,169,110,0.6);text-transform:uppercase;margin-bottom:2px">${k.label}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--white)">${k.val}</div>
+    </div>`).join('');
+
+  // Unit types with tooltip on total
+  const uts = unitTypesMap[project.id] || [];
+  const uss = unitStatusMap[project.id] || [];
+  const unitsEl = document.getElementById('ib-units');
+  if (uts.length === 0) {
+    unitsEl.innerHTML = '<div style="font-size:10px;color:rgba(245,240,232,0.35)">Henüz daire tipi girilmedi</div>';
+  } else {
+    unitsEl.innerHTML = uts.map(ut => {
+      const us = uss.find(s => s.unit_type_id === ut.id) || { musait: ut.toplam_adet, opsiyonlu: 0, satildi: 0 };
+      const tooltipId = 'tt-' + ut.id;
+      return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(245,240,232,0.05);position:relative"
+        onmouseenter="document.getElementById('${tooltipId}').style.display='block'"
+        onmouseleave="document.getElementById('${tooltipId}').style.display='none'">
+        <span style="font-size:11px;color:rgba(245,240,232,0.55);min-width:36px">${ut.tip}</span>
+        <span style="font-size:10px;color:rgba(245,240,232,0.35);flex:1">${ut.m2_min}–${ut.m2_max} m²</span>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:13px;color:${project.color};margin-right:8px">${ut.fiyat||'—'}</span>
+        <span style="font-size:10px;color:rgba(245,240,232,0.5);cursor:default;border-bottom:1px dashed rgba(201,169,110,0.4);padding-bottom:1px"
+          title="Üzerine gelin">${ut.toplam_adet} ad.</span>
+        <div id="${tooltipId}" style="display:none;position:absolute;right:0;bottom:calc(100% + 4px);
+          background:rgba(10,10,10,0.97);border:1px solid rgba(201,169,110,0.4);
+          padding:10px 14px;white-space:nowrap;z-index:9;min-width:160px">
+          <div style="font-size:9px;letter-spacing:2px;color:rgba(201,169,110,0.7);margin-bottom:8px;text-transform:uppercase">${ut.tip} Durum</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="display:flex;justify-content:space-between;gap:16px">
+              <span style="font-size:10px;color:#5DBD84">Müsait</span>
+              <span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#5DBD84">${us.musait}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:16px">
+              <span style="font-size:10px;color:#E8A96E">Opsiyonlu</span>
+              <span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#E8A96E">${us.opsiyonlu}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:16px">
+              <span style="font-size:10px;color:#E87070">Satıldı</span>
+              <span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#E87070">${us.satildi}</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Olanaklar
+  const ozEl = document.getElementById('ib-ozellikler');
+  const ozs = project.ozellikler || [];
+  ozEl.innerHTML = ozs.length
+    ? ozs.map(o => `<span style="font-size:9px;letter-spacing:.5px;color:rgba(245,240,232,0.5);background:rgba(245,240,232,0.04);border:1px solid rgba(201,169,110,0.15);padding:3px 8px">${o}</span>`).join('')
+    : '<span style="font-size:10px;color:rgba(245,240,232,0.3)">—</span>';
+
+  // Footer
+  document.getElementById('ib-dot-p').style.background = project.color;
+  document.getElementById('ib-mtext-p').textContent = 'Hedef seçin → rota hesaplanır';
+  document.getElementById('ib-mtext-p').style.color = project.color;
+
+  document.getElementById('hint').style.display = 'none';
+  document.getElementById('ib').classList.add('vis');
+}
+
+let projectLabelsVisible = true;
+function toggleProjectLabels() {
+  projectLabelsVisible = !projectLabelsVisible;
+  const btn = document.getElementById('labelToggleBtn');
+  btn.style.opacity = projectLabelsVisible ? '1' : '0.4';
+  projectMarkers.forEach(pm => {
+    const label = pm.el.querySelector('.marker-label');
+    if (label) label.style.display = projectLabelsVisible ? '' : 'none';
+  });
+}
+
+function toggleRouteBox() {
+  const box = document.getElementById('routeBox');
+  const btn = document.getElementById('routeToggleBtn');
+  const isHidden = box.style.display === 'none';
+  box.style.display = isHidden ? 'block' : 'none';
+  btn.style.background = isHidden ? 'rgba(201,169,110,.2)' : 'rgba(201,169,110,.1)';
+}
+
+function setRouteMode(mode, btn) {
+  activeRouteMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (activeProject && routeTarget) drawRouteBetween(activeProject, routeTarget);
+}
+
+function setRouteStatus(text, isError = false) {
+  const el = document.getElementById('routeStatus');
+  el.textContent = text;
+  el.style.color = isError ? '#E87070' : 'rgba(245,240,232,0.6)';
+}
+
+function routeToDestination(dest) {
+  document.getElementById('destinationInput').value = dest.name;
+  drawRouteToTarget(dest);
+}
+
+async function searchAndRoute() {
+  const q = document.getElementById('destinationInput').value.trim();
+  if (!activeProject) {
+    setRouteStatus('Önce bir proje seçmelisiniz.', true);
+    return;
+  }
+  if (!q) {
+    setRouteStatus('Lütfen bir hedef girin.', true);
+    return;
+  }
+  setRouteStatus('Hedef aranıyor...');
+  try {
+    const result = await geocodePlace(q);
+    if (!result) throw new Error('Hedef bulunamadı');
+    drawRouteToTarget(result);
+  } catch (err) {
+    setRouteStatus('Hedef bulunamadı. Daha açık bir adres veya yer adı deneyin.', true);
+  }
+}
+
+async function geocodePlace(query) {
+  // Google Geocoding API (browser-native)
+  if (window.google && window.google.maps) {
+    try {
+      const geocoder = new google.maps.Geocoder();
+      const q = /ankara/i.test(query) ? query : query + ', Ankara, Türkiye';
+      const result = await new Promise((resolve, reject) => {
+        geocoder.geocode({ address: q, region: 'tr' }, (res, status) => {
+          if (status === 'OK') resolve(res);
+          else reject(status);
+        });
+      });
+      if (result && result.length) {
+        const loc = result[0].geometry.location;
+        return {
+          name: result[0].formatted_address.split(',').slice(0,2).join(', '),
+          lat: loc.lat(),
+          lng: loc.lng()
+        };
+      }
+    } catch(e) { console.warn('Google Geocoder hata:', e); }
+  }
+  // Fallback: Nominatim
+  try {
+    const q = /ankara/i.test(query) ? query : query + ', Ankara, Türkiye';
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&countrycodes=tr&q=' + encodeURIComponent(q), { headers: {'Accept':'application/json','User-Agent':'ArslanlarProjects/1.0'} });
+    const d = await r.json();
+    if (Array.isArray(d) && d.length) return { name: d[0].display_name.split(',').slice(0,2).join(', '), lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
+  } catch(e) {}
+  return null;
+}
+
+function drawRouteToTarget(target) {
+  if (!activeProject) {
+    setRouteStatus('Önce bir proje seçmelisiniz.', true);
+    return;
+  }
+  routeTarget = target;
+  drawRouteBetween(activeProject, target);
+}
+
+function decodePolyline(encoded) {
+  const pts = []; let i = 0, lat = 0, lng = 0;
+  while (i < encoded.length) {
+    let s=0,r=0,b; do{b=encoded.charCodeAt(i++)-63;r|=(b&0x1f)<<s;s+=5;}while(b>=0x20);
+    lat+=(r&1)?~(r>>1):(r>>1); s=0;r=0;
+    do{b=encoded.charCodeAt(i++)-63;r|=(b&0x1f)<<s;s+=5;}while(b>=0x20);
+    lng+=(r&1)?~(r>>1):(r>>1);
+    pts.push([lat/1e5,lng/1e5]);
+  }
+  return pts;
+}
+
+async function drawRouteBetween(project, target) {
+  setRouteStatus(project.name + ' → ' + target.name + ' hesaplanıyor...');
+  const mode = ROUTE_MODES[activeRouteMode];
+
+  // Google Maps DirectionsService (browser-native, no CORS issue)
+  if (window.google && window.google.maps) {
+    try {
+      const travelMode = activeRouteMode === 'walk'
+        ? google.maps.TravelMode.WALKING
+        : google.maps.TravelMode.DRIVING;
+      const svc = new google.maps.DirectionsService();
+      const result = await new Promise((resolve, reject) => {
+        svc.route({
+          origin: { lat: project.lat, lng: project.lng },
+          destination: { lat: target.lat, lng: target.lng },
+          travelMode: travelMode,
+          region: 'tr'
+        }, (res, status) => {
+          if (status === 'OK') resolve(res);
+          else reject(status);
+        });
+      });
+      const leg = result.routes[0].legs[0];
+      // JS API uses overview_path (array of LatLng), not encoded polyline
+      const path = result.routes[0].overview_path;
+      const geojson = { type: 'LineString', coordinates: path.map(p => [p.lng(), p.lat()]) };
+      renderRoute(geojson, mode.color, false);
+      renderTargetMarker(target, mode.color);
+      fitRoute(project, target);
+      showRouteInfo(project, target, leg.distance.value, leg.duration.value, mode);
+      setRouteStatus(project.name + ' → ' + target.name + ' — ' + leg.distance.text + ' / ' + leg.duration.text);
+      return;
+    } catch(e) { console.warn('Google DirectionsService hata:', e); }
+  }
+
+  // Fallback: OSRM
+  try {
+    const profile = activeRouteMode === 'walk' ? 'foot' : 'car';
+    const r = await fetch('https://router.project-osrm.org/route/v1/' + profile + '/' +
+      project.lng + ',' + project.lat + ';' + target.lng + ',' + target.lat +
+      '?overview=full&geometries=geojson');
+    const d = await r.json();
+    if (d.code === 'Ok' && d.routes && d.routes.length) {
+      renderRoute(d.routes[0].geometry, mode.color, false);
+      renderTargetMarker(target, mode.color);
+      fitRoute(project, target);
+      showRouteInfo(project, target, d.routes[0].distance, d.routes[0].duration, mode);
+      setRouteStatus(project.name + ' → ' + target.name + ' rotaı hazır.');
+      return;
+    }
+  } catch(e) {}
+
+  // Son fallback: düz çizgi
+  const dist = getDistance(project.lat, project.lng, target.lat, target.lng);
+  const spd = activeRouteMode === 'walk' ? 1.39 : 8.33;
+  renderRoute({ type:'LineString', coordinates:[[project.lng,project.lat],[target.lng,target.lat]] }, mode.color, true);
+  renderTargetMarker(target, mode.color);
+  fitRoute(project, target);
+  showRouteInfo(project, target, dist, dist/spd, mode, true);
+  setRouteStatus('Yaklaşık rota gösterildi.', true);
+}
+
+function renderRoute(geometry, color, dashed = false) {
+  clearRouteVisuals();
+  const mode = ROUTE_MODES[activeRouteMode] || { color, glow: color, accent:'#FFFFFF' };
+  map.addSource('route', { type:'geojson', lineMetrics:true, data:{ type:'Feature', geometry } });
+  map.addLayer({
+    id:'route-glow', type:'line', source:'route',
+    layout:{ 'line-cap':'round', 'line-join':'round' },
+    paint:{ 'line-color': mode.glow, 'line-width': 26, 'line-opacity': 0.34, 'line-blur': 12 }
+  });
+  map.addLayer({
+    id:'route-casing', type:'line', source:'route',
+    layout:{ 'line-cap':'round', 'line-join':'round' },
+    paint:{ 'line-color': mode.accent, 'line-width': 10, 'line-opacity': 0.96 }
+  });
+  map.addLayer({
+    id:'route-line', type:'line', source:'route',
+    layout:{ 'line-cap':'round', 'line-join':'round' },
+    paint:{ 'line-color': mode.color, 'line-width': 6.2, 'line-opacity': 1, 'line-dasharray': dashed ? [4,3] : [1] }
+  });
+  if (!dashed) {
+    map.addLayer({
+      id:'route-flow', type:'line', source:'route',
+      layout:{ 'line-cap':'round', 'line-join':'round' },
+      paint:{
+        'line-width': 3.2,
+        'line-opacity': 0.95,
+        'line-gradient': buildFlowGradient(mode.accent, routeAnimPhase)
+      }
+    });
+    startRouteAnimation(mode.accent);
+  }
+  routeLayer = true;
+}
+
+function buildFlowGradient(highlightColor, phase = 0) {
+  const p = ((phase % 1) + 1) % 1;
+  const a = p;
+  const b = Math.min(p + 0.08, 1);
+  const c = Math.min(p + 0.16, 1);
+  return [
+    'interpolate', ['linear'], ['line-progress'],
+    0, 'rgba(255,255,255,0)',
+    a, 'rgba(255,255,255,0)',
+    b, highlightColor,
+    c, 'rgba(255,255,255,0)',
+    1, 'rgba(255,255,255,0)'
+  ];
+}
+
+function startRouteAnimation(highlightColor) {
+  stopRouteAnimation();
+  routeAnimTimer = setInterval(() => {
+    routeAnimPhase += 0.03;
+    try {
+      if (map && map.getLayer('route-flow')) {
+        map.setPaintProperty('route-flow', 'line-gradient', buildFlowGradient(highlightColor, routeAnimPhase));
+      }
+    } catch (e) {}
+  }, 90);
+}
+
+function stopRouteAnimation() {
+  if (routeAnimTimer) {
+    clearInterval(routeAnimTimer);
+    routeAnimTimer = null;
+  }
+}
+
+function renderTargetMarker(target, color) {
+  if (routeMarker) routeMarker.remove();
+  const el = document.createElement('div');
+  el.style.cssText = 'display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);';
+  el.innerHTML = `
+    <div style="background:rgba(8,8,8,.92);color:${color};border:1px solid ${color};font-size:9px;letter-spacing:1.2px;padding:6px 10px;white-space:nowrap;box-shadow:0 10px 24px rgba(0,0,0,.3);">${target.name}</div>
+    <div style="width:12px;height:12px;background:${color};border:2px solid rgba(255,255,255,.45);border-radius:50%;margin-top:8px;"></div>`;
+  routeMarker = new maplibregl.Marker({ element: el, anchor:'bottom' }).setLngLat([target.lng, target.lat]).addTo(map);
+}
+
+function fitRoute(project, target) {
+  const bounds = new maplibregl.LngLatBounds();
+  bounds.extend([project.lng, project.lat]);
+  bounds.extend([target.lng, target.lat]);
+  const isMobile = window.innerWidth <= 900;
+  map.fitBounds(bounds, {
+    padding: isMobile ? { top:70, right:24, bottom:190, left:24 } : { top:90, right:110, bottom:90, left:470 },
+    maxZoom:14.6, duration:1300
+  });
+}
+
+function showRouteInfo(project, target, distanceM, durationS, mode, approx = false) {
+  document.getElementById('ib-project-view').style.display = 'none';
+  document.getElementById('ib-route-view').style.display = 'block';
+  document.getElementById('hint').style.display = 'none';
+  document.getElementById('ib-name-r').textContent = project.name;
+  document.getElementById('ib-cat-r').textContent = target.name;
+  document.getElementById('ib-dist').textContent = formatDistance(distanceM);
+  document.getElementById('ib-time').textContent = formatDuration(durationS);
+  document.getElementById('ib-icon').textContent = mode.icon;
+  document.getElementById('ib-ml').textContent = mode.label;
+  document.getElementById('ib-dot').style.background = mode.color;
+  document.getElementById('ib-mtext').textContent = approx ? 'yaklaşık rota gösterimi' : target.name + ' için rota çizildi';
+  document.getElementById('ib-mtext').style.color = mode.color;
+  document.getElementById('ib').classList.add('vis');
+}
+
+function clearRouteVisuals() {
+  if (routeMarker) { routeMarker.remove(); routeMarker = null; }
+  stopRouteAnimation();
+  ['route-glow','route-casing','route-line','route-flow'].forEach(id => { try { map.removeLayer(id); } catch(e) {} });
+  try { map.removeSource('route'); } catch(e) {}
+  routeLayer = false;
+}
+
+function clearSelection() {
+  activeProject = null;
+  routeTarget = null;
+  clearRouteVisuals();
+  document.getElementById('ib').classList.remove('vis');
+  document.getElementById('ib-project-view').style.display = 'none';
+  document.getElementById('ib-route-view').style.display = 'none';
+  document.getElementById('hint').style.display = 'flex';
+  document.getElementById('selectedProjectLabel').textContent = 'Önce bir proje seçin.';
+  document.getElementById('destinationInput').value = '';
+  setRouteStatus('Hazır hedefler aşağıda. Serbest aramayla da rota alabilirsiniz.');
+  buildPresetButtons(null);
+  document.querySelectorAll('.pi').forEach(e => e.classList.remove('active'));
+  projectMarkers.forEach(pm => {
+    const label = pm.el.querySelector('.marker-label');
+    if (!label) return;
+    label.style.transform = 'scale(1)';
+    label.style.boxShadow = '0 10px 24px rgba(0,0,0,.28)';
+    label.style.borderColor = 'rgba(255,255,255,.18)';
+  });
+  fitProjects();
+  map.easeTo({ pitch: 62, bearing: -18, duration: 1200 });
+}
+
+const VIEWS = {
+  drone:  { center: INITIAL_CENTER, zoom: INITIAL_ZOOM, pitch: 62, bearing: -18 },
+  top:    { center: INITIAL_CENTER, zoom: 11.8, pitch: 0, bearing: 0 },
+  street: { center: INITIAL_CENTER, zoom: 14.2, pitch: 80, bearing: -18 },
+};
+
+function setView(name, btn) {
+  document.querySelectorAll('.vc-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const view = VIEWS[name];
+  map.flyTo({ ...view, duration: 1600, essential: true });
+}
+
+function startOrbit() {
+  const orbitBtn = document.getElementById('vc-orbit');
+  if (orbiting) {
+    orbiting = false;
+    clearInterval(orbitTimer);
+    orbitBtn.classList.remove('active');
+    return;
+  }
+  orbiting = true;
+  orbitBtn.classList.add('active');
+  let bearing = map.getBearing();
+  orbitTimer = setInterval(() => {
+    bearing += 0.5;
+    map.setBearing(bearing);
+  }, 50);
+}
+
+function updateCompass() {
+  const bearing = map.getBearing();
+  const pitch = map.getPitch();
+  const norm = (bearing % 360 + 360) % 360;
+  const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+  const dir = dirs[Math.round(norm / 45) % 8];
+  document.getElementById('compNeedle').style.transform = `translate(-50%, -100%) rotate(${bearing}deg)`;
+  document.getElementById('compBearing').textContent = `${dir} ${Math.round(norm)}°`;
+  document.getElementById('pitchBar').style.width = (pitch / 85 * 100) + '%';
+  document.getElementById('pitchLabel').textContent = `↕ ${Math.round(pitch)}°`;
+}
+
+function getDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLng = (lng2-lng1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function formatDistance(m) {
+  return m < 1000 ? `${Math.round(m)}m` : `${(m/1000).toFixed(1)}km`;
+}
+
+function formatDuration(s) {
+  const mins = Math.round(s / 60);
+  if (mins < 60) return `${mins} dk`;
+  return `${Math.floor(mins / 60)}s ${mins % 60}dk`;
+}
+
+
+function updateLayerToggleUI() { /* handled by slider */ }
+function toggleSatellite(force = null) {
+  satelliteVisible = force === null ? !satelliteVisible : !!force;
+  const val = satelliteVisible ? 35 : 0;
+  setSatOpacity(val);
+  const slider = document.getElementById('satSlider');
+  if (slider) slider.value = val;
+}
+
+document.getElementById('destinationInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') searchAndRoute();
+});
+
+
+function toggleMobilePanel(forceOpen = null) {
+  const shouldOpen = forceOpen === null ? !document.body.classList.contains('panel-open') : !!forceOpen;
+  document.body.classList.toggle('panel-open', shouldOpen);
+}
+
+if (window.innerWidth <= 900) {
+  document.body.classList.remove('panel-open');
+}
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 900) document.body.classList.remove('panel-open');
+});
+
+// Boot: load Supabase data first, then build UI
+(async () => {
+  try {
+    await loadSupabaseData();
+  } catch(e) {
+    console.warn('Supabase load failed, using empty data', e);
+  }
+  buildProjectList();
+  buildPresetButtons(null);
+  initMap();
+})();
+</script>
+
+</body>
+</html>

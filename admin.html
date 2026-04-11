@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arslanlar — Admin Panel</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold:#C9A96E; --gold-l:#E8C98A; --gold-d:#9B7A45;
+  --black:#0A0A0A; --b2:#111; --b3:#1A1A1A; --b4:#222; --b5:#2A2A2A;
+  --white:#F5F0E8; --wd:rgba(245,240,232,0.6); --wf:rgba(245,240,232,0.07);
+  --border:rgba(201,169,110,0.18); --borderhi:rgba(201,169,110,0.45);
+  --green:#5DBD84; --red:#E87070; --orange:#E8A96E;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100%;background:var(--black);color:var(--white);font-family:'Montserrat',sans-serif;font-weight:300;}
+
+/* ── LOGIN ── */
+#loginScreen{
+  position:fixed;inset:0;background:var(--black);
+  display:flex;align-items:center;justify-content:center;z-index:1000;
+}
+.login-box{
+  width:360px;border:1px solid var(--borderhi);padding:48px 40px;
+  background:var(--b2);
+}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--gold);letter-spacing:5px;text-align:center;margin-bottom:6px;}
+.login-sub{font-size:9px;letter-spacing:4px;color:var(--wd);text-align:center;text-transform:uppercase;margin-bottom:40px;}
+.f-label{font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;display:block;margin-bottom:8px;}
+.f-input{
+  width:100%;background:var(--b3);border:1px solid var(--border);color:var(--white);
+  font-family:'Montserrat',sans-serif;font-size:13px;font-weight:300;
+  padding:13px 16px;outline:none;margin-bottom:20px;transition:border-color .2s;
+}
+.f-input:focus{border-color:var(--gold);}
+.f-input::placeholder{color:rgba(245,240,232,.3);}
+.btn-gold{
+  width:100%;background:var(--gold);color:var(--black);border:none;
+  font-family:'Montserrat',sans-serif;font-size:11px;font-weight:500;
+  letter-spacing:3px;text-transform:uppercase;padding:15px;cursor:pointer;transition:background .2s;
+}
+.btn-gold:hover{background:var(--gold-l);}
+.login-err{font-size:11px;color:var(--red);text-align:center;margin-top:14px;min-height:16px;}
+
+/* ── APP SHELL ── */
+#app{display:none;}
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:56px;
+  background:rgba(10,10,10,0.97);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;z-index:100;
+}
+.topbar-logo{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);letter-spacing:4px;}
+.topbar-right{display:flex;align-items:center;gap:20px;}
+.topbar-user{font-size:10px;letter-spacing:1.5px;color:var(--wd);}
+.btn-sm{
+  background:none;border:1px solid var(--border);color:var(--wd);
+  font-family:'Montserrat',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  padding:7px 16px;cursor:pointer;transition:all .2s;
+}
+.btn-sm:hover{border-color:var(--gold);color:var(--gold);}
+
+.sidebar{
+  position:fixed;top:56px;left:0;bottom:0;width:220px;
+  background:var(--b2);border-right:1px solid var(--border);
+  padding:20px 0;overflow-y:auto;z-index:50;
+}
+.sb-section{font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;padding:0 20px;margin:18px 0 8px;}
+.sb-item{
+  display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;
+  font-size:11px;color:var(--wd);letter-spacing:.5px;transition:all .2s;
+  border-left:2px solid transparent;
+}
+.sb-item:hover{background:var(--wf);color:var(--white);}
+.sb-item.active{background:rgba(201,169,110,.08);color:var(--gold);border-left-color:var(--gold);}
+.sb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+.main{margin-top:56px;margin-left:220px;padding:32px;min-height:calc(100vh - 56px);}
+
+/* ── PANELS ── */
+.panel{display:none;}
+.panel.active{display:block;}
+
+.page-title{
+  font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;
+  margin-bottom:6px;
+}
+.page-title em{font-style:italic;color:var(--gold);}
+.page-sub{font-size:11px;color:var(--wd);letter-spacing:1px;margin-bottom:32px;}
+.gold-line{width:50px;height:1px;background:var(--gold);margin-bottom:32px;}
+
+/* ── CARDS ── */
+.card{background:var(--b2);border:1px solid var(--border);padding:28px;margin-bottom:20px;}
+.card-title{font-size:10px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:20px;}
+
+/* ── GRID ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
+
+/* ── FORM ELEMENTS ── */
+.field{margin-bottom:18px;}
+.field label{font-size:9px;letter-spacing:2.5px;color:var(--gold);text-transform:uppercase;display:block;margin-bottom:8px;}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--b3);border:1px solid var(--border);color:var(--white);
+  font-family:'Montserrat',sans-serif;font-size:13px;font-weight:300;
+  padding:12px 14px;outline:none;transition:border-color .2s;resize:vertical;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);}
+.field input::placeholder,.field textarea::placeholder{color:rgba(245,240,232,.3);}
+.field select option{background:var(--b3);}
+.field-hint{font-size:9px;color:rgba(245,240,232,.35);margin-top:5px;letter-spacing:.5px;}
+
+/* ── PROJECT SELECTOR ── */
+.proj-selector{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;}
+.proj-pill{
+  background:var(--wf);border:1px solid var(--border);
+  padding:8px 16px;cursor:pointer;font-size:10px;letter-spacing:1.5px;
+  color:var(--wd);transition:all .2s;white-space:nowrap;
+}
+.proj-pill:hover{border-color:var(--borderhi);color:var(--white);}
+.proj-pill.active{background:rgba(201,169,110,.12);border-color:var(--gold);color:var(--gold);}
+
+/* ── UNIT TYPES TABLE ── */
+.unit-table{width:100%;border-collapse:collapse;margin-top:12px;}
+.unit-table th{
+  font-size:9px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;
+  text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);
+}
+.unit-table td{
+  padding:10px 12px;border-bottom:1px solid rgba(245,240,232,.05);
+  font-size:12px;color:var(--wd);vertical-align:middle;
+}
+.unit-table td input{
+  background:var(--b4);border:1px solid var(--border);color:var(--white);
+  font-family:'Montserrat',sans-serif;font-size:12px;font-weight:300;
+  padding:7px 10px;outline:none;width:100%;transition:border-color .2s;
+}
+.unit-table td input:focus{border-color:var(--gold);}
+.unit-table tr:hover td{background:rgba(245,240,232,.02);}
+.del-btn{
+  background:none;border:1px solid rgba(232,112,112,.3);color:var(--red);
+  padding:5px 10px;cursor:pointer;font-size:10px;transition:all .2s;
+}
+.del-btn:hover{background:rgba(232,112,112,.1);}
+.add-row-btn{
+  background:none;border:1px dashed var(--border);color:var(--wd);
+  padding:10px;width:100%;cursor:pointer;font-size:10px;letter-spacing:2px;
+  text-transform:uppercase;margin-top:8px;transition:all .2s;
+}
+.add-row-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+/* ── STATUS TABLE ── */
+.status-table{width:100%;border-collapse:collapse;}
+.status-table th{font-size:9px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);}
+.status-table td{padding:10px 12px;border-bottom:1px solid rgba(245,240,232,.05);font-size:12px;vertical-align:middle;}
+.status-table td input{
+  background:var(--b4);border:1px solid var(--border);color:var(--white);
+  font-family:'Montserrat',sans-serif;font-size:13px;font-weight:400;
+  padding:7px 10px;outline:none;width:70px;text-align:center;transition:border-color .2s;
+}
+.status-table td input:focus{border-color:var(--gold);}
+.s-musait{color:var(--green);}
+.s-opsiyonlu{color:var(--orange);}
+.s-satildi{color:var(--red);}
+
+/* ── RENDER UPLOAD ── */
+.render-preview{
+  width:100%;aspect-ratio:16/9;background:var(--b3);border:1px dashed var(--border);
+  display:flex;align-items:center;justify-content:center;margin-bottom:12px;
+  overflow:hidden;position:relative;
+}
+.render-preview img{width:100%;height:100%;object-fit:cover;}
+.render-empty{font-size:10px;color:rgba(245,240,232,.3);letter-spacing:2px;text-transform:uppercase;}
+
+/* ── BUTTONS ── */
+.btn-primary{
+  background:var(--gold);color:var(--black);border:none;
+  font-family:'Montserrat',sans-serif;font-size:10px;font-weight:500;
+  letter-spacing:2.5px;text-transform:uppercase;padding:13px 28px;cursor:pointer;transition:background .2s;
+}
+.btn-primary:hover{background:var(--gold-l);}
+.btn-secondary{
+  background:none;color:var(--wd);border:1px solid var(--border);
+  font-family:'Montserrat',sans-serif;font-size:10px;
+  letter-spacing:2px;text-transform:uppercase;padding:12px 24px;cursor:pointer;transition:all .2s;
+}
+.btn-secondary:hover{border-color:var(--gold);color:var(--gold);}
+.btn-row{display:flex;gap:12px;align-items:center;margin-top:20px;}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:30px;right:30px;z-index:999;
+  background:var(--b3);border:1px solid var(--borderhi);
+  padding:14px 22px;font-size:11px;letter-spacing:1px;
+  transform:translateX(200px);opacity:0;transition:all .35s;
+  display:flex;align-items:center;gap:10px;
+}
+#toast.show{transform:translateX(0);opacity:1;}
+#toast .t-icon{font-size:14px;}
+
+/* ── STATS ── */
+.stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;}
+.stat-card{background:var(--b2);border:1px solid var(--border);padding:20px 22px;}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:40px;color:var(--gold);line-height:1;}
+.stat-lbl{font-size:9px;letter-spacing:2px;color:var(--wd);text-transform:uppercase;margin-top:6px;}
+
+/* ── OZELLIKLER ── */
+.tags-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.tag{
+  display:flex;align-items:center;gap:6px;
+  background:var(--wf);border:1px solid var(--border);padding:6px 12px;
+  font-size:11px;color:var(--wd);
+}
+.tag-del{background:none;border:none;color:rgba(232,112,112,.6);cursor:pointer;font-size:12px;padding:0 2px;}
+.tag-del:hover{color:var(--red);}
+.tag-add{display:flex;gap:8px;margin-top:8px;}
+.tag-add input{flex:1;background:var(--b3);border:1px solid var(--border);color:var(--white);font-family:'Montserrat',sans-serif;font-size:12px;padding:8px 12px;outline:none;}
+.tag-add input:focus{border-color:var(--gold);}
+.tag-add button{background:none;border:1px solid var(--border);color:var(--gold);padding:8px 14px;cursor:pointer;font-size:12px;transition:all .2s;}
+.tag-add button:hover{background:rgba(201,169,110,.1);}
+
+.save-indicator{font-size:10px;color:var(--green);letter-spacing:1px;display:none;}
+.save-indicator.show{display:inline;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">ARSLANLAR</div>
+    <div class="login-sub">Admin Paneli</div>
+    <label class="f-label">E-posta</label>
+    <input class="f-input" type="email" id="loginEmail" placeholder="admin@arslanlar.com.tr" autocomplete="email">
+    <label class="f-label">Şifre</label>
+    <input class="f-input" type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+    <button class="btn-gold" onclick="doLogin()">Giriş Yap</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">ARSLANLAR</div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="topbarUser"></span>
+      <button class="btn-sm" onclick="doLogout()">Çıkış</button>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sb-section">Genel</div>
+    <div class="sb-item active" onclick="showPanel('dashboard',this)">
+      <span>📊</span><span>Özet</span>
+    </div>
+
+    <div class="sb-section">Projeler</div>
+    <div class="sb-item" onclick="showPanel('newproject',this)" id="sb-newproject">
+      <span style="font-size:14px">＋</span><span>Yeni Proje Ekle</span>
+    </div>
+    <div id="sidebarProjects"></div>
+
+    <div class="sb-section">Yönetim</div>
+    <div class="sb-item" onclick="showPanel('status',this)">
+      <span>🏠</span><span>Daire Durumları</span>
+    </div>
+    <div class="sb-item" onclick="showPanel('transit',this)">
+      <span>🚇</span><span>Transit Hatları</span>
+    </div>
+    <div class="sb-item" onclick="showPanel('pois',this)">
+      <span>📍</span><span>Özel Noktalar</span>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="page-title">Genel <em>Özet</em></div>
+      <div class="page-sub">Tüm projelerin anlık durumu</div>
+      <div class="gold-line"></div>
+      <div class="stat-cards" id="dashStats"></div>
+      <div class="card">
+        <div class="card-title">Proje Listesi</div>
+        <div id="dashProjList"></div>
+      </div>
+    </div>
+
+    <!-- PROJECT EDIT PANEL (template, cloned per project) -->
+    <div class="panel" id="panel-project">
+      <div class="page-title" id="projPanelTitle">Proje <em>Düzenle</em></div>
+      <div class="page-sub" id="projPanelSub"></div>
+      <div class="gold-line"></div>
+
+      <div class="grid-2">
+        <!-- Sol: Temel bilgiler -->
+        <div>
+          <div class="card">
+            <div class="card-title">Temel Bilgiler</div>
+            <div class="field"><label>Proje Adı</label><input type="text" id="pe-name" placeholder="ARSLANLAR VİP"></div>
+            <div class="grid-2">
+              <div class="field"><label>Proje Tipi</label>
+                <select id="pe-tip">
+                  <option value="Konut">Konut</option>
+                  <option value="Karma Kullanım">Karma Kullanım</option>
+                  <option value="Lüks Konut">Lüks Konut</option>
+                  <option value="Akıllı Konut">Akıllı Konut</option>
+                  <option value="Ticari">Ticari</option>
+                </select>
+              </div>
+              <div class="field"><label>Teslim Tarihi</label><input type="text" id="pe-teslim" placeholder="2026 Q2"></div>
+            </div>
+            <div class="grid-2">
+              <div class="field"><label>Blok Sayısı</label><input type="number" id="pe-blok" min="1"></div>
+              <div class="field"><label>Kat Sayısı</label><input type="number" id="pe-kat" min="1"></div>
+            </div>
+            <div class="field"><label>Toplam İnşaat Alanı</label><input type="text" id="pe-alan" placeholder="24.500 m²"></div>
+            <div class="field"><label>Açıklama / Slogan</label><textarea id="pe-aciklama" rows="3" placeholder="Kısa proje tanımı..."></textarea></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Render Görseli</div>
+            <div class="render-preview" id="pe-preview">
+              <span class="render-empty">Henüz görsel yok</span>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;margin-top:12px;">
+              <label style="flex:1;background:rgba(201,169,110,.1);border:1px solid var(--borderhi);color:var(--gold);font-family:Montserrat,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;text-align:center;transition:background .2s;">
+                &#128193; Görsel Seç &amp; Yükle
+                <input type="file" id="pe-file" accept="image/*" style="display:none" onchange="uploadRender()">
+              </label>
+              <div id="uploadStatus" style="font-size:10px;color:var(--wd);letter-spacing:1px;min-width:80px;"></div>
+            </div>
+            <div class="field" style="margin-top:12px;">
+              <label>veya URL ile gir</label>
+              <input type="url" id="pe-render" placeholder="https://... (jpg, png, webp)" oninput="previewRender()">
+              <div class="field-hint">Dosya yükleyince URL otomatik dolar</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sağ: Olanaklar + Daire tipleri -->
+        <div>
+          <div class="card">
+            <div class="card-title">Olanaklar</div>
+            <div class="tags-wrap" id="pe-tags"></div>
+            <div class="tag-add">
+              <input type="text" id="pe-tag-input" placeholder="Yeni olanak..." onkeydown="if(event.key==='Enter')addTag()">
+              <button onclick="addTag()">+ Ekle</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Daire Tipleri</div>
+            <table class="unit-table">
+              <thead>
+                <tr>
+                  <th>Tip</th><th>Min m²</th><th>Max m²</th><th>Fiyat</th><th>Adet</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="pe-units"></tbody>
+            </table>
+            <button class="add-row-btn" onclick="addUnitRow()">+ Yeni Daire Tipi Ekle</button>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-primary" onclick="saveProject()">Kaydet</button>
+            <button class="btn-secondary" onclick="saveProject(true)">Kaydet & Devam</button>
+            <span class="save-indicator" id="saveIndicator">✓ Kaydedildi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUS PANEL -->
+    <div class="panel" id="panel-status">
+      <div class="page-title">Daire <em>Durumları</em></div>
+      <div class="page-sub">Satıldı / Müsait / Opsiyonlu sayılarını güncelleyin</div>
+      <div class="gold-line"></div>
+
+      <div class="proj-selector" id="statusProjSelector"></div>
+
+      <div class="card" id="statusCard">
+        <div class="card-title" id="statusCardTitle">Proje Seçin</div>
+        <table class="status-table">
+          <thead>
+            <tr>
+              <th>Daire Tipi</th>
+              <th>Toplam</th>
+              <th class="s-musait">Müsait</th>
+              <th class="s-opsiyonlu">Opsiyonlu</th>
+              <th class="s-satildi">Satıldı</th>
+            </tr>
+          </thead>
+          <tbody id="statusTableBody"></tbody>
+        </table>
+        <div class="btn-row" style="display:none" id="statusSaveRow">
+          <button class="btn-primary" onclick="saveStatus()">Durumları Kaydet</button>
+          <span class="save-indicator" id="statusSaveInd">✓ Kaydedildi</span>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- NEW PROJECT PANEL -->
+    <div class="panel" id="panel-newproject">
+      <div class="page-title">Yeni <em>Proje Ekle</em></div>
+      <div class="page-sub">Yeni proje veya görüşmede olan projeyi sisteme ekleyin</div>
+      <div class="gold-line"></div>
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="card-title">Temel Bilgiler</div>
+            <div class="field"><label>Proje ID (kısa, benzersiz)</label><input type="text" id="np-id" placeholder="örn: yeni_proje" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')">
+              <div class="field-hint">Sadece küçük harf, rakam ve alt çizgi. Sonradan değiştirilemez.</div>
+            </div>
+            <div class="field"><label>Proje Adı</label><input type="text" id="np2-name" placeholder="ARSLANLAR YENİ PROJE"></div>
+            <div class="grid-2">
+              <div class="field"><label>Durum</label>
+                <select id="np2-durum">
+                  <option value="aktif">Aktif Satış</option>
+                  <option value="yaklasiyoruz">Başlamak Üzere</option>
+                  <option value="gorusme">Görüşmede</option>
+                  <option value="tamamlandi">Tamamlandı</option>
+                </select>
+              </div>
+              <div class="field"><label>Proje Tipi</label>
+                <select id="np2-tip">
+                  <option value="Konut">Konut</option>
+                  <option value="Karma Kullanım">Karma Kullanım</option>
+                  <option value="Lüks Konut">Lüks Konut</option>
+                  <option value="Akıllı Konut">Akıllı Konut</option>
+                  <option value="Ticari">Ticari</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="field"><label>Enlem (lat)</label><input type="number" id="np2-lat" step="0.000001" placeholder="40.107290"></div>
+              <div class="field"><label>Boylam (lng)</label><input type="number" id="np2-lng" step="0.000001" placeholder="32.982544"></div>
+            </div>
+            <div class="field-hint" style="margin-top:-10px;margin-bottom:16px">Google Maps'te projeye sağ tıkla → koordinatları kopyala</div>
+            <div class="field"><label>Marker Rengi</label>
+              <div style="display:flex;gap:10px;align-items:center">
+                <input type="color" id="np2-color" value="#C9A96E" style="width:50px;height:36px;background:none;border:1px solid var(--border);cursor:pointer;padding:2px">
+                <input type="text" id="np2-color-text" value="#C9A96E" style="flex:1" oninput="document.getElementById('np2-color').value=this.value">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">Proje Detayları</div>
+            <div class="grid-2">
+              <div class="field"><label>Teslim Tarihi</label><input type="text" id="np2-teslim" placeholder="2027 Q2"></div>
+              <div class="field"><label>Blok Sayısı</label><input type="number" id="np2-blok" min="1" value="1"></div>
+            </div>
+            <div class="grid-2">
+              <div class="field"><label>Kat Sayısı</label><input type="number" id="np2-kat" min="1"></div>
+              <div class="field"><label>Toplam Alan</label><input type="text" id="np2-alan" placeholder="15.000 m²"></div>
+            </div>
+            <div class="field"><label>Açıklama</label><textarea id="np2-aciklama" rows="3" placeholder="Proje hakkında kısa açıklama..."></textarea></div>
+          </div>
+          <div class="card" style="margin-top:0">
+            <div class="card-title">Sıralama</div>
+            <div class="field"><label>Haritadaki sıra</label><input type="number" id="np2-sira" min="1" value="10">
+              <div class="field-hint">Sol panelde görünüm sırası (1 = en üstte)</div>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn-primary" onclick="createNewProject()">Projeyi Oluştur</button>
+          </div>
+          <div id="np2-result" style="margin-top:12px;font-size:11px;color:var(--green);display:none">✓ Proje oluşturuldu! Sol menüden düzenleyebilirsiniz.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSIT PANEL -->
+    <div class="panel" id="panel-transit">
+      <div class="page-title">Transit <em>Hatları</em></div>
+      <div class="page-sub">Metro, otobüs ve tramvay hatlarını ve duraklarını yönetin</div>
+      <div class="gold-line"></div>
+      <div style="display:flex;gap:12px;margin-bottom:20px">
+        <button class="btn-primary" onclick="showAddLineForm()">+ Yeni Hat Ekle</button>
+      </div>
+      <div id="transitLinesList"></div>
+      <!-- Add/Edit Line Form -->
+      <div class="card" id="lineFormCard" style="display:none">
+        <div class="card-title" id="lineFormTitle">Yeni Hat</div>
+        <input type="hidden" id="lf-id">
+        <div class="grid-2">
+          <div class="field"><label>Hat Adı</label><input type="text" id="lf-name" placeholder="Ankaray M1 Hattı"></div>
+          <div class="field"><label>Tür</label>
+            <select id="lf-type">
+              <option value="metro">Metro</option>
+              <option value="bus">Otobüs</option>
+              <option value="tram">Tramvay</option>
+              <option value="metrobus">Metrobüs</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>Hat Rengi</label>
+          <div style="display:flex;gap:10px;align-items:center">
+            <input type="color" id="lf-color" value="#6B9FD4" style="width:50px;height:36px;background:none;border:1px solid var(--border);cursor:pointer;padding:2px">
+            <input type="text" id="lf-color-text" value="#6B9FD4" style="flex:1" oninput="document.getElementById('lf-color').value=this.value">
+          </div>
+        </div>
+        <div class="field">
+          <label>Koordinatlar (her satıra bir nokta: lng,lat)</label>
+          <textarea id="lf-coords" rows="8" placeholder="32.8541,39.9208&#10;32.8590,39.9310&#10;32.8630,39.9420&#10;(her satıra lng,lat formatında)"></textarea>
+          <div class="field-hint">Longitude,Latitude sırasıyla — Google Maps'ten sağ tık → koordinatları kopyala (önce lat gelir, burada lng,lat sırası lazım)</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" onclick="saveLine()">Kaydet</button>
+          <button class="btn-secondary" onclick="document.getElementById('lineFormCard').style.display='none'">İptal</button>
+        </div>
+      </div>
+      <!-- Stops -->
+      <div class="card" id="stopsCard" style="display:none;margin-top:20px">
+        <div class="card-title" id="stopsCardTitle">Duraklar</div>
+        <div id="stopsList"></div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <div class="card-title">Yeni Durak Ekle</div>
+          <div class="grid-2">
+            <div class="field"><label>Durak Adı</label><input type="text" id="ns-name" placeholder="Kızılay Metro"></div>
+            <div class="field"><label>Tür</label>
+              <select id="ns-type">
+                <option value="metro">Metro</option><option value="bus">Otobüs</option><option value="tram">Tramvay</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Enlem (lat)</label><input type="number" id="ns-lat" step="0.000001" placeholder="39.920800"></div>
+            <div class="field"><label>Boylam (lng)</label><input type="number" id="ns-lng" step="0.000001" placeholder="32.854100"></div>
+          </div>
+          <input type="hidden" id="ns-line-id">
+          <button class="btn-primary" onclick="addStop()">Durak Ekle</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECT POIs PANEL -->
+    <div class="panel" id="panel-pois">
+      <div class="page-title">Özel <em>Noktalar</em></div>
+      <div class="page-sub">Her proje için giriş kapısı, yakın önemli noktalar</div>
+      <div class="gold-line"></div>
+      <div class="proj-selector" id="poisProjSelector"></div>
+      <div class="card" id="poisCard" style="display:none">
+        <div class="card-title" id="poisCardTitle">Noktalar</div>
+        <div id="poisList"></div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <div class="card-title">Yeni Nokta Ekle</div>
+          <div class="grid-2">
+            <div class="field"><label>Nokta Adı</label><input type="text" id="np-name" placeholder="Ana Giriş Kapısı"></div>
+            <div class="field"><label>Kategori</label>
+              <select id="np-cat">
+                <option value="giris">Giriş Kapısı</option>
+                <option value="market">Market</option>
+                <option value="hastane">Hastane</option>
+                <option value="okul">Okul</option>
+                <option value="park">Park</option>
+                <option value="otopark">Otopark</option>
+                <option value="genel">Genel</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Enlem (lat)</label><input type="number" id="np-lat" step="0.000001"></div>
+            <div class="field"><label>Boylam (lng)</label><input type="number" id="np-lng" step="0.000001"></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>İkon (emoji)</label><input type="text" id="np-icon" value="📍" maxlength="2"></div>
+            <div class="field"><label>Renk</label>
+              <input type="color" id="np-color" value="#C9A96E" style="width:100%;height:42px;background:none;border:1px solid var(--border);cursor:pointer;padding:2px">
+            </div>
+          </div>
+          <input type="hidden" id="np-project-id">
+          <button class="btn-primary" onclick="addPOI()">Nokta Ekle</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"><span class="t-icon" id="toastIcon">✓</span><span id="toastMsg"></span></div>
+
+<script>
+// ═══════════════════════════════════════════
+const SUPABASE_URL = 'https://lbmzjhvgunkitpatijut.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_59-PLGkxMNiaL_lKUXyDbQ_ubzKmEcY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let projects = [];
+let unitTypes = {};   // project_id → [unit_type rows]
+let unitStatus = {};  // project_id → [status rows]
+let editingProjectId = null;
+let currentTags = [];
+let currentUnitRows = []; // { id (if exists), tip, m2_min, m2_max, fiyat, toplam_adet }
+
+// ═══════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  document.getElementById('loginErr').textContent = '';
+  if (!email || !pass) { document.getElementById('loginErr').textContent = 'Email ve şifre gerekli.'; return; }
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { document.getElementById('loginErr').textContent = 'Giriş başarısız: ' + error.message; return; }
+  currentUser = data.user;
+  startApp();
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+async function checkSession() {
+  const { data } = await sb.auth.getSession();
+  if (data.session) {
+    currentUser = data.session.user;
+    startApp();
+  }
+}
+
+// ═══════════════════════════════════════════
+// APP START
+// ═══════════════════════════════════════════
+async function startApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('topbarUser').textContent = currentUser.email;
+  await loadAllData();
+  buildSidebar();
+  buildDashboard();
+  buildStatusSelector();
+  await loadTransitData();
+}
+
+async function loadAllData() {
+  const [pRes, utRes, usRes] = await Promise.all([
+    sb.from('projects').select('*').order('sira'),
+    sb.from('unit_types').select('*').order('sira'),
+    sb.from('unit_status').select('*'),
+  ]);
+  projects = pRes.data || [];
+  // group unit types by project_id
+  unitTypes = {};
+  (utRes.data || []).forEach(ut => {
+    if (!unitTypes[ut.project_id]) unitTypes[ut.project_id] = [];
+    unitTypes[ut.project_id].push(ut);
+  });
+  // group status
+  unitStatus = {};
+  (usRes.data || []).forEach(us => {
+    if (!unitStatus[us.project_id]) unitStatus[us.project_id] = [];
+    unitStatus[us.project_id].push(us);
+  });
+}
+
+// ═══════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════
+function buildSidebar() {
+  const c = document.getElementById('sidebarProjects');
+  c.innerHTML = '';
+  projects.forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'sb-item';
+    d.id = 'sb-proj-' + p.id;
+    d.innerHTML = `<span class="sb-dot" style="background:${p.color}"></span><span>${p.name.replace('ARSLANLAR ','')}</span>`;
+    d.onclick = () => { openProjectPanel(p.id); showPanel('project', d); };
+    c.appendChild(d);
+  });
+}
+
+function showPanel(name, clickedEl) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (clickedEl) clickedEl.classList.add('active');
+  if (name === 'transit') renderTransitLinesList();
+  if (name === 'pois')    buildPoisSelector();
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
+function buildDashboard() {
+  // Stats
+  let totalDaire = 0, totalMusait = 0, totalOpsiyonlu = 0, totalSatildi = 0;
+  projects.forEach(p => {
+    (unitTypes[p.id] || []).forEach(ut => { totalDaire += (ut.toplam_adet || 0); });
+    (unitStatus[p.id] || []).forEach(us => {
+      totalMusait += (us.musait || 0);
+      totalOpsiyonlu += (us.opsiyonlu || 0);
+      totalSatildi += (us.satildi || 0);
+    });
+  });
+  document.getElementById('dashStats').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${projects.length}</div><div class="stat-lbl">Aktif Proje</div></div>
+    <div class="stat-card"><div class="stat-num">${totalDaire}</div><div class="stat-lbl">Toplam Daire</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${totalMusait}</div><div class="stat-lbl">Müsait</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)">${totalSatildi}</div><div class="stat-lbl">Satıldı</div></div>
+  `;
+  // Project list
+  const rows = projects.map(p => {
+    const uts = unitTypes[p.id] || [];
+    const total = uts.reduce((a, ut) => a + (ut.toplam_adet || 0), 0);
+    const uss = unitStatus[p.id] || [];
+    const satildi = uss.reduce((a, us) => a + (us.satildi || 0), 0);
+    const pct = total > 0 ? Math.round(satildi / total * 100) : 0;
+    return `<div style="display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid rgba(245,240,232,.05);">
+      <span style="width:10px;height:10px;border-radius:50%;background:${p.color};flex-shrink:0;"></span>
+      <span style="flex:1;font-size:12px;letter-spacing:.5px;">${p.name}</span>
+      <span style="font-size:10px;color:var(--wd)">${p.tip || ''}</span>
+      <span style="font-size:10px;color:var(--wd)">${total} daire</span>
+      <span style="font-size:10px;color:var(--red)">${pct}% satıldı</span>
+      <button onclick="openProjectPanel('${p.id}')" style="background:none;border:1px solid var(--border);color:var(--gold);padding:5px 12px;cursor:pointer;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;">Düzenle</button>
+    </div>`;
+  }).join('');
+  document.getElementById('dashProjList').innerHTML = rows;
+}
+
+// ═══════════════════════════════════════════
+// PROJECT PANEL
+// ═══════════════════════════════════════════
+function openProjectPanel(projectId) {
+  editingProjectId = projectId;
+  const p = projects.find(x => x.id === projectId);
+  if (!p) return;
+
+  document.getElementById('projPanelTitle').innerHTML = `${p.name.replace('ARSLANLAR ','')} <em>Düzenle</em>`;
+  document.getElementById('projPanelSub').textContent = p.name + ' — ' + (p.tip || '');
+
+  // Fill form
+  document.getElementById('pe-name').value    = p.name || '';
+  document.getElementById('pe-tip').value     = p.tip || 'Konut';
+  document.getElementById('pe-teslim').value  = p.teslim || '';
+  document.getElementById('pe-blok').value    = p.blok_sayisi || '';
+  document.getElementById('pe-kat').value     = p.kat_sayisi || '';
+  document.getElementById('pe-alan').value    = p.toplam_alan || '';
+  document.getElementById('pe-aciklama').value = p.aciklama || '';
+  document.getElementById('pe-render').value  = p.render_url || '';
+  previewRender();
+
+  // Tags
+  currentTags = [...(p.ozellikler || [])];
+  renderTags();
+
+  // Unit rows
+  currentUnitRows = (unitTypes[projectId] || []).map(ut => ({...ut}));
+  renderUnitRows();
+
+  showPanel('project', document.getElementById('sb-proj-' + projectId));
+}
+
+function previewRender() {
+  const url = document.getElementById('pe-render').value.trim();
+  const prev = document.getElementById('pe-preview');
+  prev.innerHTML = url
+    ? `<img src="${url}" onerror="this.parentElement.innerHTML='<span class=render-empty>Görsel yüklenemedi</span>'">`
+    : '<span class="render-empty">Henüz görsel yok</span>';
+}
+
+async function uploadRender() {
+  const file = document.getElementById('pe-file').files[0];
+  if (!file || !editingProjectId) return;
+  const status = document.getElementById('uploadStatus');
+  status.textContent = 'Yükleniyor...';
+  status.style.color = 'var(--gold)';
+  const ext = file.name.split('.').pop();
+  const path = `${editingProjectId}-${Date.now()}.${ext}`;
+  const { data, error } = await sb.storage.from('renders').upload(path, file, { upsert: true, contentType: file.type });
+  if (error) { status.textContent = 'Hata!'; status.style.color = 'var(--red)'; toast('Yükleme hatası: ' + error.message, 'x', true); return; }
+  const { data: urlData } = sb.storage.from('renders').getPublicUrl(path);
+  const publicUrl = urlData.publicUrl;
+  document.getElementById('pe-render').value = publicUrl;
+  previewRender();
+  status.textContent = '✓ Yüklendi';
+  status.style.color = 'var(--green)';
+  toast('Görsel yüklendi', '✓');
+}
+
+// Tags
+function renderTags() {
+  const wrap = document.getElementById('pe-tags');
+  wrap.innerHTML = currentTags.map((t,i) =>
+    `<div class="tag">${t}<button class="tag-del" onclick="removeTag(${i})">×</button></div>`
+  ).join('');
+}
+function addTag() {
+  const inp = document.getElementById('pe-tag-input');
+  const val = inp.value.trim();
+  if (val && !currentTags.includes(val)) { currentTags.push(val); renderTags(); }
+  inp.value = '';
+}
+function removeTag(i) { currentTags.splice(i,1); renderTags(); }
+
+// Unit rows
+function renderUnitRows() {
+  const tbody = document.getElementById('pe-units');
+  tbody.innerHTML = currentUnitRows.map((r,i) => `
+    <tr>
+      <td><input value="${r.tip||''}" placeholder="2+1" oninput="currentUnitRows[${i}].tip=this.value"></td>
+      <td><input type="number" value="${r.m2_min||''}" placeholder="85" oninput="currentUnitRows[${i}].m2_min=+this.value" style="width:70px"></td>
+      <td><input type="number" value="${r.m2_max||''}" placeholder="100" oninput="currentUnitRows[${i}].m2_max=+this.value" style="width:70px"></td>
+      <td><input value="${r.fiyat||''}" placeholder="3.400.000 ₺" oninput="currentUnitRows[${i}].fiyat=this.value"></td>
+      <td><input type="number" value="${r.toplam_adet||0}" oninput="currentUnitRows[${i}].toplam_adet=+this.value" style="width:70px"></td>
+      <td><button class="del-btn" onclick="removeUnitRow(${i})">Sil</button></td>
+    </tr>
+  `).join('');
+}
+function addUnitRow() {
+  currentUnitRows.push({ tip:'', m2_min:0, m2_max:0, fiyat:'', toplam_adet:0 });
+  renderUnitRows();
+}
+function removeUnitRow(i) { currentUnitRows.splice(i,1); renderUnitRows(); }
+
+// SAVE PROJECT
+async function saveProject(stay = false) {
+  const p = projects.find(x => x.id === editingProjectId);
+  if (!p) return;
+
+  const updates = {
+    name:        document.getElementById('pe-name').value.trim(),
+    tip:         document.getElementById('pe-tip').value,
+    teslim:      document.getElementById('pe-teslim').value.trim(),
+    blok_sayisi: parseInt(document.getElementById('pe-blok').value) || null,
+    kat_sayisi:  parseInt(document.getElementById('pe-kat').value) || null,
+    toplam_alan: document.getElementById('pe-alan').value.trim(),
+    aciklama:    document.getElementById('pe-aciklama').value.trim(),
+    render_url:  document.getElementById('pe-render').value.trim(),
+    ozellikler:  currentTags,
+  };
+
+  // Update project
+  const { error: pErr } = await sb.from('projects').update(updates).eq('id', editingProjectId);
+  if (pErr) { toast('Hata: ' + pErr.message, '✕', true); return; }
+
+  // Update unit types: delete all then insert
+  await sb.from('unit_types').delete().eq('project_id', editingProjectId);
+  if (currentUnitRows.length > 0) {
+    const rows = currentUnitRows.map((r, i) => ({
+      project_id: editingProjectId,
+      tip: r.tip, m2_min: r.m2_min, m2_max: r.m2_max,
+      fiyat: r.fiyat, toplam_adet: r.toplam_adet, sira: i
+    }));
+    const { error: utErr } = await sb.from('unit_types').insert(rows);
+    if (utErr) { toast('Daire tipi kayıt hatası: ' + utErr.message, '✕', true); return; }
+  }
+
+  // Reload & refresh
+  await loadAllData();
+  buildSidebar();
+  buildDashboard();
+
+  // Show indicator
+  const ind = document.getElementById('saveIndicator');
+  ind.classList.add('show');
+  setTimeout(() => ind.classList.remove('show'), 2500);
+  toast(`${updates.name} kaydedildi`, '✓');
+
+  if (!stay) {} // stay on page
+}
+
+// ═══════════════════════════════════════════
+// STATUS PANEL
+// ═══════════════════════════════════════════
+let activeStatusProject = null;
+
+function buildStatusSelector() {
+  const c = document.getElementById('statusProjSelector');
+  c.innerHTML = '';
+  projects.forEach(p => {
+    const btn = document.createElement('div');
+    btn.className = 'proj-pill';
+    btn.id = 'sp-' + p.id;
+    btn.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color};margin-right:8px;vertical-align:middle;"></span>${p.name.replace('ARSLANLAR ','')}`;
+    btn.onclick = () => openStatusPanel(p.id);
+    c.appendChild(btn);
+  });
+}
+
+async function openStatusPanel(projectId) {
+  activeStatusProject = projectId;
+  document.querySelectorAll('.proj-pill').forEach(b => b.classList.remove('active'));
+  document.getElementById('sp-' + projectId).classList.add('active');
+
+  const p = projects.find(x => x.id === projectId);
+  document.getElementById('statusCardTitle').textContent = p.name + ' — Daire Durumları';
+
+  const uts = unitTypes[projectId] || [];
+  const uss = unitStatus[projectId] || [];
+
+  const tbody = document.getElementById('statusTableBody');
+  tbody.innerHTML = uts.map(ut => {
+    const us = uss.find(s => s.unit_type_id === ut.id) || { musait: ut.toplam_adet, opsiyonlu: 0, satildi: 0 };
+    return `<tr>
+      <td style="font-size:12px;color:var(--white);font-weight:400;">${ut.tip} <span style="color:var(--wd);font-size:10px;">${ut.m2_min}–${ut.m2_max} m²</span></td>
+      <td style="color:var(--wd)">${ut.toplam_adet}</td>
+      <td><input type="number" min="0" value="${us.musait||0}" id="st-m-${ut.id}" class="s-musait" style="border-color:rgba(93,189,132,.3)"></td>
+      <td><input type="number" min="0" value="${us.opsiyonlu||0}" id="st-o-${ut.id}" class="s-opsiyonlu" style="border-color:rgba(232,169,110,.3)"></td>
+      <td><input type="number" min="0" value="${us.satildi||0}" id="st-s-${ut.id}" class="s-satildi" style="border-color:rgba(232,112,112,.3)"></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('statusSaveRow').style.display = 'flex';
+}
+
+async function saveStatus() {
+  const uts = unitTypes[activeStatusProject] || [];
+  for (const ut of uts) {
+    const musait    = parseInt(document.getElementById('st-m-' + ut.id)?.value) || 0;
+    const opsiyonlu = parseInt(document.getElementById('st-o-' + ut.id)?.value) || 0;
+    const satildi   = parseInt(document.getElementById('st-s-' + ut.id)?.value) || 0;
+
+    const existing = (unitStatus[activeStatusProject] || []).find(s => s.unit_type_id === ut.id);
+    if (existing) {
+      await sb.from('unit_status').update({ musait, opsiyonlu, satildi, updated_at: new Date().toISOString() }).eq('id', existing.id);
+    } else {
+      await sb.from('unit_status').insert({ project_id: activeStatusProject, unit_type_id: ut.id, musait, opsiyonlu, satildi });
+    }
+  }
+  await loadAllData();
+  buildDashboard();
+  const ind = document.getElementById('statusSaveInd');
+  ind.classList.add('show');
+  setTimeout(() => ind.classList.remove('show'), 2500);
+  toast('Durumlar kaydedildi', '✓');
+}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+let toastTimer;
+function toast(msg, icon='✓', isErr=false) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastIcon').textContent = icon;
+  t.style.borderColor = isErr ? 'rgba(232,112,112,.5)' : 'rgba(201,169,110,.45)';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ═══════════════════════════════════════════
+// TRANSIT LINES
+// ═══════════════════════════════════════════
+let transitLines = [];
+let transitStops = [];
+let editingLineId = null;
+let activePoiProjectId = null;
+
+async function loadTransitData() {
+  const [lRes, sRes] = await Promise.all([
+    sb.from('transit_lines').select('*').order('id'),
+    sb.from('transit_stops').select('*').order('id'),
+  ]);
+  transitLines = lRes.data || [];
+  transitStops = sRes.data || [];
+}
+
+async function renderTransitLinesList() {
+  await loadTransitData();
+  const c = document.getElementById('transitLinesList');
+  if (!transitLines.length) { c.innerHTML = '<div style="font-size:11px;color:var(--wd);padding:12px 0">Henüz hat eklenmemiş.</div>'; return; }
+  c.innerHTML = transitLines.map(line => {
+    const stops = transitStops.filter(s => s.line_id === line.id);
+    const typeLabel = {metro:'Metro',bus:'Otobüs',tram:'Tramvay',metrobus:'Metrobüs'}[line.type] || line.type;
+    return `<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)">
+      <div style="width:14px;height:14px;border-radius:50%;background:${line.color};flex-shrink:0"></div>
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--white)">${line.name}</div>
+        <div style="font-size:10px;color:var(--wd);margin-top:2px">${typeLabel} · ${stops.length} durak</div>
+      </div>
+      <button onclick="editLine(${line.id})" style="background:none;border:1px solid var(--border);color:var(--gold);padding:5px 12px;cursor:pointer;font-size:9px;letter-spacing:1.5px;text-transform:uppercase">Düzenle</button>
+      <button onclick="manageStops(${line.id})" style="background:none;border:1px solid rgba(107,159,212,.4);color:#6B9FD4;padding:5px 12px;cursor:pointer;font-size:9px;letter-spacing:1.5px;text-transform:uppercase">Duraklar</button>
+      <button onclick="deleteLine(${line.id})" style="background:none;border:1px solid rgba(232,112,112,.3);color:var(--red);padding:5px 12px;cursor:pointer;font-size:9px">Sil</button>
+    </div>`;
+  }).join('');
+}
+
+function showAddLineForm() {
+  editingLineId = null;
+  document.getElementById('lf-id').value = '';
+  document.getElementById('lf-name').value = '';
+  document.getElementById('lf-type').value = 'metro';
+  document.getElementById('lf-color').value = '#6B9FD4';
+  document.getElementById('lf-color-text').value = '#6B9FD4';
+  document.getElementById('lf-coords').value = '';
+  document.getElementById('lineFormTitle').textContent = 'Yeni Hat Ekle';
+  document.getElementById('lineFormCard').style.display = 'block';
+  document.getElementById('stopsCard').style.display = 'none';
+}
+
+function editLine(id) {
+  var line = transitLines.find(function(l){ return l.id === id; });
+  if (!line) return;
+  editingLineId = id;
+  document.getElementById('lf-id').value = id;
+  document.getElementById('lf-name').value = line.name;
+  document.getElementById('lf-type').value = line.type;
+  document.getElementById('lf-color').value = line.color;
+  document.getElementById('lf-color-text').value = line.color;
+  var coordArr = line.coordinates || [];
+  var coordLines = [];
+  for (var i=0; i<coordArr.length; i++) { coordLines.push(coordArr[i][0]+','+coordArr[i][1]); }
+  document.getElementById('lf-coords').value = coordLines.join(String.fromCharCode(10));
+  document.getElementById('lineFormTitle').textContent = 'Hat Duzenle: ' + line.name;
+  document.getElementById('lineFormCard').style.display = 'block';
+}
+
+async function saveLine() {
+  const name  = document.getElementById('lf-name').value.trim();
+  const type  = document.getElementById('lf-type').value;
+  const color = document.getElementById('lf-color-text').value.trim() || document.getElementById('lf-color').value;
+  const raw   = document.getElementById('lf-coords').value.trim();
+  if (!name || !raw) { toast('Hat adı ve koordinatlar gerekli', '!', true); return; }
+  const coordinates = raw.split(String.fromCharCode(10)).map(l => l.trim()).filter(Boolean).map(l => {
+    const [lng, lat] = l.split(',').map(Number);
+    return [lng, lat];
+  }).filter(p => !isNaN(p[0]) && !isNaN(p[1]));
+  if (coordinates.length < 2) { toast('En az 2 koordinat gerekli', '!', true); return; }
+  const payload = { name, type, color, coordinates };
+  let err;
+  if (editingLineId) {
+    ({ error: err } = await sb.from('transit_lines').update(payload).eq('id', editingLineId));
+  } else {
+    ({ error: err } = await sb.from('transit_lines').insert(payload));
+  }
+  if (err) { toast('Hata: ' + err.message, '!', true); return; }
+  toast('Hat kaydedildi', '✓');
+  document.getElementById('lineFormCard').style.display = 'none';
+  renderTransitLinesList();
+}
+
+async function deleteLine(id) {
+  if (!confirm('Bu hattı silmek istediğinizden emin misiniz?')) return;
+  await sb.from('transit_lines').delete().eq('id', id);
+  renderTransitLinesList();
+  toast('Hat silindi');
+}
+
+function manageStops(lineId) {
+  const line = transitLines.find(l => l.id === lineId);
+  document.getElementById('ns-line-id').value = lineId;
+  document.getElementById('ns-type').value = line.type;
+  document.getElementById('stopsCardTitle').textContent = line.name + ' — Duraklar';
+  renderStopsList(lineId);
+  document.getElementById('stopsCard').style.display = 'block';
+  document.getElementById('lineFormCard').style.display = 'none';
+}
+
+function renderStopsList(lineId) {
+  const stops = transitStops.filter(s => s.line_id === lineId);
+  const c = document.getElementById('stopsList');
+  if (!stops.length) { c.innerHTML = '<div style="font-size:11px;color:var(--wd);padding:8px 0">Henüz durak yok.</div>'; return; }
+  c.innerHTML = stops.map(s => `
+    <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(245,240,232,.05)">
+      <span style="font-size:12px;flex:1;color:var(--white)">${s.name}</span>
+      <span style="font-size:10px;color:var(--wd)">${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</span>
+      <button onclick="deleteStop(${s.id})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px">✕</button>
+    </div>`).join('');
+}
+
+async function addStop() {
+  const name   = document.getElementById('ns-name').value.trim();
+  const lat    = parseFloat(document.getElementById('ns-lat').value);
+  const lng    = parseFloat(document.getElementById('ns-lng').value);
+  const type   = document.getElementById('ns-type').value;
+  const lineId = parseInt(document.getElementById('ns-line-id').value);
+  if (!name || isNaN(lat) || isNaN(lng)) { toast('Ad, enlem ve boylam gerekli', '!', true); return; }
+  const { error } = await sb.from('transit_stops').insert({ line_id: lineId, name, lat, lng, type });
+  if (error) { toast('Hata: ' + error.message, '!', true); return; }
+  await loadTransitData();
+  renderStopsList(lineId);
+  document.getElementById('ns-name').value = '';
+  document.getElementById('ns-lat').value = '';
+  document.getElementById('ns-lng').value = '';
+  toast('Durak eklendi', '✓');
+}
+
+async function deleteStop(id) {
+  const lineId = parseInt(document.getElementById('ns-line-id').value);
+  await sb.from('transit_stops').delete().eq('id', id);
+  await loadTransitData();
+  renderStopsList(lineId);
+  toast('Durak silindi');
+}
+
+// ═══════════════════════════════════════════
+// PROJECT POIs
+// ═══════════════════════════════════════════
+let projectPois = [];
+
+async function loadProjectPois() {
+  const { data } = await sb.from('project_pois').select('*').order('sira');
+  projectPois = data || [];
+}
+
+function buildPoisSelector() {
+  const c = document.getElementById('poisProjSelector');
+  c.innerHTML = '';
+  projects.forEach(p => {
+    const btn = document.createElement('div');
+    btn.className = 'proj-pill';
+    btn.id = 'pp-' + p.id;
+    btn.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color};margin-right:8px;vertical-align:middle"></span>${p.name.replace('ARSLANLAR ','')}`;
+    btn.onclick = () => openPoisPanel(p.id);
+    c.appendChild(btn);
+  });
+}
+
+async function openPoisPanel(projectId) {
+  activePoiProjectId = projectId;
+  await loadProjectPois();
+  document.querySelectorAll('.proj-pill').forEach(b => b.classList.remove('active'));
+  document.getElementById('pp-' + projectId).classList.add('active');
+  const p = projects.find(x => x.id === projectId);
+  document.getElementById('poisCardTitle').textContent = p.name + ' — Özel Noktalar';
+  document.getElementById('np-project-id').value = projectId;
+  document.getElementById('poisCard').style.display = 'block';
+  renderPoisList(projectId);
+}
+
+function renderPoisList(projectId) {
+  const pois = projectPois.filter(p => p.project_id === projectId);
+  const c = document.getElementById('poisList');
+  if (!pois.length) { c.innerHTML = '<div style="font-size:11px;color:var(--wd);padding:8px 0">Henüz nokta yok.</div>'; return; }
+  c.innerHTML = pois.map(poi => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(245,240,232,.05)">
+      <span style="font-size:16px">${poi.icon||'📍'}</span>
+      <span style="width:8px;height:8px;border-radius:50%;background:${poi.color};flex-shrink:0"></span>
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--white)">${poi.name}</div>
+        <div style="font-size:9px;color:var(--wd);margin-top:2px">${poi.category} · ${poi.lat.toFixed(5)}, ${poi.lng.toFixed(5)}</div>
+      </div>
+      <button onclick="deletePOI(${poi.id})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px">✕</button>
+    </div>`).join('');
+}
+
+async function addPOI() {
+  const name      = document.getElementById('np-name').value.trim();
+  const category  = document.getElementById('np-cat').value;
+  const lat       = parseFloat(document.getElementById('np-lat').value);
+  const lng       = parseFloat(document.getElementById('np-lng').value);
+  const icon      = document.getElementById('np-icon').value.trim() || '📍';
+  const color     = document.getElementById('np-color').value;
+  const projectId = document.getElementById('np-project-id').value;
+  if (!name || isNaN(lat) || isNaN(lng)) { toast('Ad, enlem ve boylam gerekli', '!', true); return; }
+  const { error } = await sb.from('project_pois').insert({ project_id: projectId, name, category, lat, lng, icon, color });
+  if (error) { toast('Hata: ' + error.message, '!', true); return; }
+  await loadProjectPois();
+  renderPoisList(projectId);
+  document.getElementById('np-name').value = '';
+  document.getElementById('np-lat').value = '';
+  document.getElementById('np-lng').value = '';
+  toast('Nokta eklendi', '✓');
+}
+
+async function deletePOI(id) {
+  await sb.from('project_pois').delete().eq('id', id);
+  await loadProjectPois();
+  renderPoisList(activePoiProjectId);
+  toast('Nokta silindi');
+}
+
+// ═══════════════════════════════════════════
+// YENİ PROJE OLUŞTURMA
+// ═══════════════════════════════════════════
+async function createNewProject() {
+  const id       = document.getElementById('np-id').value.trim();
+  const name     = document.getElementById('np2-name').value.trim();
+  const tip      = document.getElementById('np2-tip').value;
+  const lat      = parseFloat(document.getElementById('np2-lat').value);
+  const lng      = parseFloat(document.getElementById('np2-lng').value);
+  const color    = document.getElementById('np2-color-text').value.trim() || document.getElementById('np2-color').value;
+  const teslim   = document.getElementById('np2-teslim').value.trim();
+  const blok     = parseInt(document.getElementById('np2-blok').value) || 1;
+  const kat      = parseInt(document.getElementById('np2-kat').value) || null;
+  const alan     = document.getElementById('np2-alan').value.trim();
+  const aciklama = document.getElementById('np2-aciklama').value.trim();
+  const sira     = parseInt(document.getElementById('np2-sira').value) || 10;
+
+  if (!id || !name || isNaN(lat) || isNaN(lng)) {
+    toast('ID, isim, enlem ve boylam zorunludur', '!', true);
+    return;
+  }
+  if (!/^[a-z0-9_]+$/.test(id)) {
+    toast('ID sadece küçük harf, rakam ve alt çizgi içerebilir', '!', true);
+    return;
+  }
+
+  const { error } = await sb.from('projects').insert({
+    id, name, lat, lng, color, tip, teslim,
+    blok_sayisi: blok, kat_sayisi: kat,
+    toplam_alan: alan, aciklama, sira
+  });
+
+  if (error) {
+    if (error.code === '23505') toast('Bu ID zaten kullanılıyor, farklı bir ID deneyin', '!', true);
+    else toast('Hata: ' + error.message, '!', true);
+    return;
+  }
+
+  await loadAllData();
+  buildSidebar();
+  buildDashboard();
+
+  document.getElementById('np2-result').style.display = 'block';
+  toast(name + ' projesi oluşturuldu!', '✓');
+
+  // Clear form
+  setTimeout(() => {
+    ['np-id','np2-name','np2-lat','np2-lng','np2-teslim','np2-alan','np2-aciklama'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.getElementById('np2-result').style.display = 'none';
+    document.getElementById('np2-color').value = '#C9A96E';
+    document.getElementById('np2-color-text').value = '#C9A96E';
+    document.getElementById('np2-sira').value = '10';
+    document.getElementById('np2-blok').value = '1';
+  }, 3000);
+}
+
+// ═══════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════
+checkSession();
+</script>
+</body>
+</html>

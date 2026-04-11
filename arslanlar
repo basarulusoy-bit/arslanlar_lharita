@@ -1,0 +1,2 @@
+/*
+  Content-Security-Policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.supabase.co https://*.netlify.app https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://tiles.openfreemap.org https://demotiles.maplibre.org https://server.arcgisonline.com https://overpass-api.de https://router.project-osrm.org https://nominatim.openstreetmap.org https://*.basemaps.cartocdn.com data: blob:
