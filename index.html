@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Arslanlar Projeleri — 3D Harita</title>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD4JLGCE71U1n9YmhLFQRv7CDCjmrUigkA&libraries=places&loading=async&callback=initGoogleMaps"></script>
 <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet"/>
@@ -423,12 +422,6 @@
 
 <script>
 // ── SUPABASE ──────────────────────────────────────────────
-const GOOGLE_API_KEY = 'AIzaSyD4JLGCE71U1n9YmhLFQRv7CDCjmrUigkA';
-// Google Maps callback
-window.initGoogleMaps = function() {
-  window.googleMapsReady = true;
-};
-
 const SUPABASE_URL = 'https://lbmzjhvgunkitpatijut.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_59-PLGkxMNiaL_lKUXyDbQ_ubzKmEcY';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1301,28 +1294,6 @@ async function searchAndRoute() {
 }
 
 async function geocodePlace(query) {
-  // Google Geocoding API (browser-native)
-  if (window.google && window.google.maps) {
-    try {
-      const geocoder = new google.maps.Geocoder();
-      const q = /ankara/i.test(query) ? query : query + ', Ankara, Türkiye';
-      const result = await new Promise((resolve, reject) => {
-        geocoder.geocode({ address: q, region: 'tr' }, (res, status) => {
-          if (status === 'OK') resolve(res);
-          else reject(status);
-        });
-      });
-      if (result && result.length) {
-        const loc = result[0].geometry.location;
-        return {
-          name: result[0].formatted_address.split(',').slice(0,2).join(', '),
-          lat: loc.lat(),
-          lng: loc.lng()
-        };
-      }
-    } catch(e) { console.warn('Google Geocoder hata:', e); }
-  }
-  // Fallback: Nominatim
   try {
     const q = /ankara/i.test(query) ? query : query + ', Ankara, Türkiye';
     const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&countrycodes=tr&q=' + encodeURIComponent(q), { headers: {'Accept':'application/json','User-Agent':'ArslanlarProjects/1.0'} });
@@ -1357,35 +1328,19 @@ async function drawRouteBetween(project, target) {
   setRouteStatus(project.name + ' → ' + target.name + ' hesaplanıyor...');
   const mode = ROUTE_MODES[activeRouteMode];
   const isWalk = activeRouteMode === 'walk';
-
-  if (window.googleMapsReady && window.google && window.google.maps && window.google.maps.DirectionsService) {
-    try {
-      const svc = new google.maps.DirectionsService();
-      const travelMode = isWalk ? google.maps.TravelMode.WALKING : google.maps.TravelMode.DRIVING;
-      const result = await new Promise((resolve, reject) => {
-        svc.route({ origin:{lat:project.lat,lng:project.lng}, destination:{lat:target.lat,lng:target.lng}, travelMode, region:'tr' },
-          (res, status) => { if (status==='OK') resolve(res); else reject(new Error(status)); });
-      });
-      const leg = result.routes[0].legs[0];
-      const path = result.routes[0].overview_path;
-      const geojson = { type:'LineString', coordinates:path.map(p => [p.lng(), p.lat()]) };
-      renderRoute(geojson, mode.color, false);
-      renderTargetMarker(target, mode.color);
-      fitRoute(project, target);
-      showRouteInfo(project, target, leg.distance.value, leg.duration.value, mode);
-      setRouteStatus(project.name + ' → ' + target.name + ' — ' + leg.distance.text + ' / ' + leg.duration.text);
-      return;
-    } catch(e) { console.warn('Google:', e.message); }
-  }
-
   const osrmProfile = isWalk ? 'foot' : 'car';
+
   try {
-    const r = await fetch('https://router.project-osrm.org/route/v1/' + osrmProfile + '/' +
-      project.lng+','+project.lat+';'+target.lng+','+target.lat+'?overview=full&geometries=geojson');
+    const url = 'https://router.project-osrm.org/route/v1/' + osrmProfile + '/' +
+      project.lng + ',' + project.lat + ';' + target.lng + ',' + target.lat +
+      '?overview=full&geometries=geojson';
+    const r = await fetch(url);
     const d = await r.json();
-    if (d.code==='Ok' && d.routes && d.routes.length) {
+    if (d.code === 'Ok' && d.routes && d.routes.length) {
       const dist = d.routes[0].distance;
-      const dur = isWalk ? dist/1.39 : d.routes[0].duration;
+      // OSRM foot profili yanlış süre veriyor, elle hesapla
+      // Yürüyüş: 5 km/h = 1.39 m/s, Araç şehir içi: 30 km/h = 8.33 m/s
+      const dur = isWalk ? (dist / 1.39) : d.routes[0].duration;
       renderRoute(d.routes[0].geometry, mode.color, false);
       renderTargetMarker(target, mode.color);
       fitRoute(project, target);
@@ -1393,11 +1348,12 @@ async function drawRouteBetween(project, target) {
       setRouteStatus(project.name + ' → ' + target.name + ' rotası hazır.');
       return;
     }
-  } catch(e) { console.warn('OSRM:', e); }
+  } catch(e) { console.warn('OSRM hatası:', e); }
 
+  // Fallback: düz çizgi
   const dist = getDistance(project.lat, project.lng, target.lat, target.lng);
   const spd = isWalk ? 1.39 : 8.33;
-  renderRoute({type:'LineString',coordinates:[[project.lng,project.lat],[target.lng,target.lat]]}, mode.color, true);
+  renderRoute({ type:'LineString', coordinates:[[project.lng,project.lat],[target.lng,target.lat]] }, mode.color, true);
   renderTargetMarker(target, mode.color);
   fitRoute(project, target);
   showRouteInfo(project, target, dist, dist/spd, mode, true);
