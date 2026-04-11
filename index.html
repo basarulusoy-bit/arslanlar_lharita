@@ -1349,306 +1349,54 @@ function decodePolyline(encoded) {
 }
 
 async function drawRouteBetween(project, target) {
-  console.log('drawRoute called, mode:', activeRouteMode, 'google:', !!(window.google && window.google.maps));
   setRouteStatus(project.name + ' → ' + target.name + ' hesaplanıyor...');
   const mode = ROUTE_MODES[activeRouteMode];
+  const isWalk = activeRouteMode === 'walk';
 
-  // Google Maps DirectionsService (browser-native, no CORS issue)
-  if (window.google && window.google.maps) {
+  if (window.google && window.google.maps && window.google.maps.DirectionsService) {
     try {
-      const travelMode = activeRouteMode === 'walk'
-        ? google.maps.TravelMode.WALKING
-        : google.maps.TravelMode.DRIVING;
       const svc = new google.maps.DirectionsService();
+      const travelMode = isWalk ? google.maps.TravelMode.WALKING : google.maps.TravelMode.DRIVING;
       const result = await new Promise((resolve, reject) => {
-        svc.route({
-          origin: { lat: project.lat, lng: project.lng },
-          destination: { lat: target.lat, lng: target.lng },
-          travelMode: travelMode,
-          region: 'tr'
-        }, (res, status) => {
-          if (status === 'OK') resolve(res);
-          else reject(status);
-        });
+        svc.route({ origin:{lat:project.lat,lng:project.lng}, destination:{lat:target.lat,lng:target.lng}, travelMode, region:'tr' },
+          (res, status) => { if (status==='OK') resolve(res); else reject(new Error(status)); });
       });
       const leg = result.routes[0].legs[0];
-      // JS API uses overview_path (array of LatLng), not encoded polyline
       const path = result.routes[0].overview_path;
-      const geojson = { type: 'LineString', coordinates: path.map(p => [p.lng(), p.lat()]) };
+      const geojson = { type:'LineString', coordinates:path.map(p => [p.lng(), p.lat()]) };
       renderRoute(geojson, mode.color, false);
       renderTargetMarker(target, mode.color);
       fitRoute(project, target);
       showRouteInfo(project, target, leg.distance.value, leg.duration.value, mode);
       setRouteStatus(project.name + ' → ' + target.name + ' — ' + leg.distance.text + ' / ' + leg.duration.text);
       return;
-    } catch(e) { console.warn('Google DirectionsService hata:', e); }
+    } catch(e) { console.warn('Google:', e.message); }
   }
 
-  // Fallback: OSRM - profile must match mode
-  const osrmProfile = activeRouteMode === 'walk' ? 'foot' : 'car';
-  console.log('Using OSRM fallback with profile:', osrmProfile);
+  const osrmProfile = isWalk ? 'foot' : 'car';
   try {
     const r = await fetch('https://router.project-osrm.org/route/v1/' + osrmProfile + '/' +
-      project.lng + ',' + project.lat + ';' + target.lng + ',' + target.lat +
-      '?overview=full&geometries=geojson');
+      project.lng+','+project.lat+';'+target.lng+','+target.lat+'?overview=full&geometries=geojson');
     const d = await r.json();
-    console.log('OSRM result:', d.code, d.routes && d.routes[0] && d.routes[0].duration);
-    if (d.code === 'Ok' && d.routes && d.routes.length) {
+    if (d.code==='Ok' && d.routes && d.routes.length) {
+      const dist = d.routes[0].distance;
+      const dur = isWalk ? dist/1.39 : d.routes[0].duration;
       renderRoute(d.routes[0].geometry, mode.color, false);
       renderTargetMarker(target, mode.color);
       fitRoute(project, target);
-      showRouteInfo(project, target, d.routes[0].distance, d.routes[0].duration, mode);
-      setRouteStatus(project.name + ' → ' + target.name + ' rotaı hazır.');
+      showRouteInfo(project, target, dist, dur, mode);
+      setRouteStatus(project.name + ' → ' + target.name + ' rotası hazır.');
       return;
     }
-  } catch(e) {}
+  } catch(e) { console.warn('OSRM:', e); }
 
-  // Son fallback: düz çizgi
   const dist = getDistance(project.lat, project.lng, target.lat, target.lng);
-  const spd = activeRouteMode === 'walk' ? 1.39 : 8.33;
-  renderRoute({ type:'LineString', coordinates:[[project.lng,project.lat],[target.lng,target.lat]] }, mode.color, true);
+  const spd = isWalk ? 1.39 : 8.33;
+  renderRoute({type:'LineString',coordinates:[[project.lng,project.lat],[target.lng,target.lat]]}, mode.color, true);
   renderTargetMarker(target, mode.color);
   fitRoute(project, target);
   showRouteInfo(project, target, dist, dist/spd, mode, true);
   setRouteStatus('Yaklaşık rota gösterildi.', true);
 }
 
-function renderRoute(geometry, color, dashed = false) {
-  clearRouteVisuals();
-  const mode = ROUTE_MODES[activeRouteMode] || { color, glow: color, accent:'#FFFFFF' };
-  map.addSource('route', { type:'geojson', lineMetrics:true, data:{ type:'Feature', geometry } });
-  map.addLayer({
-    id:'route-glow', type:'line', source:'route',
-    layout:{ 'line-cap':'round', 'line-join':'round' },
-    paint:{ 'line-color': mode.glow, 'line-width': 26, 'line-opacity': 0.34, 'line-blur': 12 }
-  });
-  map.addLayer({
-    id:'route-casing', type:'line', source:'route',
-    layout:{ 'line-cap':'round', 'line-join':'round' },
-    paint:{ 'line-color': mode.accent, 'line-width': 10, 'line-opacity': 0.96 }
-  });
-  map.addLayer({
-    id:'route-line', type:'line', source:'route',
-    layout:{ 'line-cap':'round', 'line-join':'round' },
-    paint:{ 'line-color': mode.color, 'line-width': 6.2, 'line-opacity': 1, 'line-dasharray': dashed ? [4,3] : [1] }
-  });
-  if (!dashed) {
-    map.addLayer({
-      id:'route-flow', type:'line', source:'route',
-      layout:{ 'line-cap':'round', 'line-join':'round' },
-      paint:{
-        'line-width': 3.2,
-        'line-opacity': 0.95,
-        'line-gradient': buildFlowGradient(mode.accent, routeAnimPhase)
-      }
-    });
-    startRouteAnimation(mode.accent);
-  }
-  routeLayer = true;
-}
 
-function buildFlowGradient(highlightColor, phase = 0) {
-  const p = ((phase % 1) + 1) % 1;
-  const a = p;
-  const b = Math.min(p + 0.08, 1);
-  const c = Math.min(p + 0.16, 1);
-  return [
-    'interpolate', ['linear'], ['line-progress'],
-    0, 'rgba(255,255,255,0)',
-    a, 'rgba(255,255,255,0)',
-    b, highlightColor,
-    c, 'rgba(255,255,255,0)',
-    1, 'rgba(255,255,255,0)'
-  ];
-}
-
-function startRouteAnimation(highlightColor) {
-  stopRouteAnimation();
-  routeAnimTimer = setInterval(() => {
-    routeAnimPhase += 0.03;
-    try {
-      if (map && map.getLayer('route-flow')) {
-        map.setPaintProperty('route-flow', 'line-gradient', buildFlowGradient(highlightColor, routeAnimPhase));
-      }
-    } catch (e) {}
-  }, 90);
-}
-
-function stopRouteAnimation() {
-  if (routeAnimTimer) {
-    clearInterval(routeAnimTimer);
-    routeAnimTimer = null;
-  }
-}
-
-function renderTargetMarker(target, color) {
-  if (routeMarker) routeMarker.remove();
-  const el = document.createElement('div');
-  el.style.cssText = 'display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);';
-  el.innerHTML = `
-    <div style="background:rgba(8,8,8,.92);color:${color};border:1px solid ${color};font-size:9px;letter-spacing:1.2px;padding:6px 10px;white-space:nowrap;box-shadow:0 10px 24px rgba(0,0,0,.3);">${target.name}</div>
-    <div style="width:12px;height:12px;background:${color};border:2px solid rgba(255,255,255,.45);border-radius:50%;margin-top:8px;"></div>`;
-  routeMarker = new maplibregl.Marker({ element: el, anchor:'bottom' }).setLngLat([target.lng, target.lat]).addTo(map);
-}
-
-function fitRoute(project, target) {
-  const bounds = new maplibregl.LngLatBounds();
-  bounds.extend([project.lng, project.lat]);
-  bounds.extend([target.lng, target.lat]);
-  const isMobile = window.innerWidth <= 900;
-  map.fitBounds(bounds, {
-    padding: isMobile ? { top:70, right:24, bottom:190, left:24 } : { top:90, right:110, bottom:90, left:470 },
-    maxZoom:14.6, duration:1300
-  });
-}
-
-function showRouteInfo(project, target, distanceM, durationS, mode, approx = false) {
-  document.getElementById('ib-project-view').style.display = 'none';
-  document.getElementById('ib-route-view').style.display = 'block';
-  document.getElementById('hint').style.display = 'none';
-  document.getElementById('ib-name-r').textContent = project.name;
-  document.getElementById('ib-cat-r').textContent = target.name;
-  document.getElementById('ib-dist').textContent = formatDistance(distanceM);
-  document.getElementById('ib-time').textContent = formatDuration(durationS);
-  document.getElementById('ib-icon').textContent = mode.icon;
-  document.getElementById('ib-ml').textContent = mode.label;
-  document.getElementById('ib-dot').style.background = mode.color;
-  document.getElementById('ib-mtext').textContent = approx ? 'yaklaşık rota gösterimi' : target.name + ' için rota çizildi';
-  document.getElementById('ib-mtext').style.color = mode.color;
-  document.getElementById('ib').classList.add('vis');
-}
-
-function clearRouteVisuals() {
-  if (routeMarker) { routeMarker.remove(); routeMarker = null; }
-  stopRouteAnimation();
-  ['route-glow','route-casing','route-line','route-flow'].forEach(id => { try { map.removeLayer(id); } catch(e) {} });
-  try { map.removeSource('route'); } catch(e) {}
-  routeLayer = false;
-}
-
-function clearSelection() {
-  activeProject = null;
-  routeTarget = null;
-  clearRouteVisuals();
-  document.getElementById('ib').classList.remove('vis');
-  document.getElementById('ib-project-view').style.display = 'none';
-  document.getElementById('ib-route-view').style.display = 'none';
-  document.getElementById('hint').style.display = 'flex';
-  document.getElementById('selectedProjectLabel').textContent = 'Önce bir proje seçin.';
-  document.getElementById('destinationInput').value = '';
-  setRouteStatus('Hazır hedefler aşağıda. Serbest aramayla da rota alabilirsiniz.');
-  buildPresetButtons(null);
-  document.querySelectorAll('.pi').forEach(e => e.classList.remove('active'));
-  projectMarkers.forEach(pm => {
-    const label = pm.el.querySelector('.marker-label');
-    if (!label) return;
-    label.style.transform = 'scale(1)';
-    label.style.boxShadow = '0 10px 24px rgba(0,0,0,.28)';
-    label.style.borderColor = 'rgba(255,255,255,.18)';
-  });
-  fitProjects();
-  map.easeTo({ pitch: 62, bearing: -18, duration: 1200 });
-}
-
-const VIEWS = {
-  drone:  { center: INITIAL_CENTER, zoom: INITIAL_ZOOM, pitch: 62, bearing: -18 },
-  top:    { center: INITIAL_CENTER, zoom: 11.8, pitch: 0, bearing: 0 },
-  street: { center: INITIAL_CENTER, zoom: 14.2, pitch: 80, bearing: -18 },
-};
-
-function setView(name, btn) {
-  document.querySelectorAll('.vc-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const view = VIEWS[name];
-  map.flyTo({ ...view, duration: 1600, essential: true });
-}
-
-function startOrbit() {
-  const orbitBtn = document.getElementById('vc-orbit');
-  if (orbiting) {
-    orbiting = false;
-    clearInterval(orbitTimer);
-    orbitBtn.classList.remove('active');
-    return;
-  }
-  orbiting = true;
-  orbitBtn.classList.add('active');
-  let bearing = map.getBearing();
-  orbitTimer = setInterval(() => {
-    bearing += 0.5;
-    map.setBearing(bearing);
-  }, 50);
-}
-
-function updateCompass() {
-  const bearing = map.getBearing();
-  const pitch = map.getPitch();
-  const norm = (bearing % 360 + 360) % 360;
-  const dirs = ['N','NE','E','SE','S','SW','W','NW'];
-  const dir = dirs[Math.round(norm / 45) % 8];
-  document.getElementById('compNeedle').style.transform = `translate(-50%, -100%) rotate(${bearing}deg)`;
-  document.getElementById('compBearing').textContent = `${dir} ${Math.round(norm)}°`;
-  document.getElementById('pitchBar').style.width = (pitch / 85 * 100) + '%';
-  document.getElementById('pitchLabel').textContent = `↕ ${Math.round(pitch)}°`;
-}
-
-function getDistance(lat1, lng1, lat2, lng2) {
-  const R = 6371000;
-  const dLat = (lat2-lat1)*Math.PI/180;
-  const dLng = (lng2-lng1)*Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-function formatDistance(m) {
-  return m < 1000 ? `${Math.round(m)}m` : `${(m/1000).toFixed(1)}km`;
-}
-
-function formatDuration(s) {
-  const mins = Math.round(s / 60);
-  if (mins < 60) return `${mins} dk`;
-  return `${Math.floor(mins / 60)}s ${mins % 60}dk`;
-}
-
-
-function updateLayerToggleUI() { /* handled by slider */ }
-function toggleSatellite(force = null) {
-  satelliteVisible = force === null ? !satelliteVisible : !!force;
-  const val = satelliteVisible ? 35 : 0;
-  setSatOpacity(val);
-  const slider = document.getElementById('satSlider');
-  if (slider) slider.value = val;
-}
-
-document.getElementById('destinationInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') searchAndRoute();
-});
-
-
-function toggleMobilePanel(forceOpen = null) {
-  const shouldOpen = forceOpen === null ? !document.body.classList.contains('panel-open') : !!forceOpen;
-  document.body.classList.toggle('panel-open', shouldOpen);
-}
-
-if (window.innerWidth <= 900) {
-  document.body.classList.remove('panel-open');
-}
-window.addEventListener('resize', () => {
-  if (window.innerWidth > 900) document.body.classList.remove('panel-open');
-});
-
-// Boot: load Supabase data first, then build UI
-(async () => {
-  try {
-    await loadSupabaseData();
-  } catch(e) {
-    console.warn('Supabase load failed, using empty data', e);
-  }
-  buildProjectList();
-  buildPresetButtons(null);
-  initMap();
-})();
-</script>
-
-</body>
-</html>
