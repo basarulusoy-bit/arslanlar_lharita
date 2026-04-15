@@ -431,27 +431,72 @@ html,body{height:100%;background:var(--black);color:var(--white);font-family:'Mo
         </div>
       </div>
       <div id="jwStep2" style="display:none">
+        <!-- Müşteri Bilgileri -->
         <div class="g2" style="margin-bottom:14px;">
           <div class="f"><label>Ad Soyad <span class="req">*</span></label><input type="text" id="jwCusName" placeholder="Ad Soyad"></div>
           <div class="f"><label>T.C. Kimlik No</label><input type="text" id="jwCusTc" placeholder="11 haneli TC"></div>
           <div class="f"><label>Telefon <span class="req">*</span></label><input type="tel" id="jwCusTel"></div>
           <div class="f"><label>E-Posta</label><input type="email" id="jwCusEmail"></div>
         </div>
-        <div style="font-size:8px;letter-spacing:2px;color:rgba(201,169,110,.5);text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Ödeme Planı (Kampanya Sabit Değerleri)</div>
-        <div class="g3" style="margin-bottom:12px;">
-          <div class="f"><label>Peşinat (₺)</label><input type="number" id="jwDown" oninput="jwCalc()"></div>
-          <div class="f"><label>Aylık Taksit (₺)</label><input type="number" id="jwMonthly" readonly style="color:var(--gold)"></div>
-          <div class="f"><label>Taksit Adedi</label><input type="number" id="jwCount" value="36" readonly style="color:var(--gold)"></div>
-        </div>
-        <div id="jwPlanSummary" style="display:none;background:var(--b5);border:1px solid var(--borderhi);padding:14px 18px;margin-bottom:12px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-            <div><div style="font-size:9px;color:rgba(201,169,110,.55);margin-bottom:3px;">TOPLAM BEDEL</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold)" id="jps-total">—</div></div>
-            <div><div style="font-size:9px;color:rgba(201,169,110,.55);margin-bottom:3px;">PEŞİNAT</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--green)" id="jps-down">—</div></div>
-            <div><div style="font-size:9px;color:rgba(201,169,110,.55);margin-bottom:3px;">AYLIK TAKSİT</div><div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--white)" id="jps-monthly">—</div></div>
+
+        <!-- Ödeme Planı Başlık -->
+        <div style="font-size:8px;letter-spacing:2px;color:rgba(201,169,110,.5);text-transform:uppercase;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);">Ödeme Planı</div>
+
+        <!-- Özet Kartlar -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+          <div style="background:var(--b5);border:1px solid var(--border);padding:10px;text-align:center;">
+            <div style="font-size:8px;color:rgba(201,169,110,.55);margin-bottom:4px;letter-spacing:1px;">TOPLAM BEDEL</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--gold)" id="jps-total">—</div>
+          </div>
+          <div style="background:var(--b5);border:1px solid var(--borderhi);padding:10px;text-align:center;">
+            <div style="font-size:8px;color:rgba(201,169,110,.55);margin-bottom:4px;letter-spacing:1px;">PEŞİNAT</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--green)" id="jps-down">—</div>
+          </div>
+          <div style="background:var(--b5);border:1px solid var(--border);padding:10px;text-align:center;">
+            <div style="font-size:8px;color:rgba(201,169,110,.55);margin-bottom:4px;letter-spacing:1px;">AYLIK TAKSİT</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--white)" id="jps-monthly">—</div>
           </div>
         </div>
-        <div id="jwInstWrap" style="max-height:200px;overflow-y:auto;"></div>
-        <div style="display:flex;justify-content:space-between;margin-top:16px;">
+
+        <!-- Peşinat Slider -->
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <label style="font-size:8px;letter-spacing:1.5px;color:rgba(201,169,110,.6);text-transform:uppercase;">PEŞİNAT (₺)</label>
+            <span style="font-size:11px;color:var(--gold);font-family:'Cormorant Garamond',serif;" id="jwDownDisplay">—</span>
+          </div>
+          <input type="range" id="jwDownSlider" min="0" max="100" step="1" oninput="jwSliderChange(this.value)" style="width:100%;accent-color:var(--gold);">
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--wd);margin-top:3px;">
+            <span id="jwDownMin">Min: —</span>
+            <span id="jwDownMax">Max: —</span>
+          </div>
+        </div>
+
+        <!-- Taksit Sayısı -->
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <label style="font-size:8px;letter-spacing:1.5px;color:rgba(201,169,110,.6);text-transform:uppercase;">TAKSİT ADEDİ</label>
+            <span style="font-size:11px;color:var(--white);font-family:'Cormorant Garamond',serif;" id="jwCountDisplay">36 ay</span>
+          </div>
+          <input type="range" id="jwCountSlider" min="6" max="60" step="6" value="36" oninput="jwCountChange(this.value)" style="width:100%;accent-color:var(--gold);">
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--wd);margin-top:3px;">
+            <span>6 ay</span><span>12</span><span>24</span><span>36</span><span>48</span><span>60 ay</span>
+          </div>
+        </div>
+
+        <!-- Ara Ödemeler -->
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <label style="font-size:8px;letter-spacing:1.5px;color:rgba(201,169,110,.6);text-transform:uppercase;">ARA ÖDEMELER</label>
+            <button class="abtn" style="font-size:9px;padding:3px 8px;" onclick="jwAddAraOdeme()">+ Ekle</button>
+          </div>
+          <div id="jwAraOdemeler"></div>
+          <div id="jwAraTotal" style="display:none;font-size:10px;color:var(--orange);margin-top:4px;text-align:right;"></div>
+        </div>
+
+        <!-- Taksit Tablosu -->
+        <div id="jwInstWrap" style="max-height:180px;overflow-y:auto;border-top:1px solid var(--border);padding-top:8px;"></div>
+
+        <div style="display:flex;justify-content:space-between;margin-top:14px;">
           <button class="abtn" onclick="jwGoStep(1)">← Geri</button>
           <button class="abtn p" onclick="jwGoStep(3)">Sözleşmeyi Hazırla →</button>
         </div>
@@ -881,16 +926,14 @@ window.addEventListener('message', function(e) {
     var rows = [
       '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd);width:40%">Daire No</td><td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:500">' + no + '</td></tr>',
       '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Tip</td><td style="padding:7px 10px;border-bottom:1px solid var(--border)">' + (ut||'-') + '</td></tr>',
-      '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Kat</td><td style="padding:7px 10px;border-bottom:1px solid var(--border)">' + fl + '. Kat</td></tr>',
+      '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Kat</td><td style="padding:7px 10px;border-bottom:1px solid var(--border)">' + (fl===0||fl==='0'?'Zemin Kat':fl+'. Kat') + '</td></tr>',
       '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Peşinat</td><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--gold)">' + (p.down||0).toLocaleString('tr-TR') + ' ₺</td></tr>',
       '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Aylık Taksit</td><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--gold)">' + (p.monthly||0).toLocaleString('tr-TR') + ' ₺ x ' + (p.count||36) + ' ay</td></tr>',
       '<tr><td style="padding:7px 10px;color:var(--wd)">Toplam Bedel</td><td style="padding:7px 10px;font-size:17px;color:var(--white)">' + (p.total||0).toLocaleString('tr-TR') + ' ₺</td></tr>'
     ];
     document.getElementById('jwUnitDetail').innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px;">' + rows.join('') + '</table>';
-    document.getElementById('jwDown').value    = p.down    || 0;
-    document.getElementById('jwMonthly').value = p.monthly || 0;
-    document.getElementById('jwCount').value   = p.count   || 36;
-    jwCalc();
+    // Init payment plan with unit type
+    setTimeout(function(){ jwInitPlan(ut); }, 50);
     jwGoStep(1);
     document.getElementById('jwModal').classList.add('open');
   }
@@ -990,35 +1033,136 @@ function jwOpenModal(unitId) {
       <tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Aylık Taksit</td><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--gold)">${p.monthly.toLocaleString('tr-TR')} ₺ × ${p.count} ay</td></tr>
       <tr><td style="padding:7px 10px;color:var(--wd)">Toplam Bedel</td><td style="padding:7px 10px;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--white)">${p.total.toLocaleString('tr-TR')} ₺</td></tr>
     </table>`;
-  // Pre-fill plan values
-  document.getElementById('jwDown').value    = p.down;
-  document.getElementById('jwMonthly').value = p.monthly;
-  document.getElementById('jwCount').value   = p.count;
-  jwCalc();
+  // Init payment plan
+  jwInitPlan(u.type);
   jwGoStep(1);
   document.getElementById('jwModal').classList.add('open');
 }
 
+// Ödeme planı state
+var jwPlanState = { total: 0, minDown: 0, down: 0, count: 36, araOdemeler: [], _monthly: 0, _araTotal: 0, _kalan: 0 };
+
+function jwInitPlan(unitType) {
+  var p = JW_PLANS[unitType] || {};
+  jwPlanState.total   = p.total   || 0;
+  jwPlanState.minDown = p.down    || 0;
+  jwPlanState.down    = p.down    || 0;
+  jwPlanState.count   = p.count   || 36;
+  jwPlanState.araOdemeler = [];
+
+  var sl = document.getElementById('jwDownSlider');
+  if (sl) { sl.min = jwPlanState.minDown; sl.max = jwPlanState.total; sl.step = 10000; sl.value = jwPlanState.minDown; }
+  var cs = document.getElementById('jwCountSlider');
+  if (cs) cs.value = 36;
+  var ao = document.getElementById('jwAraOdemeler');
+  if (ao) ao.innerHTML = '';
+  var at = document.getElementById('jwAraTotal');
+  if (at) at.style.display = 'none';
+  var dmn = document.getElementById('jwDownMin');
+  if (dmn) dmn.textContent = 'Min: ' + jwPlanState.minDown.toLocaleString('tr-TR') + ' ₺';
+  var dmx = document.getElementById('jwDownMax');
+  if (dmx) dmx.textContent = 'Max: ' + jwPlanState.total.toLocaleString('tr-TR') + ' ₺';
+  jwAraIdx = 0;
+  jwCalc();
+}
+
+function jwSliderChange(val) {
+  jwPlanState.down = Math.max(jwPlanState.minDown, parseInt(val));
+  var sl = document.getElementById('jwDownSlider');
+  if (sl) sl.value = jwPlanState.down;
+  jwCalc();
+}
+
+function jwCountChange(val) {
+  jwPlanState.count = parseInt(val);
+  var cd = document.getElementById('jwCountDisplay');
+  if (cd) cd.textContent = val + ' ay';
+  jwCalc();
+}
+
+var jwAraIdx = 0;
+function jwAddAraOdeme() {
+  var idx = jwAraIdx++;
+  jwPlanState.araOdemeler.push({ idx: idx, amount: 0, month: 1 });
+  var container = document.getElementById('jwAraOdemeler');
+  var div = document.createElement('div');
+  div.id = 'ara-' + idx;
+  div.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px;';
+  div.innerHTML = '<input type="number" placeholder="Tutar (₺)" style="flex:2;background:var(--b4);border:1px solid var(--border);color:var(--white);padding:6px 8px;font-family:Montserrat,sans-serif;font-size:11px;outline:none;" oninput="jwAraChange(' + idx + ','amount',this.value)">' +
+    '<select style="flex:1;background:var(--b4);border:1px solid var(--border);color:var(--white);padding:6px 8px;font-family:Montserrat,sans-serif;font-size:11px;outline:none;" onchange="jwAraChange(' + idx + ','month',this.value)">' +
+    Array.from({length:35},function(_,i){return '<option value="'+(i+1)+'">'+(i+1)+'. ay</option>';}).join('') +
+    '</select>' +
+    '<button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:0 4px;" onclick="jwRemoveAra(' + idx + ')">×</button>';
+  container.appendChild(div);
+}
+
+function jwAraChange(idx, field, val) {
+  var item = jwPlanState.araOdemeler.find(function(a){ return a.idx===idx; });
+  if (item) { item[field] = parseFloat(val)||0; }
+  jwCalc();
+}
+
+function jwRemoveAra(idx) {
+  jwPlanState.araOdemeler = jwPlanState.araOdemeler.filter(function(a){ return a.idx!==idx; });
+  var el = document.getElementById('ara-' + idx);
+  if (el) el.remove();
+  jwCalc();
+}
+
 function jwCalc() {
-  const down    = +document.getElementById('jwDown').value    || 0;
-  const monthly = +document.getElementById('jwMonthly').value || 0;
-  const count   = +document.getElementById('jwCount').value   || 36;
-  if (!down && !monthly) { document.getElementById('jwPlanSummary').style.display='none'; return; }
-  const total = down + monthly * count;
-  document.getElementById('jps-total').textContent   = total.toLocaleString('tr-TR')   + ' ₺';
-  document.getElementById('jps-down').textContent    = down.toLocaleString('tr-TR')    + ' ₺';
-  document.getElementById('jps-monthly').textContent = monthly.toLocaleString('tr-TR') + ' ₺';
-  document.getElementById('jwPlanSummary').style.display = 'block';
-  const now = new Date();
-  let rows = '';
-  let cum = 0;
-  for (let m = 1; m <= count; m++) {
-    const d = new Date(now.getFullYear(), now.getMonth() + m, 1);
-    const mn = d.toLocaleDateString('tr-TR', {month:'long', year:'numeric'});
-    cum += monthly;
-    rows += `<tr><td style="color:var(--wd);font-size:11px;width:24px">${m}</td><td style="font-size:11px;color:var(--wd)">${mn}</td><td style="text-align:right;font-size:11px">${monthly.toLocaleString('tr-TR')} ₺</td><td style="text-align:right;font-size:11px;color:var(--wd)">${(down+cum).toLocaleString('tr-TR')} ₺</td></tr>`;
+  var total    = jwPlanState.total;
+  var down     = jwPlanState.down;
+  var count    = jwPlanState.count;
+  var araList  = jwPlanState.araOdemeler;
+  var araTotal = araList.reduce(function(s,a){ return s+(a.amount||0); }, 0);
+  var kalan    = Math.max(0, total - down - araTotal);
+  var monthly  = count > 0 ? Math.round(kalan / count) : 0;
+
+  jwPlanState._monthly  = monthly;
+  jwPlanState._araTotal = araTotal;
+  jwPlanState._kalan    = kalan;
+
+  var tot = document.getElementById('jps-total');   if(tot) tot.textContent = total.toLocaleString('tr-TR') + ' ₺';
+  var dn  = document.getElementById('jps-down');    if(dn)  dn.textContent  = down.toLocaleString('tr-TR')  + ' ₺';
+  var mo  = document.getElementById('jps-monthly'); if(mo)  mo.textContent  = monthly.toLocaleString('tr-TR')+ ' ₺';
+  var dd  = document.getElementById('jwDownDisplay'); if(dd) dd.textContent = down.toLocaleString('tr-TR') + ' ₺';
+  var cd  = document.getElementById('jwCountDisplay'); if(cd) cd.textContent = count + ' ay';
+
+  var at = document.getElementById('jwAraTotal');
+  if (at) {
+    if (araTotal > 0) {
+      at.style.display = 'block';
+      at.textContent = 'Ara ödemeler: ' + araTotal.toLocaleString('tr-TR') + ' ₺ · Kalan: ' + kalan.toLocaleString('tr-TR') + ' ₺';
+    } else {
+      at.style.display = 'none';
+    }
   }
-  document.getElementById('jwInstWrap').innerHTML = `<table style="width:100%;border-collapse:collapse"><thead><tr><th style="padding:5px 6px;text-align:left;font-size:8px;letter-spacing:1.5px;color:rgba(201,169,110,.4);border-bottom:1px solid var(--border)">#</th><th style="padding:5px 6px;text-align:left;font-size:8px;letter-spacing:1.5px;color:rgba(201,169,110,.4);border-bottom:1px solid var(--border)">TARİH</th><th style="padding:5px 6px;text-align:right;font-size:8px;letter-spacing:1.5px;color:rgba(201,169,110,.4);border-bottom:1px solid var(--border)">TAKSİT</th><th style="padding:5px 6px;text-align:right;font-size:8px;letter-spacing:1.5px;color:rgba(201,169,110,.4);border-bottom:1px solid var(--border)">TOPLAM</th></tr></thead><tbody>${rows}</tbody></table>`;
+
+  var araByMonth = {};
+  araList.forEach(function(a){ if(a.month>0&&a.amount>0) araByMonth[a.month]=(araByMonth[a.month]||0)+a.amount; });
+
+  var now = new Date();
+  var rows = '';
+  var cumTotal = down;
+  var regIdx = 0;
+  for (var m = 1; m <= count; m++) {
+    var d2 = new Date(now.getFullYear(), now.getMonth() + m, 1);
+    var mn = d2.toLocaleDateString('tr-TR', {month:'long', year:'numeric'});
+    if (araByMonth[m]) {
+      cumTotal += araByMonth[m];
+      rows += '<tr style="background:rgba(201,169,110,.06)"><td style="padding:4px 5px;color:var(--wd);font-size:10px">—</td><td style="padding:4px 5px;font-size:10px;color:var(--wd)">' + mn + '</td><td style="padding:4px 5px;text-align:right;font-size:10px;color:var(--gold)">' + araByMonth[m].toLocaleString('tr-TR') + ' ₺ <small>ARA</small></td><td style="padding:4px 5px;text-align:right;font-size:10px;color:var(--wd)">' + cumTotal.toLocaleString('tr-TR') + ' ₺</td></tr>';
+    }
+    regIdx++;
+    cumTotal += monthly;
+    rows += '<tr><td style="padding:4px 5px;color:var(--wd);font-size:10px">' + regIdx + '</td><td style="padding:4px 5px;font-size:10px;color:var(--wd)">' + mn + '</td><td style="padding:4px 5px;text-align:right;font-size:10px">' + monthly.toLocaleString('tr-TR') + ' ₺</td><td style="padding:4px 5px;text-align:right;font-size:10px;color:var(--wd)">' + cumTotal.toLocaleString('tr-TR') + ' ₺</td></tr>';
+  }
+  var iw = document.getElementById('jwInstWrap');
+  if (iw) iw.innerHTML = '<table style="width:100%;border-collapse:collapse"><thead><tr>' +
+    '<th style="padding:4px 5px;text-align:left;font-size:8px;color:rgba(201,169,110,.4);border-bottom:1px solid var(--border)">#</th>' +
+    '<th style="padding:4px 5px;text-align:left;font-size:8px;color:rgba(201,169,110,.4);border-bottom:1px solid var(--border)">TARİH</th>' +
+    '<th style="padding:4px 5px;text-align:right;font-size:8px;color:rgba(201,169,110,.4);border-bottom:1px solid var(--border)">TAKSÍT</th>' +
+    '<th style="padding:4px 5px;text-align:right;font-size:8px;color:rgba(201,169,110,.4);border-bottom:1px solid var(--border)">TOPLAM</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
 function jwGoStep(n) {
@@ -1081,10 +1225,10 @@ async function jwSaveContract() {
   const cusName = document.getElementById('jwCusName').value.trim();
   const cusTel  = document.getElementById('jwCusTel').value.trim();
   if (!cusName || !cusTel) { toast('Ad soyad ve telefon zorunludur.', false); jwGoStep(2); return; }
-  const down    = +document.getElementById('jwDown').value;
-  const monthly = +document.getElementById('jwMonthly').value;
-  const count   = +document.getElementById('jwCount').value;
-  const total   = down + monthly * count;
+  const down    = jwPlanState.down || 0;
+  const monthly = jwPlanState._monthly || 0;
+  const count   = jwPlanState.count || 36;
+  const total   = jwPlanState.total || (down + monthly * count);
   const no = 'JWL-' + new Date().getFullYear() + '-' + String(jwSavedContracts.length + 1001).padStart(4,'0');
 
   // Supabase güncelle
