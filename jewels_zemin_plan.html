@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jewels ZEMİN KAT</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--gold:#C9A96E;--black:#0A0A0A;--b2:#111;--b3:#181818;--white:#F5F0E8;--wd:rgba(245,240,232,0.6);--border:rgba(201,169,110,0.2);--green:#5DBD84;--orange:#E8A96E;--red:#E87070;}
+html,body{height:100%;overflow:hidden;background:var(--black);color:var(--white);font-family:'Montserrat',sans-serif;font-size:12px;font-weight:300;}
+.wrap{display:flex;flex-direction:column;height:100%;}
+.toolbar{flex-shrink:0;padding:8px 12px;background:var(--b2);border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;}
+.kat-title{font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--gold);margin-right:8px;}
+.fbtn{background:none;border:1px solid var(--border);color:var(--wd);padding:4px 10px;font-size:9px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:'Montserrat',sans-serif;transition:all .15s;}
+.fbtn.active,.fbtn:hover{background:rgba(201,169,110,.18);border-color:var(--gold);color:var(--gold);}
+.legend{display:flex;gap:10px;margin-left:auto;font-size:9px;letter-spacing:.5px;color:var(--wd);align-items:center;}
+.ld{width:8px;height:8px;border-radius:1px;display:inline-block;margin-right:3px;}
+.stats{display:flex;gap:12px;padding:0 12px;font-size:9px;color:var(--wd);}
+.st span{font-family:'Cormorant Garamond',serif;font-size:15px;margin-left:2px;color:var(--gold);}
+.body{flex:1;display:flex;overflow:hidden;}
+.plan-area{flex:1;overflow:auto;padding:8px;}
+.plan-area::-webkit-scrollbar{width:4px;height:4px;}
+.plan-area::-webkit-scrollbar-thumb{background:rgba(201,169,110,.2);}
+svg.fp{display:block;width:100%;height:auto;}
+.unit{cursor:pointer;}
+.unit polygon{stroke-width:1.5;transition:fill-opacity .1s;}
+.unit:hover polygon{fill-opacity:1!important;stroke-width:2.5!important;}
+.unit.dim{opacity:.25;pointer-events:none;}
+.ulbl{font-size:14px;fill:rgba(10,10,10,.85);text-anchor:middle;dominant-baseline:central;pointer-events:none;font-family:Montserrat,sans-serif;font-weight:500;}
+/* RIGHT PANEL */
+.rpanel{width:0;overflow:hidden;transition:width .25s;background:var(--b2);border-left:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;}
+.rpanel.open{width:260px;}
+.rp-hdr{padding:16px 16px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;}
+.rp-no{font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--gold);line-height:1;}
+.rp-tip{font-size:9px;letter-spacing:1.5px;color:var(--wd);text-transform:uppercase;margin-top:3px;}
+.rp-close{background:none;border:none;color:var(--wd);font-size:18px;cursor:pointer;padding:2px 6px;}
+.rp-close:hover{color:var(--white);}
+.rp-body{flex:1;padding:14px 16px;overflow-y:auto;}
+.sbadge{display:inline-block;padding:4px 12px;font-size:8px;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;border-radius:2px;}
+.s-av{background:rgba(93,189,132,.15);color:var(--green);border:1px solid rgba(93,189,132,.3);}
+.s-pe{background:rgba(201,169,110,.15);color:var(--gold);border:1px solid rgba(201,169,110,.3);}
+.s-re{background:rgba(232,169,110,.12);color:var(--orange);border:1px solid rgba(232,169,110,.25);}
+.s-so{background:rgba(232,112,112,.1);color:var(--red);border:1px solid rgba(232,112,112,.2);}
+.pi{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(245,240,232,.06);}
+.pi-l{font-size:8px;letter-spacing:1.5px;color:var(--wd);text-transform:uppercase;}
+.pi-v{font-family:'Cormorant Garamond',serif;font-size:16px;}
+.pi-v.gold{color:var(--gold);font-size:18px;}
+.rp-btns{padding:12px 16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px;}
+.rbtn{padding:11px;text-align:center;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:none;font-family:'Montserrat',sans-serif;font-weight:500;transition:all .2s;}
+.rbtn-gold{background:var(--gold);color:var(--black);}
+.rbtn-gold:hover{background:#E8CC84;}
+.rbtn-ghost{background:transparent;border:1px solid var(--border);color:var(--wd);}
+.rbtn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+.rbtn:disabled{opacity:.3;cursor:default;}
+/* Rezervasyon formu */
+.rform{padding:12px 16px;border-top:1px solid var(--border);display:none;}
+.rform.open{display:block;}
+.rform-title{font-size:8px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
+.rfinput{width:100%;background:rgba(255,255,255,.03);border:none;border-bottom:1px solid rgba(201,169,110,.25);color:var(--white);font-family:'Montserrat',sans-serif;font-size:12px;font-weight:300;padding:8px 4px;outline:none;margin-bottom:8px;}
+.rfinput::placeholder{color:rgba(245,240,232,.2);}
+.rfinput:focus{border-bottom-color:var(--gold);}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrap">
+  <div class="toolbar">
+    <span class="kat-title">ZEMİN KAT · 1+1 LOFT BAHÇELİ</span>
+    <button class="fbtn active" onclick="flt('all',this)">TÜMÜ</button>
+    <button class="fbtn" onclick="flt('available',this)">BOŞ</button>
+    <button class="fbtn" onclick="flt('pending',this)">ONAY BEKLİYOR</button>
+    <button class="fbtn" onclick="flt('reserved',this)">REZERVE</button>
+    <button class="fbtn" onclick="flt('sold',this)">SATILDI</button>
+    <div class="legend">
+      <span><span class="ld" style="background:#5DBD84"></span>BOŞ</span>
+      <span><span class="ld" style="background:{var(--gold)}"></span>ONAY BEKLİYOR</span>
+      <span><span class="ld" style="background:#E8A96E"></span>REZERVE</span>
+      <span><span class="ld" style="background:#E87070"></span>SATILDI</span>
+    </div>
+    <div class="stats">
+      <div class="st">BOŞ<span id="cB">—</span></div>
+      <div class="st">ONAY<span id="cP">—</span></div>
+      <div class="st">REZERVE<span id="cR">—</span></div>
+      <div class="st">SATILDI<span id="cS">—</span></div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="plan-area">
+      <svg class="fp" viewBox="0 0 6691 2926" id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="rpanel" id="rpanel">
+      <div class="rp-hdr">
+        <div><div class="rp-no" id="pNo">—</div><div class="rp-tip" id="pTip">1+1 LOFT BAHÇELİ</div></div>
+        <button class="rp-close" onclick="closePanel()">✕</button>
+      </div>
+      <div class="rp-body">
+        <div id="pBadge"></div>
+        <div class="pi"><span class="pi-l">Daire No</span><span class="pi-v" id="pNo2">—</span></div>
+        <div class="pi"><span class="pi-l">Tip</span><span class="pi-v">1+1 Loft Bahçeli</span></div>
+        <div class="pi"><span class="pi-l">Kat</span><span class="pi-v">0. Kat</span></div>
+        <div class="pi"><span class="pi-l">Peşinat</span><span class="pi-v gold">1,250,000 ₺</span></div>
+        <div class="pi"><span class="pi-l">Aylık Taksit</span><span class="pi-v gold">69,000 ₺</span></div>
+        <div class="pi"><span class="pi-l">Vade</span><span class="pi-v">36 Ay</span></div>
+        <div class="pi"><span class="pi-l">Toplam</span><span class="pi-v">3,734,000 ₺</span></div>
+        <div id="pExtra" style="margin-top:8px;"></div>
+      </div>
+      <div class="rform" id="rform">
+        <div class="rform-title">Rezervasyon Bilgileri</div>
+        <input class="rfinput" id="rfName" placeholder="Müşteri Adı Soyadı *">
+        <input class="rfinput" id="rfTel"  placeholder="Telefon *">
+        <input class="rfinput" id="rfNote" placeholder="Not (opsiyonel)">
+      </div>
+      <div class="rp-btns" id="pBtns"></div>
+    </div>
+  </div>
+</div>
+<script>
+const UD=[{"no": "1", "pts": [[6300.36, 2025.69], [6513.87, 2042.08], [6530.26, 1828.58], [6316.76, 1812.19]], "cx": 6415.3, "cy": 1927.1}, {"no": "2", "pts": [[6001.45, 2002.74], [6214.96, 2019.13], [6231.35, 1805.63], [6017.85, 1789.23]], "cx": 6116.4, "cy": 1904.2}, {"no": "3", "pts": [[6283.97, 2239.2], [6497.47, 2255.59], [6513.87, 2042.08], [6300.36, 2025.69]], "cx": 6398.9, "cy": 2140.6}, {"no": "4", "pts": [[6267.57, 2452.7], [6481.08, 2469.1], [6497.47, 2255.59], [6283.97, 2239.2]], "cx": 6382.5, "cy": 2354.1}, {"no": "5", "pts": [[6251.18, 2666.21], [6464.69, 2682.6], [6481.08, 2469.1], [6267.57, 2452.7]], "cx": 6366.1, "cy": 2567.7}, {"no": "6", "pts": [[6234.79, 2879.71], [6448.29, 2896.11], [6464.69, 2682.6], [6251.18, 2666.21]], "cx": 6349.7, "cy": 2781.2}, {"no": "7", "pts": [[5897.27, 2695.25], [6111.41, 2695.25], [6111.41, 2481.12], [5897.27, 2481.12]], "cx": 6004.3, "cy": 2588.2}, {"no": "8", "pts": [[5683.14, 2395.47], [5897.27, 2395.47], [5897.27, 2181.33], [5683.14, 2181.33]], "cx": 5790.2, "cy": 2288.4}, {"no": "9", "pts": [[5683.14, 2695.25], [5897.27, 2695.25], [5897.27, 2481.12], [5683.14, 2481.12]], "cx": 5790.2, "cy": 2588.2}, {"no": "10", "pts": [[5469.0, 2395.47], [5683.14, 2395.47], [5683.14, 2181.33], [5469.0, 2181.33]], "cx": 5576.1, "cy": 2288.4}, {"no": "11", "pts": [[5469.0, 2695.25], [5683.14, 2695.25], [5683.14, 2481.12], [5469.0, 2481.12]], "cx": 5576.1, "cy": 2588.2}, {"no": "12", "pts": [[5254.87, 2395.47], [5469.0, 2395.47], [5469.0, 2181.33], [5254.87, 2181.33]], "cx": 5361.9, "cy": 2288.4}, {"no": "13", "pts": [[5254.87, 2695.25], [5469.0, 2695.25], [5469.0, 2481.12], [5254.87, 2481.12]], "cx": 5361.9, "cy": 2588.2}, {"no": "14", "pts": [[5040.74, 2395.47], [5254.87, 2395.47], [5254.87, 2181.33], [5040.74, 2181.33]], "cx": 5147.8, "cy": 2288.4}, {"no": "15", "pts": [[5040.74, 2695.25], [5254.87, 2695.25], [5254.87, 2481.12], [5040.74, 2481.12]], "cx": 5147.8, "cy": 2588.2}, {"no": "16", "pts": [[4826.6, 2395.47], [5040.74, 2395.47], [5040.74, 2181.33], [4826.6, 2181.33]], "cx": 4933.7, "cy": 2288.4}, {"no": "17", "pts": [[4826.6, 2695.25], [5040.74, 2695.25], [5040.74, 2481.12], [4826.6, 2481.12]], "cx": 4933.7, "cy": 2588.2}, {"no": "18", "pts": [[4612.47, 2395.47], [4826.6, 2395.47], [4826.6, 2181.33], [4612.47, 2181.33]], "cx": 4719.5, "cy": 2288.4}, {"no": "19", "pts": [[4612.47, 2695.25], [4826.6, 2695.25], [4826.6, 2481.12], [4612.47, 2481.12]], "cx": 4719.5, "cy": 2588.2}, {"no": "20", "pts": [[4398.33, 2395.47], [4612.47, 2395.47], [4612.47, 2181.33], [4398.33, 2181.33]], "cx": 4505.4, "cy": 2288.4}, {"no": "21", "pts": [[4398.33, 2695.25], [4612.47, 2695.25], [4612.47, 2481.12], [4398.33, 2481.12]], "cx": 4505.4, "cy": 2588.2}, {"no": "22", "pts": [[4184.2, 2395.47], [4398.33, 2395.47], [4398.33, 2181.33], [4184.2, 2181.33]], "cx": 4291.3, "cy": 2288.4}, {"no": "23", "pts": [[4184.2, 2695.25], [4398.33, 2695.25], [4398.33, 2481.12], [4184.2, 2481.12]], "cx": 4291.3, "cy": 2588.2}, {"no": "24", "pts": [[3970.07, 2395.47], [4184.2, 2395.47], [4184.2, 2181.33], [3970.07, 2181.33]], "cx": 4077.1, "cy": 2288.4}, {"no": "25", "pts": [[3970.07, 2695.25], [4184.2, 2695.25], [4184.2, 2481.12], [3970.07, 2481.12]], "cx": 4077.1, "cy": 2588.2}, {"no": "26", "pts": [[3755.93, 2395.47], [3970.07, 2395.47], [3970.07, 2181.33], [3755.93, 2181.33]], "cx": 3863.0, "cy": 2288.4}, {"no": "27", "pts": [[3755.93, 2695.25], [3970.07, 2695.25], [3970.07, 2481.12], [3755.93, 2481.12]], "cx": 3863.0, "cy": 2588.2}, {"no": "28", "pts": [[3541.8, 2395.47], [3755.93, 2395.47], [3755.93, 2181.33], [3541.8, 2181.33]], "cx": 3648.9, "cy": 2288.4}, {"no": "29", "pts": [[3541.8, 2695.25], [3755.93, 2695.25], [3755.93, 2481.12], [3541.8, 2481.12]], "cx": 3648.9, "cy": 2588.2}, {"no": "30", "pts": [[3327.66, 2395.47], [3541.8, 2395.47], [3541.8, 2181.33], [3327.66, 2181.33]], "cx": 3434.7, "cy": 2288.4}, {"no": "31", "pts": [[3327.66, 2695.25], [3541.8, 2695.25], [3541.8, 2481.12], [3327.66, 2481.12]], "cx": 3434.7, "cy": 2588.2}, {"no": "32", "pts": [[3113.53, 2695.25], [3327.66, 2695.25], [3327.66, 2481.12], [3113.53, 2481.12]], "cx": 3220.6, "cy": 2588.2}, {"no": "33", "pts": [[2899.4, 2395.47], [3113.53, 2395.47], [3113.53, 2181.33], [2899.4, 2181.33]], "cx": 3006.5, "cy": 2288.4}, {"no": "34", "pts": [[2899.4, 2695.25], [3113.53, 2695.25], [3113.53, 2481.12], [2899.4, 2481.12]], "cx": 3006.5, "cy": 2588.2}, {"no": "35", "pts": [[2685.26, 2395.47], [2899.4, 2395.47], [2899.4, 2181.33], [2685.26, 2181.33]], "cx": 2792.3, "cy": 2288.4}, {"no": "36", "pts": [[2685.26, 2695.25], [2899.4, 2695.25], [2899.4, 2481.12], [2685.26, 2481.12]], "cx": 2792.3, "cy": 2588.2}, {"no": "37", "pts": [[2471.13, 2395.47], [2685.26, 2395.47], [2685.26, 2181.33], [2471.13, 2181.33]], "cx": 2578.2, "cy": 2288.4}, {"no": "38", "pts": [[2471.13, 2695.25], [2685.26, 2695.25], [2685.26, 2481.12], [2471.13, 2481.12]], "cx": 2578.2, "cy": 2588.2}, {"no": "39", "pts": [[2256.99, 2395.47], [2471.13, 2395.47], [2471.13, 2181.33], [2256.99, 2181.33]], "cx": 2364.1, "cy": 2288.4}, {"no": "40", "pts": [[2256.99, 2695.25], [2471.13, 2695.25], [2471.13, 2481.12], [2256.99, 2481.12]], "cx": 2364.1, "cy": 2588.2}, {"no": "41", "pts": [[2042.86, 2395.47], [2256.99, 2395.47], [2256.99, 2181.33], [2042.86, 2181.33]], "cx": 2149.9, "cy": 2288.4}, {"no": "42", "pts": [[2042.86, 2695.25], [2256.99, 2695.25], [2256.99, 2481.12], [2042.86, 2481.12]], "cx": 2149.9, "cy": 2588.2}, {"no": "43", "pts": [[1828.73, 2395.47], [2042.86, 2395.47], [2042.86, 2181.33], [1828.73, 2181.33]], "cx": 1935.8, "cy": 2288.4}, {"no": "44", "pts": [[1828.73, 2695.25], [2042.86, 2695.25], [2042.86, 2481.12], [1828.73, 2481.12]], "cx": 1935.8, "cy": 2588.2}, {"no": "45", "pts": [[1614.59, 2395.47], [1828.73, 2395.47], [1828.73, 2181.33], [1614.59, 2181.33]], "cx": 1721.7, "cy": 2288.4}, {"no": "46", "pts": [[1614.59, 2695.25], [1828.73, 2695.25], [1828.73, 2481.12], [1614.59, 2481.12]], "cx": 1721.7, "cy": 2588.2}, {"no": "47", "pts": [[1400.46, 2395.47], [1614.59, 2395.47], [1614.59, 2181.33], [1400.46, 2181.33]], "cx": 1507.5, "cy": 2288.4}, {"no": "48", "pts": [[1400.46, 2695.25], [1614.59, 2695.25], [1614.59, 2481.12], [1400.46, 2481.12]], "cx": 1507.5, "cy": 2588.2}, {"no": "49", "pts": [[1186.32, 2395.47], [1400.46, 2395.47], [1400.46, 2181.33], [1186.32, 2181.33]], "cx": 1293.4, "cy": 2288.4}, {"no": "50", "pts": [[1186.32, 2695.25], [1400.46, 2695.25], [1400.46, 2481.12], [1186.32, 2481.12]], "cx": 1293.4, "cy": 2588.2}, {"no": "51", "pts": [[972.19, 2395.47], [1186.32, 2395.47], [1186.32, 2181.33], [972.19, 2181.33]], "cx": 1079.3, "cy": 2288.4}, {"no": "52", "pts": [[972.19, 2695.25], [1186.32, 2695.25], [1186.32, 2481.12], [972.19, 2481.12]], "cx": 1079.3, "cy": 2588.2}, {"no": "53", "pts": [[758.06, 2395.47], [972.19, 2395.47], [972.19, 2181.33], [758.06, 2181.33]], "cx": 865.1, "cy": 2288.4}, {"no": "54", "pts": [[758.06, 2695.25], [972.19, 2695.25], [972.19, 2481.12], [758.06, 2481.12]], "cx": 865.1, "cy": 2588.2}, {"no": "55", "pts": [[543.92, 2695.25], [758.06, 2695.25], [758.06, 2481.12], [543.92, 2481.12]], "cx": 651.0, "cy": 2588.2}, {"no": "56", "pts": [[329.79, 2695.25], [543.92, 2695.25], [543.92, 2481.12], [329.79, 2481.12]], "cx": 436.9, "cy": 2588.2}, {"no": "57", "pts": [[30.0, 2813.74], [244.13, 2813.74], [244.13, 2599.61], [30.0, 2599.61]], "cx": 137.1, "cy": 2706.7}, {"no": "58", "pts": [[30.0, 2599.61], [244.13, 2599.61], [244.13, 2385.47], [30.0, 2385.47]], "cx": 137.1, "cy": 2492.5}, {"no": "59", "pts": [[30.0, 2385.47], [244.13, 2385.47], [244.13, 2171.34], [30.0, 2171.34]], "cx": 137.1, "cy": 2278.4}, {"no": "60", "pts": [[30.0, 2171.34], [244.13, 2171.34], [244.13, 1957.21], [30.0, 1957.21]], "cx": 137.1, "cy": 2064.3}, {"no": "61", "pts": [[30.0, 1957.21], [244.13, 1957.21], [244.13, 1743.07], [30.0, 1743.07]], "cx": 137.1, "cy": 1850.1}, {"no": "62", "pts": [[30.0, 1743.07], [244.13, 1743.07], [244.13, 1528.94], [30.0, 1528.94]], "cx": 137.1, "cy": 1636.0}, {"no": "63", "pts": [[30.0, 1528.94], [244.13, 1528.94], [244.13, 1314.8], [30.0, 1314.8]], "cx": 137.1, "cy": 1421.9}, {"no": "64", "pts": [[30.0, 1314.8], [244.13, 1314.8], [244.13, 1100.67], [30.0, 1100.67]], "cx": 137.1, "cy": 1207.7}, {"no": "65", "pts": [[30.0, 1100.67], [244.13, 1100.67], [244.13, 886.54], [30.0, 886.54]], "cx": 137.1, "cy": 993.6}, {"no": "66", "pts": [[30.0, 886.54], [244.13, 886.54], [244.13, 672.4], [30.0, 672.4]], "cx": 137.1, "cy": 779.5}, {"no": "67", "pts": [[30.0, 672.4], [244.13, 672.4], [244.13, 458.27], [30.0, 458.27]], "cx": 137.1, "cy": 565.3}, {"no": "68", "pts": [[30.0, 458.27], [244.13, 458.27], [244.13, 244.13], [30.0, 244.13]], "cx": 137.1, "cy": 351.2}, {"no": "69", "pts": [[30.0, 244.13], [244.13, 244.13], [244.13, 30.0], [30.0, 30.0]], "cx": 137.1, "cy": 137.1}, {"no": "70", "pts": [[329.79, 372.61], [543.92, 372.61], [543.92, 158.48], [329.79, 158.48]], "cx": 436.9, "cy": 265.5}, {"no": "71", "pts": [[543.92, 372.61], [758.06, 372.61], [758.06, 158.48], [543.92, 158.48]], "cx": 651.0, "cy": 265.5}, {"no": "72", "pts": [[758.06, 672.4], [972.19, 672.4], [972.19, 458.27], [758.06, 458.27]], "cx": 865.1, "cy": 565.3}, {"no": "73", "pts": [[758.06, 372.61], [972.19, 372.61], [972.19, 158.48], [758.06, 158.48]], "cx": 865.1, "cy": 265.5}, {"no": "74", "pts": [[972.19, 672.4], [1186.32, 672.4], [1186.32, 458.27], [972.19, 458.27]], "cx": 1079.3, "cy": 565.3}, {"no": "75", "pts": [[972.19, 372.61], [1186.32, 372.61], [1186.32, 158.48], [972.19, 158.48]], "cx": 1079.3, "cy": 265.5}, {"no": "76", "pts": [[1186.32, 672.4], [1400.46, 672.4], [1400.46, 458.27], [1186.32, 458.27]], "cx": 1293.4, "cy": 565.3}, {"no": "77", "pts": [[1186.32, 372.61], [1400.46, 372.61], [1400.46, 158.48], [1186.32, 158.48]], "cx": 1293.4, "cy": 265.5}, {"no": "78", "pts": [[1400.46, 672.4], [1614.59, 672.4], [1614.59, 458.27], [1400.46, 458.27]], "cx": 1507.5, "cy": 565.3}, {"no": "79", "pts": [[1400.46, 372.61], [1614.59, 372.61], [1614.59, 158.48], [1400.46, 158.48]], "cx": 1507.5, "cy": 265.5}, {"no": "80", "pts": [[1614.59, 672.4], [1828.73, 672.4], [1828.73, 458.27], [1614.59, 458.27]], "cx": 1721.7, "cy": 565.3}, {"no": "81", "pts": [[1614.59, 372.61], [1828.73, 372.61], [1828.73, 158.48], [1614.59, 158.48]], "cx": 1721.7, "cy": 265.5}, {"no": "82", "pts": [[1828.73, 672.4], [2042.86, 672.4], [2042.86, 458.27], [1828.73, 458.27]], "cx": 1935.8, "cy": 565.3}, {"no": "83", "pts": [[1828.73, 372.61], [2042.86, 372.61], [2042.86, 158.48], [1828.73, 158.48]], "cx": 1935.8, "cy": 265.5}, {"no": "84", "pts": [[2042.86, 672.4], [2256.99, 672.4], [2256.99, 458.27], [2042.86, 458.27]], "cx": 2149.9, "cy": 565.3}, {"no": "85", "pts": [[2042.86, 372.61], [2256.99, 372.61], [2256.99, 158.48], [2042.86, 158.48]], "cx": 2149.9, "cy": 265.5}, {"no": "86", "pts": [[2256.99, 672.4], [2471.13, 672.4], [2471.13, 458.27], [2256.99, 458.27]], "cx": 2364.1, "cy": 565.3}, {"no": "87", "pts": [[2256.99, 372.61], [2471.13, 372.61], [2471.13, 158.48], [2256.99, 158.48]], "cx": 2364.1, "cy": 265.5}, {"no": "88", "pts": [[2471.13, 672.4], [2685.26, 672.4], [2685.26, 458.27], [2471.13, 458.27]], "cx": 2578.2, "cy": 565.3}, {"no": "89", "pts": [[2471.13, 372.61], [2685.26, 372.61], [2685.26, 158.48], [2471.13, 158.48]], "cx": 2578.2, "cy": 265.5}, {"no": "90", "pts": [[2685.26, 672.4], [2899.4, 672.4], [2899.4, 458.27], [2685.26, 458.27]], "cx": 2792.3, "cy": 565.3}, {"no": "91", "pts": [[2685.26, 372.61], [2899.4, 372.61], [2899.4, 158.48], [2685.26, 158.48]], "cx": 2792.3, "cy": 265.5}, {"no": "92", "pts": [[2899.4, 672.4], [3113.53, 672.4], [3113.53, 458.27], [2899.4, 458.27]], "cx": 3006.5, "cy": 565.3}, {"no": "93", "pts": [[2899.4, 372.61], [3113.53, 372.61], [3113.53, 158.48], [2899.4, 158.48]], "cx": 3006.5, "cy": 265.5}, {"no": "94", "pts": [[3113.53, 372.61], [3327.66, 372.61], [3327.66, 158.48], [3113.53, 158.48]], "cx": 3220.6, "cy": 265.5}, {"no": "95", "pts": [[3327.66, 672.4], [3541.8, 672.4], [3541.8, 458.27], [3327.66, 458.27]], "cx": 3434.7, "cy": 565.3}, {"no": "96", "pts": [[3327.66, 372.61], [3541.8, 372.61], [3541.8, 158.48], [3327.66, 158.48]], "cx": 3434.7, "cy": 265.5}, {"no": "97", "pts": [[3541.8, 672.4], [3755.93, 672.4], [3755.93, 458.27], [3541.8, 458.27]], "cx": 3648.9, "cy": 565.3}, {"no": "98", "pts": [[3541.8, 372.61], [3755.93, 372.61], [3755.93, 158.48], [3541.8, 158.48]], "cx": 3648.9, "cy": 265.5}, {"no": "99", "pts": [[3755.93, 672.4], [3970.07, 672.4], [3970.07, 458.27], [3755.93, 458.27]], "cx": 3863.0, "cy": 565.3}, {"no": "100", "pts": [[3755.93, 372.61], [3970.07, 372.61], [3970.07, 158.48], [3755.93, 158.48]], "cx": 3863.0, "cy": 265.5}, {"no": "101", "pts": [[3970.07, 672.4], [4184.2, 672.4], [4184.2, 458.27], [3970.07, 458.27]], "cx": 4077.1, "cy": 565.3}, {"no": "102", "pts": [[3970.07, 372.61], [4184.2, 372.61], [4184.2, 158.48], [3970.07, 158.48]], "cx": 4077.1, "cy": 265.5}, {"no": "103", "pts": [[4184.2, 672.4], [4398.33, 672.4], [4398.33, 458.27], [4184.2, 458.27]], "cx": 4291.3, "cy": 565.3}, {"no": "104", "pts": [[4184.2, 372.61], [4398.33, 372.61], [4398.33, 158.48], [4184.2, 158.48]], "cx": 4291.3, "cy": 265.5}, {"no": "105", "pts": [[4398.33, 672.4], [4612.47, 672.4], [4612.47, 458.27], [4398.33, 458.27]], "cx": 4505.4, "cy": 565.3}, {"no": "106", "pts": [[4398.33, 372.61], [4612.47, 372.61], [4612.47, 158.48], [4398.33, 158.48]], "cx": 4505.4, "cy": 265.5}, {"no": "107", "pts": [[4612.47, 672.4], [4826.6, 672.4], [4826.6, 458.27], [4612.47, 458.27]], "cx": 4719.5, "cy": 565.3}, {"no": "108", "pts": [[4612.47, 372.61], [4826.6, 372.61], [4826.6, 158.48], [4612.47, 158.48]], "cx": 4719.5, "cy": 265.5}, {"no": "109", "pts": [[4826.6, 672.4], [5040.74, 672.4], [5040.74, 458.27], [4826.6, 458.27]], "cx": 4933.7, "cy": 565.3}, {"no": "110", "pts": [[4826.6, 372.61], [5040.74, 372.61], [5040.74, 158.48], [4826.6, 158.48]], "cx": 4933.7, "cy": 265.5}, {"no": "111", "pts": [[5040.74, 672.4], [5254.87, 672.4], [5254.87, 458.27], [5040.74, 458.27]], "cx": 5147.8, "cy": 565.3}, {"no": "112", "pts": [[5040.74, 372.61], [5254.87, 372.61], [5254.87, 158.48], [5040.74, 158.48]], "cx": 5147.8, "cy": 265.5}, {"no": "113", "pts": [[5254.87, 672.4], [5469.0, 672.4], [5469.0, 458.27], [5254.87, 458.27]], "cx": 5361.9, "cy": 565.3}, {"no": "114", "pts": [[5254.87, 372.61], [5469.0, 372.61], [5469.0, 158.48], [5254.87, 158.48]], "cx": 5361.9, "cy": 265.5}, {"no": "115", "pts": [[5469.0, 672.4], [5683.14, 672.4], [5683.14, 458.27], [5469.0, 458.27]], "cx": 5576.1, "cy": 565.3}, {"no": "116", "pts": [[5469.0, 372.61], [5683.14, 372.61], [5683.14, 158.48], [5469.0, 158.48]], "cx": 5576.1, "cy": 265.5}, {"no": "117", "pts": [[5683.14, 672.4], [5897.27, 672.4], [5897.27, 458.27], [5683.14, 458.27]], "cx": 5790.2, "cy": 565.3}, {"no": "118", "pts": [[5683.14, 372.61], [5897.27, 372.61], [5897.27, 158.48], [5683.14, 158.48]], "cx": 5790.2, "cy": 265.5}, {"no": "119", "pts": [[5897.27, 372.61], [6111.41, 372.61], [6111.41, 158.48], [5897.27, 158.48]], "cx": 6004.3, "cy": 265.5}, {"no": "120", "pts": [[6111.41, 372.61], [6325.54, 372.61], [6325.54, 158.48], [6111.41, 158.48]], "cx": 6218.5, "cy": 265.5}, {"no": "121", "pts": [[6431.51, 317.65], [6645.02, 334.04], [6661.41, 120.53], [6447.91, 104.14]], "cx": 6546.5, "cy": 219.1}, {"no": "122", "pts": [[6415.12, 531.15], [6628.62, 547.55], [6645.02, 334.04], [6431.51, 317.65]], "cx": 6530.1, "cy": 432.6}, {"no": "123", "pts": [[6398.73, 744.66], [6612.23, 761.05], [6628.62, 547.55], [6415.12, 531.15]], "cx": 6513.7, "cy": 646.1}, {"no": "124", "pts": [[6382.33, 958.16], [6595.84, 974.56], [6612.23, 761.05], [6398.73, 744.66]], "cx": 6497.3, "cy": 859.6}, {"no": "125", "pts": [[6067.03, 1148.72], [6280.54, 1165.11], [6296.93, 951.61], [6083.42, 935.21]], "cx": 6182.0, "cy": 1050.2}, {"no": "126", "pts": [[6365.94, 1171.67], [6579.44, 1188.06], [6595.84, 974.56], [6382.33, 958.16]], "cx": 6480.9, "cy": 1073.1}, {"no": "127", "pts": [[6050.64, 1362.22], [6264.14, 1378.62], [6280.54, 1165.11], [6067.03, 1148.72]], "cx": 6165.6, "cy": 1263.7}, {"no": "128", "pts": [[6349.54, 1385.17], [6563.05, 1401.57], [6579.44, 1188.06], [6365.94, 1171.67]], "cx": 6464.5, "cy": 1286.6}];
+const SB='https://lbmzjhvgunkitpatijut.supabase.co',SK='sb_publishable_59-PLGkxMNiaL_lKUXyDbQ_ubzKmEcY',UT='1+1 Loft Bahçeli';
+const CM={available:'#5DBD84',pending:'#C9A96E',reserved:'#E8A96E',sold:'#E87070'};
+const SL={available:'Boş',pending:'Onay Bekliyor',reserved:'Rezerve',sold:'Satıldı'};
+const SC={available:'s-av',pending:'s-pe',reserved:'s-re',sold:'s-so'};
+let US={},CF='all',SEL=null;
+
+async function load(){
+  try{
+    const enc=encodeURIComponent(UT);
+    const r=await fetch(SB+'/rest/v1/jewels_units?select=unit_no,status,customer_name,reserved_by_name&type=eq.'+enc,{headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
+    const d=await r.json();
+    if(Array.isArray(d))d.forEach(u=>US[u.unit_no]={status:u.status,cus:u.customer_name,agency:u.reserved_by_name});
+  }catch(e){}
+  render();
+}
+
+function render(){
+  const svg=document.getElementById('svg');
+  let b=0,p=0,r=0,s=0,h='';
+  UD.forEach(u=>{
+    const d=US[u.no]||{};
+    const st=d.status||'available';
+    if(st==='available')b++;else if(st==='pending')p++;else if(st==='reserved')r++;else s++;
+    const c=CM[st];
+    const pts=u.pts.map(p=>p[0]+','+p[1]).join(' ');
+    const dim=(CF!=='all'&&CF!==st)?' dim':'';
+    const sel=(SEL===u.no)?'stroke-width="3" stroke-opacity="1"':'stroke-width="1.5" stroke-opacity="0.6"';
+    h+=`<g class="unit${dim}" data-no="${u.no}" data-st="${st}" onclick="sel('${u.no}')"><polygon points="${pts}" fill="${c}" fill-opacity="0.78" stroke="#000" ${sel}/><text class="ulbl" x="${u.cx}" y="${u.cy}">${u.no}</text></g>`;
+  });
+  svg.innerHTML=h;
+  document.getElementById('cB').textContent=b;
+  document.getElementById('cP').textContent=p;
+  document.getElementById('cR').textContent=r;
+  document.getElementById('cS').textContent=s;
+}
+
+function flt(v,btn){
+  CF=v;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.unit').forEach(el=>el.classList.toggle('dim',v!=='all'&&v!==el.dataset.st));
+}
+
+function sel(no){
+  SEL=no;
+  const d=US[no]||{};
+  const st=d.status||'available';
+  document.getElementById('pNo').textContent='Daire '+no;
+  document.getElementById('pNo2').textContent=no;
+  document.getElementById('pBadge').innerHTML='<span class="sbadge '+SC[st]+'">'+SL[st]+'</span>';
+  
+  let extra='';
+  if(d.cus)extra+='<div class="pi"><span class="pi-l">Müşteri</span><span class="pi-v" style="font-size:13px">'+d.cus+'</span></div>';
+  if(d.agency)extra+='<div class="pi"><span class="pi-l">Acenta</span><span class="pi-v" style="font-size:13px">'+d.agency+'</span></div>';
+  document.getElementById('pExtra').innerHTML=extra;
+  
+  let btns='',showForm=false;
+  if(st==='available'){
+    btns='<button class="rbtn rbtn-gold" onclick="showReserveForm()">REZERVASYON TALEBİ</button><button class="rbtn rbtn-ghost" onclick="reqSale()">SATIŞ TALEBİ</button>';
+  }else if(st==='pending'){
+    btns='<button class="rbtn rbtn-ghost" style="color:var(--red)" onclick="cancelReq()">TALEBİ GERİ ÇEK</button>';
+  }else if(st==='reserved'){
+    btns='<button class="rbtn rbtn-gold" onclick="reqSale()">SATIŞ TALEBİ</button>';
+  }else{
+    btns='<button class="rbtn rbtn-ghost" disabled>Satıldı</button>';
+  }
+  document.getElementById('pBtns').innerHTML=btns;
+  document.getElementById('rform').classList.remove('open');
+  document.getElementById('rpanel').classList.add('open');
+  
+  document.querySelectorAll('.unit polygon').forEach(p=>{p.setAttribute('stroke-width','1.5');p.setAttribute('stroke-opacity','0.6');});
+  const el=document.querySelector('.unit[data-no="'+no+'"] polygon');
+  if(el){el.setAttribute('stroke-width','3');el.setAttribute('stroke-opacity','1');}
+}
+
+function closePanel(){
+  SEL=null;
+  document.getElementById('rpanel').classList.remove('open');
+  document.getElementById('rform').classList.remove('open');
+  document.querySelectorAll('.unit polygon').forEach(p=>{p.setAttribute('stroke-width','1.5');p.setAttribute('stroke-opacity','0.6');});
+}
+
+function showReserveForm(){
+  document.getElementById('rform').classList.add('open');
+  document.getElementById('rfName').focus();
+  document.getElementById('pBtns').innerHTML='<button class="rbtn rbtn-gold" onclick="submitReserve()">TALEP GÖNDER →</button><button class="rbtn rbtn-ghost" onclick="document.getElementById(\'rform\').classList.remove(\'open\')">İptal</button>';
+}
+
+async function submitReserve(){
+  const name=document.getElementById('rfName').value.trim();
+  const tel=document.getElementById('rfTel').value.trim();
+  if(!name||!tel){alert('Ad ve telefon zorunludur.');return;}
+  const note=document.getElementById('rfNote').value.trim();
+  try{
+    await fetch(SB+'/rest/v1/jewels_units?unit_no=eq.'+SEL+'&type=eq.'+encodeURIComponent(UT),{
+      method:'PATCH',
+      headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({status:'pending',customer_name:name,customer_tel:tel,reservation_note:note,reserved_at:new Date().toISOString()})
+    });
+  }catch(e){}
+  US[SEL]={status:'pending',cus:name};
+  render();sel(SEL);
+  document.getElementById('rform').classList.remove('open');
+}
+
+async function reqSale(){
+  const name=document.getElementById('rfName')?.value||US[SEL]?.cus||'';
+  try{
+    await fetch(SB+'/rest/v1/jewels_units?unit_no=eq.'+SEL+'&type=eq.'+encodeURIComponent(UT),{
+      method:'PATCH',
+      headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({status:'pending_sale',reserved_at:new Date().toISOString()})
+    });
+  }catch(e){}
+  US[SEL]={...US[SEL],status:'pending_sale'};
+  render();sel(SEL);
+  window.parent.postMessage({type:'jwContract',no:SEL,unitType:UT,floor:0}, '*');
+}
+
+async function cancelReq(){
+  try{
+    await fetch(SB+'/rest/v1/jewels_units?unit_no=eq.'+SEL+'&type=eq.'+encodeURIComponent(UT),{
+      method:'PATCH',
+      headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({status:'available',customer_name:null,customer_tel:null,reservation_note:null})
+    });
+  }catch(e){}
+  US[SEL]={status:'available'};
+  render();sel(SEL);
+}
+
+load();
+</script>
+</body>
+</html>
