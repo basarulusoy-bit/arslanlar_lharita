@@ -201,6 +201,8 @@ html,body{height:100%;background:var(--black);color:var(--white);font-family:'Mo
       <div class="sb-item" onclick="showPanel('addoffer',this)">+ Yeni Teklif</div>
       <div class="sb-sec">Hesap</div>
       <div class="sb-item" onclick="showPanel('profile',this)">◉ Profilim</div>
+      <div class="sb-sec" style="color:rgba(201,169,110,.7);">Jewels Kampanyası</div>
+      <div class="sb-item" onclick="showPanel('jewels',this);loadJewels()">◈ Stok & Satış</div>
     </div>
     <div class="main">
 
@@ -376,6 +378,93 @@ html,body{height:100%;background:var(--black);color:var(--white);font-family:'Mo
         <div class="fc"><div class="fc-ttl">Bilgilerim</div><div id="profContent" style="color:var(--wd);line-height:2.2;font-size:13px">Yükleniyor...</div></div>
       </div>
 
+      <!-- ══ JEWELS KAMPANYA PANELİ ══ -->
+      <div class="panel" id="panel-jewels">
+        <div class="ptitle">Arslanlar <em>Jewels</em></div>
+        <div class="psub">Kampanya stok durumu · Daire seçimi · Sözleşme</div>
+        <div class="gline"></div>
+        <div class="stats" id="jwStats" style="grid-template-columns:repeat(4,1fr)">
+          <div class="stat"><div class="stat-v" id="jwCntBoş" style="color:#5DBD84">—</div><div class="stat-l">Boş</div></div>
+          <div class="stat"><div class="stat-v" id="jwCntRez" style="color:var(--orange)">—</div><div class="stat-l">Rezerve</div></div>
+          <div class="stat"><div class="stat-v" id="jwCntSat" style="color:var(--red)">—</div><div class="stat-l">Satıldı</div></div>
+          <div class="stat"><div class="stat-v" id="jwCntTop">—</div><div class="stat-l">Toplam</div></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+          <div style="display:flex;gap:4px;">
+            <button class="abtn jf-status active" onclick="jwFilter('status','all',this)">Tümü</button>
+            <button class="abtn jf-status" onclick="jwFilter('status','available',this)">Boş</button>
+            <button class="abtn jf-status" onclick="jwFilter('status','reserved',this)">Rezerve</button>
+            <button class="abtn jf-status" onclick="jwFilter('status','sold',this)">Satıldı</button>
+          </div>
+          <div style="display:flex;gap:4px;margin-left:auto;">
+            <button class="abtn jf-type active" onclick="jwFilter('type','all',this)">Tüm Tipler</button>
+            <button class="abtn jf-type" onclick="jwFilter('type','1+1 Loft',this)">Loft</button>
+            <button class="abtn jf-type" onclick="jwFilter('type','2+1 Dubleks',this)">Dubleks</button>
+            <button class="abtn jf-type" onclick="jwFilter('type','1+1 Loft Bahçeli',this)">Bahçeli</button>
+          </div>
+        </div>
+        <div id="jwGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ JEWELS DAİRE MODAL ══ -->
+<div class="modal-bg" id="jwModal">
+  <div class="modal" style="width:min(640px,96vw);">
+    <div class="modal-hdr">
+      <div class="modal-ttl" id="jwModalTitle">Daire Detayı</div>
+      <button class="modal-close" onclick="closeModal('jwModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:18px;">
+        <div id="jwS1btn" style="flex:1;text-align:center;padding:8px;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);border-bottom:2px solid var(--gold);cursor:pointer;" onclick="jwGoStep(1)">1 · Daire</div>
+        <div id="jwS2btn" style="flex:1;text-align:center;padding:8px;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--wd);border-bottom:2px solid transparent;cursor:pointer;" onclick="jwGoStep(2)">2 · Müşteri & Plan</div>
+        <div id="jwS3btn" style="flex:1;text-align:center;padding:8px;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--wd);border-bottom:2px solid transparent;cursor:pointer;" onclick="jwGoStep(3)">3 · Sözleşme</div>
+      </div>
+      <div id="jwStep1">
+        <div id="jwUnitDetail"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;gap:8px;">
+          <button class="abtn" onclick="closeModal('jwModal')">İptal</button>
+          <button class="abtn p" onclick="jwGoStep(2)">Ödeme Planı →</button>
+        </div>
+      </div>
+      <div id="jwStep2" style="display:none">
+        <div class="g2" style="margin-bottom:14px;">
+          <div class="f"><label>Ad Soyad <span class="req">*</span></label><input type="text" id="jwCusName" placeholder="Ad Soyad"></div>
+          <div class="f"><label>T.C. Kimlik No</label><input type="text" id="jwCusTc" placeholder="11 haneli TC"></div>
+          <div class="f"><label>Telefon <span class="req">*</span></label><input type="tel" id="jwCusTel"></div>
+          <div class="f"><label>E-Posta</label><input type="email" id="jwCusEmail"></div>
+        </div>
+        <div style="font-size:8px;letter-spacing:2px;color:rgba(201,169,110,.5);text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Ödeme Planı (Kampanya Sabit Değerleri)</div>
+        <div class="g3" style="margin-bottom:12px;">
+          <div class="f"><label>Peşinat (₺)</label><input type="number" id="jwDown" oninput="jwCalc()"></div>
+          <div class="f"><label>Aylık Taksit (₺)</label><input type="number" id="jwMonthly" readonly style="color:var(--gold)"></div>
+          <div class="f"><label>Taksit Adedi</label><input type="number" id="jwCount" value="36" readonly style="color:var(--gold)"></div>
+        </div>
+        <div id="jwPlanSummary" style="display:none;background:var(--b5);border:1px solid var(--borderhi);padding:14px 18px;margin-bottom:12px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <div><div style="font-size:9px;color:rgba(201,169,110,.55);margin-bottom:3px;">TOPLAM BEDEL</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold)" id="jps-total">—</div></div>
+            <div><div style="font-size:9px;color:rgba(201,169,110,.55);margin-bottom:3px;">PEŞİNAT</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--green)" id="jps-down">—</div></div>
+            <div><div style="font-size:9px;color:rgba(201,169,110,.55);margin-bottom:3px;">AYLIK TAKSİT</div><div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--white)" id="jps-monthly">—</div></div>
+          </div>
+        </div>
+        <div id="jwInstWrap" style="max-height:200px;overflow-y:auto;"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:16px;">
+          <button class="abtn" onclick="jwGoStep(1)">← Geri</button>
+          <button class="abtn p" onclick="jwGoStep(3)">Sözleşmeyi Hazırla →</button>
+        </div>
+      </div>
+      <div id="jwStep3" style="display:none">
+        <div id="jwContractPreview" style="background:var(--b4);border:1px solid var(--border);padding:20px 24px;font-size:12px;line-height:1.9;max-height:400px;overflow-y:auto;"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:16px;gap:8px;">
+          <button class="abtn" onclick="jwGoStep(2)">← Düzenle</button>
+          <button class="abtn" onclick="window.print()">Yazdır / PDF</button>
+          <button class="abtn p" onclick="jwSaveContract()">Sözleşmeyi Kaydet ✓</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -758,6 +847,209 @@ function showPanel(id,el){
 function fmoney(n,d){if(!n&&n!==0)return'—';const s=d==='USD'?'$':d==='EUR'?'€':'₺';return s+Math.round(n).toLocaleString('tr-TR');}
 
 function bdg(s){const m={beklemede:'bw',aktif:'bo',onaylandi:'bo',yeni:'bi',gorusmede:'bw',teklif:'bw',kapandi:'bo',iptal:'bn',reddedildi:'bn',pasif:'bn'};const l={beklemede:'Beklemede',aktif:'Aktif',onaylandi:'Onaylandı',yeni:'Yeni',gorusmede:'Görüşmede',teklif:'Teklifte',kapandi:'Kapandı',iptal:'İptal',reddedildi:'Reddedildi',pasif:'Pasif'};return`<span class="badge ${m[s]||'bw'}">${l[s]||s}</span>`;}
+
+
+// ══ JEWELS KAMPANYA JS ══
+const JW_PLANS = {
+  '1+1 Loft':         {down:1000000, monthly:59000, count:36, total:3124000},
+  '1+1 Loft Bahçeli': {down:1250000, monthly:69000, count:36, total:3734000},
+  '2+1 Dubleks':      {down:1500000, monthly:79000, count:36, total:4344000},
+};
+
+let jwAllUnits = [], jwCurUnit = null;
+let jwFilterStatus = 'all', jwFilterType = 'all';
+
+async function loadJewels() {
+  const {data, error} = await sb.from('jewels_units').select('*').order('unit_no');
+  if (!error && data) jwAllUnits = data;
+  else jwAllUnits = jwDemoUnits();
+  jwRenderGrid();
+  jwUpdateStats();
+}
+
+function jwDemoUnits() {
+  return [
+    {id:'1',unit_no:'A-101',block:'A',floor:1,type:'1+1 Loft Bahçeli',area_m2:65,garden_m2:30,status:'available'},
+    {id:'2',unit_no:'A-102',block:'A',floor:1,type:'1+1 Loft Bahçeli',area_m2:65,garden_m2:25,status:'available'},
+    {id:'3',unit_no:'A-201',block:'A',floor:2,type:'1+1 Loft',area_m2:60,status:'sold'},
+    {id:'4',unit_no:'A-202',block:'A',floor:2,type:'1+1 Loft',area_m2:60,status:'available'},
+    {id:'5',unit_no:'A-301',block:'A',floor:3,type:'2+1 Dubleks',area_m2:110,status:'reserved'},
+    {id:'6',unit_no:'A-302',block:'A',floor:3,type:'2+1 Dubleks',area_m2:110,status:'available'},
+    {id:'7',unit_no:'B-101',block:'B',floor:1,type:'1+1 Loft Bahçeli',area_m2:68,garden_m2:35,status:'available'},
+    {id:'8',unit_no:'B-201',block:'B',floor:2,type:'1+1 Loft',area_m2:62,status:'available'},
+    {id:'9',unit_no:'B-202',block:'B',floor:2,type:'1+1 Loft',area_m2:62,status:'reserved'},
+    {id:'10',unit_no:'B-301',block:'B',floor:3,type:'2+1 Dubleks',area_m2:115,status:'sold'},
+  ];
+}
+
+function jwUpdateStats() {
+  document.getElementById('jwCntBoş').textContent = jwAllUnits.filter(u=>u.status==='available').length;
+  document.getElementById('jwCntRez').textContent  = jwAllUnits.filter(u=>u.status==='reserved').length;
+  document.getElementById('jwCntSat').textContent  = jwAllUnits.filter(u=>u.status==='sold').length;
+  document.getElementById('jwCntTop').textContent  = jwAllUnits.length;
+}
+
+function jwFilter(key, val, btn) {
+  if (key === 'status') { jwFilterStatus = val; document.querySelectorAll('.jf-status').forEach(b=>b.classList.remove('active')); }
+  else                  { jwFilterType   = val; document.querySelectorAll('.jf-type').forEach(b=>b.classList.remove('active')); }
+  btn.classList.add('active');
+  jwRenderGrid();
+}
+
+function jwRenderGrid() {
+  let units = jwAllUnits;
+  if (jwFilterStatus !== 'all') units = units.filter(u => u.status === jwFilterStatus);
+  if (jwFilterType   !== 'all') units = units.filter(u => u.type   === jwFilterType);
+  const grid = document.getElementById('jwGrid');
+  if (!units.length) { grid.innerHTML = '<div style="color:var(--wd);font-size:12px;padding:20px;">Bu kriterde daire bulunamadı.</div>'; return; }
+  const colors = {available:'#5DBD84', reserved:'var(--orange)', sold:'var(--red)'};
+  const labels = {available:'Boş', reserved:'Rezerve', sold:'Satıldı'};
+  const plan = JW_PLANS;
+  grid.innerHTML = units.map(u => {
+    const p = plan[u.type] || {};
+    const clickable = u.status === 'available';
+    const gc = colors[u.status];
+    return `<div onclick="${clickable ? 'jwOpenModal(''+u.id+'')' : ''}"
+      style="background:var(--b4);border:1px solid ${gc === '#5DBD84' ? 'rgba(93,189,132,.3)' : u.status==='reserved'?'rgba(232,169,110,.3)':'rgba(232,112,112,.25)'};padding:12px;cursor:${clickable?'pointer':'default'};transition:all .2s;position:relative;"
+      ${clickable ? 'onmouseover="this.style.background='var(--b5)'" onmouseout="this.style.background='var(--b4)'"' : 'opacity:'+( u.status==='sold'?0.6:1)}>
+      <div style="position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:${gc}"></div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:var(--white)">${u.unit_no}</div>
+      <div style="font-size:9px;color:var(--wd);margin:2px 0 6px;letter-spacing:.5px;">${u.type}</div>
+      <div style="font-size:10px;color:var(--wd)">${u.area_m2}m²${u.garden_m2?' +'+u.garden_m2+'m² bahçe':''}</div>
+      ${p.down ? '<div style="font-size:10px;color:var(--gold);margin-top:5px;">'+p.down.toLocaleString('tr-TR')+' ₺ peşinat</div>' : ''}
+      <div style="font-size:9px;color:${gc};margin-top:4px;letter-spacing:.5px;">${labels[u.status]}</div>
+    </div>`;
+  }).join('');
+}
+
+function jwOpenModal(unitId) {
+  jwCurUnit = jwAllUnits.find(u => u.id === unitId);
+  if (!jwCurUnit) return;
+  const u = jwCurUnit;
+  const p = JW_PLANS[u.type] || {down:0, monthly:0, count:36, total:0};
+  document.getElementById('jwModalTitle').textContent = 'Daire ' + u.unit_no + ' — ' + u.type;
+  document.getElementById('jwUnitDetail').innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd);width:40%">Daire No</td><td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:500">${u.unit_no}</td></tr>
+      <tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Tip</td><td style="padding:7px 10px;border-bottom:1px solid var(--border)">${u.type}</td></tr>
+      <tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Blok / Kat</td><td style="padding:7px 10px;border-bottom:1px solid var(--border)">${u.block||'—'} Blok · ${u.floor||'—'}. Kat</td></tr>
+      <tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Alan</td><td style="padding:7px 10px;border-bottom:1px solid var(--border)">${u.area_m2} m²${u.garden_m2?' + '+u.garden_m2+' m² bahçe':''}</td></tr>
+      <tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Peşinat</td><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--gold)">${p.down.toLocaleString('tr-TR')} ₺</td></tr>
+      <tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Aylık Taksit</td><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--gold)">${p.monthly.toLocaleString('tr-TR')} ₺ × ${p.count} ay</td></tr>
+      <tr><td style="padding:7px 10px;color:var(--wd)">Toplam Bedel</td><td style="padding:7px 10px;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--white)">${p.total.toLocaleString('tr-TR')} ₺</td></tr>
+    </table>`;
+  // Pre-fill plan values
+  document.getElementById('jwDown').value    = p.down;
+  document.getElementById('jwMonthly').value = p.monthly;
+  document.getElementById('jwCount').value   = p.count;
+  jwCalc();
+  jwGoStep(1);
+  document.getElementById('jwModal').classList.add('open');
+}
+
+function jwCalc() {
+  const down    = +document.getElementById('jwDown').value    || 0;
+  const monthly = +document.getElementById('jwMonthly').value || 0;
+  const count   = +document.getElementById('jwCount').value   || 36;
+  if (!down && !monthly) { document.getElementById('jwPlanSummary').style.display='none'; return; }
+  const total = down + monthly * count;
+  document.getElementById('jps-total').textContent   = total.toLocaleString('tr-TR')   + ' ₺';
+  document.getElementById('jps-down').textContent    = down.toLocaleString('tr-TR')    + ' ₺';
+  document.getElementById('jps-monthly').textContent = monthly.toLocaleString('tr-TR') + ' ₺';
+  document.getElementById('jwPlanSummary').style.display = 'block';
+  const now = new Date();
+  let rows = '';
+  let cum = 0;
+  for (let m = 1; m <= count; m++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + m, 1);
+    const mn = d.toLocaleDateString('tr-TR', {month:'long', year:'numeric'});
+    cum += monthly;
+    rows += `<tr><td style="color:var(--wd);font-size:11px;width:24px">${m}</td><td style="font-size:11px;color:var(--wd)">${mn}</td><td style="text-align:right;font-size:11px">${monthly.toLocaleString('tr-TR')} ₺</td><td style="text-align:right;font-size:11px;color:var(--wd)">${(down+cum).toLocaleString('tr-TR')} ₺</td></tr>`;
+  }
+  document.getElementById('jwInstWrap').innerHTML = `<table style="width:100%;border-collapse:collapse"><thead><tr><th style="padding:5px 6px;text-align:left;font-size:8px;letter-spacing:1.5px;color:rgba(201,169,110,.4);border-bottom:1px solid var(--border)">#</th><th style="padding:5px 6px;text-align:left;font-size:8px;letter-spacing:1.5px;color:rgba(201,169,110,.4);border-bottom:1px solid var(--border)">TARİH</th><th style="padding:5px 6px;text-align:right;font-size:8px;letter-spacing:1.5px;color:rgba(201,169,110,.4);border-bottom:1px solid var(--border)">TAKSİT</th><th style="padding:5px 6px;text-align:right;font-size:8px;letter-spacing:1.5px;color:rgba(201,169,110,.4);border-bottom:1px solid var(--border)">TOPLAM</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function jwGoStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('jwStep'+i).style.display = i===n ? 'block' : 'none';
+    const btn = document.getElementById('jwS'+i+'btn');
+    if (btn) { btn.style.color = i===n ? 'var(--gold)' : 'var(--wd)'; btn.style.borderBottomColor = i===n ? 'var(--gold)' : 'transparent'; }
+  });
+  if (n === 3) jwRenderContract();
+}
+
+function jwRenderContract() {
+  const u = jwCurUnit;
+  const cusName = document.getElementById('jwCusName').value || '______________________';
+  const cusTc   = document.getElementById('jwCusTc').value   || '___________';
+  const down    = +document.getElementById('jwDown').value    || 0;
+  const monthly = +document.getElementById('jwMonthly').value || 0;
+  const count   = +document.getElementById('jwCount').value   || 36;
+  const total   = down + monthly * count;
+  const today   = new Date().toLocaleDateString('tr-TR', {day:'2-digit', month:'long', year:'numeric'});
+  document.getElementById('jwContractPreview').innerHTML = `
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--gold)">KONUT SATIŞ ÖN SÖZLEŞMESİ</div>
+      <div style="font-size:10px;letter-spacing:2px;color:var(--wd);margin-top:4px;">ARSLANLAR JEWELS · AKYURT/BALIKHI­SAR, ANKARA</div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;">
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd);width:38%">Satıcı Firma</td><td style="padding:6px 10px;border:1px solid var(--border)">Arslanlar Gayrimenkul Geliştirme A.Ş.</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd)">Alıcı Ad Soyad</td><td style="padding:6px 10px;border:1px solid var(--border)">${cusName}</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd)">Alıcı T.C. No</td><td style="padding:6px 10px;border:1px solid var(--border)">${cusTc}</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd)">Aracı Acenta</td><td style="padding:6px 10px;border:1px solid var(--border)">${curAgency?.firma_adi||'—'}</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd)">Tarih</td><td style="padding:6px 10px;border:1px solid var(--border)">${today}</td></tr>
+    </table>
+    <div style="font-size:9px;letter-spacing:2px;color:rgba(201,169,110,.5);text-transform:uppercase;margin-bottom:8px;">Satış Konusu Taşınmaz</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;">
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd);width:38%">Proje</td><td style="padding:6px 10px;border:1px solid var(--border)">Arslanlar Jewels</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd)">Adres</td><td style="padding:6px 10px;border:1px solid var(--border)">Akyurt / Balıkhisar, Ankara</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd)">Daire No</td><td style="padding:6px 10px;border:1px solid var(--border);font-weight:500">${u.unit_no}</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd)">Daire Tipi</td><td style="padding:6px 10px;border:1px solid var(--border)">${u.type}</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd)">Brüt Alan</td><td style="padding:6px 10px;border:1px solid var(--border)">${u.area_m2} m²${u.garden_m2?' + '+u.garden_m2+' m² bahçe':''}</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd)">Teslim</td><td style="padding:6px 10px;border:1px solid var(--border)">2028 2. Çeyrek</td></tr>
+    </table>
+    <div style="font-size:9px;letter-spacing:2px;color:rgba(201,169,110,.5);text-transform:uppercase;margin-bottom:8px;">Ödeme Planı</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;">
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd);width:38%">Toplam Satış Bedeli</td><td style="padding:6px 10px;border:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--white)">${total.toLocaleString('tr-TR')} ₺</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd)">Peşinat</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--gold)">${down.toLocaleString('tr-TR')} ₺</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd)">Bakiye</td><td style="padding:6px 10px;border:1px solid var(--border)">${(total-down).toLocaleString('tr-TR')} ₺</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd)">Taksit Adedi</td><td style="padding:6px 10px;border:1px solid var(--border)">${count} ay</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);background:var(--b5);color:var(--wd)">Aylık Sabit Taksit</td><td style="padding:6px 10px;border:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--gold)">${monthly.toLocaleString('tr-TR')} ₺</td></tr>
+    </table>
+    <div style="font-size:11px;color:var(--wd);line-height:1.8;border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">İşbu ön sözleşme; yukarıda belirtilen konutun belirlenen bedel ve ödeme planı dahilinde alıcıya satışını kapsamaktadır. Taraflar, resmi satış sözleşmesinin noter onayı ile imzalanacağını kabul eder.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:28px;padding-top:16px;border-top:1px solid var(--border);">
+      <div style="text-align:center"><div style="border-top:1px solid var(--wd);margin-top:40px;padding-top:8px;font-size:10px;color:var(--wd)">Satıcı Firma Yetkilisi</div></div>
+      <div style="text-align:center"><div style="border-top:1px solid var(--wd);margin-top:40px;padding-top:8px;font-size:10px;color:var(--wd)">Alıcı — ${cusName}</div></div>
+    </div>`;
+}
+
+const jwSavedContracts = [];
+async function jwSaveContract() {
+  const u = jwCurUnit;
+  const cusName = document.getElementById('jwCusName').value.trim();
+  const cusTel  = document.getElementById('jwCusTel').value.trim();
+  if (!cusName || !cusTel) { toast('Ad soyad ve telefon zorunludur.', false); jwGoStep(2); return; }
+  const down    = +document.getElementById('jwDown').value;
+  const monthly = +document.getElementById('jwMonthly').value;
+  const count   = +document.getElementById('jwCount').value;
+  const total   = down + monthly * count;
+  const no = 'JWL-' + new Date().getFullYear() + '-' + String(jwSavedContracts.length + 1001).padStart(4,'0');
+
+  // Supabase güncelle
+  try {
+    await sb.from('jewels_units').update({status:'sold', agency_id: curAgency.id}).eq('id', u.id);
+  } catch(e) {}
+
+  // Local stok güncelle
+  const unit = jwAllUnits.find(x => x.id === u.id);
+  if (unit) unit.status = 'sold';
+  jwSavedContracts.push({no, unit: u.unit_no, customer: cusName, total, monthly, count});
+
+  closeModal('jwModal');
+  jwRenderGrid();
+  jwUpdateStats();
+  toast('Sözleşme kaydedildi! No: ' + no);
+}
 
 (async()=>{const{data:{session}}=await sb.auth.getSession();if(session?.user)await loadUser(session.user);})();
 </script>
