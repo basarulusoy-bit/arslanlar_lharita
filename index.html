@@ -1778,7 +1778,8 @@ function dpFill(p) {
   const wa = (p.whatsapp||ph).replace(/[^0-9]/g,'');
   document.getElementById('dp-ctas').innerHTML =
     '<a href="tel:'+ph+'" class="dp-btn dp-btn-g">📞 Bilgi Al</a>' +
-    '<a href="https://wa.me/'+wa+'?text='+encodeURIComponent(p.name+' projesi hakkında bilgi almak istiyorum.')+'" target="_blank" class="dp-btn dp-btn-w">WhatsApp</a>';
+    '<a href="https://wa.me/'+wa+'?text='+encodeURIComponent(p.name+' projesi hakkında bilgi almak istiyorum.')+'" target="_blank" class="dp-btn dp-btn-w">WhatsApp</a>' +
+    (p.campaign_url ? '<a href="'+p.campaign_url+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:4px;padding:10px;background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.35);color:#C9A96E;font-family:Montserrat,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:all .2s;" onmouseover="this.style.background=\'rgba(201,169,110,.2)\'" onmouseout="this.style.background=\'rgba(201,169,110,.1)\'">✦ Kampanya &amp; Ödeme Planı →</a>' : '');
 
   // Görseller
   document.getElementById('dp-gal').innerHTML = p.render_url
