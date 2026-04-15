@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arslanlar Jewels — ÜÇÜNCÜ KAT — 2+1 DUBLEKS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--gold:#C9A96E;--black:#0A0A0A;--b2:#111;--b3:#1A1A1A;--white:#F5F0E8;--wd:rgba(245,240,232,0.6);--border:rgba(201,169,110,0.2);--green:#5DBD84;--orange:#E8A96E;--red:#E87070;}
+body{background:var(--black);color:var(--white);font-family:'Montserrat',sans-serif;font-size:12px;font-weight:300;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.header{padding:12px 20px;background:var(--b2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-shrink:0;}
+.header h1{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:var(--gold);}
+.header p{font-size:9px;color:var(--wd);letter-spacing:1.5px;margin-top:2px;}
+.legend{display:flex;gap:12px;margin-left:auto;}
+.leg{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--wd);letter-spacing:.5px;}
+.leg-dot{width:9px;height:9px;border-radius:2px;}
+.controls{padding:8px 20px;background:var(--b3);border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.fbtn{background:none;border:1px solid var(--border);color:var(--wd);padding:4px 10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;font-family:'Montserrat',sans-serif;transition:all .2s;}
+.fbtn.active,.fbtn:hover{background:rgba(201,169,110,.15);border-color:var(--gold);color:var(--gold);}
+.stats{display:flex;gap:14px;margin-left:auto;font-size:9px;}
+.stat{color:var(--wd);}.stat span{color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:15px;margin-left:3px;}
+.body{display:flex;flex:1;overflow:hidden;}
+.plan-wrap{flex:1;overflow:auto;padding:12px;background:var(--black);}
+svg.floorplan{background:#0d0d0d;display:block;}
+.unit{cursor:pointer;}
+.unit polygon{transition:fill-opacity .15s,stroke-width .15s;}
+.unit:hover polygon{fill-opacity:0.9!important;}
+.unit.hidden{display:none;}
+.unit-lbl{font-size:5.5px;fill:rgba(245,240,232,.75);text-anchor:middle;dominant-baseline:central;pointer-events:none;font-family:Montserrat,sans-serif;font-weight:400;}
+.panel{width:260px;background:var(--b2);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(260px);transition:transform .28s;flex-shrink:0;}
+.panel.open{transform:none;}
+.panel-hdr{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.panel-no{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gold);}
+.panel-type{font-size:8px;letter-spacing:1.5px;color:var(--wd);margin-top:2px;text-transform:uppercase;}
+.panel-close{background:none;border:none;color:var(--wd);font-size:16px;cursor:pointer;padding:4px;}
+.panel-body{padding:14px 16px;flex:1;overflow-y:auto;}
+.pi{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(245,240,232,.05);}
+.pi-l{font-size:8px;letter-spacing:1.5px;color:var(--wd);text-transform:uppercase;}
+.pi-v{font-family:'Cormorant Garamond',serif;font-size:15px;}
+.pi-v.gold{color:var(--gold);}
+.sbadge{display:inline-block;padding:3px 10px;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;}
+.s-av{background:rgba(93,189,132,.12);color:var(--green);border:1px solid rgba(93,189,132,.25);}
+.s-re{background:rgba(232,169,110,.1);color:var(--orange);border:1px solid rgba(232,169,110,.2);}
+.s-so{background:rgba(232,112,112,.08);color:var(--red);border:1px solid rgba(232,112,112,.18);}
+.panel-btns{padding:12px 16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px;}
+.pbtn{padding:9px;text-align:center;font-size:8px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:none;font-family:'Montserrat',sans-serif;transition:all .2s;}
+.pbtn-gold{background:var(--gold);color:var(--black);}
+.pbtn-gold:hover{background:#E8CC84;}
+.pbtn-ghost{background:transparent;border:1px solid var(--border);color:var(--wd);}
+.pbtn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+.pbtn:disabled{opacity:.35;cursor:default;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div><h1>Arslanlar Jewels</h1><p>ÜÇÜNCÜ KAT — 2+1 DUBLEKS</p></div>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--green)"></div>BOŞ</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--orange)"></div>REZERVE</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>SATILDI</div>
+  </div>
+</div>
+<div class="controls">
+  <button class="fbtn active" onclick="flt('all',this)">TÜMÜ</button>
+  <button class="fbtn" onclick="flt('available',this)">BOŞ</button>
+  <button class="fbtn" onclick="flt('reserved',this)">REZERVE</button>
+  <button class="fbtn" onclick="flt('sold',this)">SATILDI</button>
+  <div class="stats">
+    <div class="stat">BOŞ<span id="cB">—</span></div>
+    <div class="stat">REZERVE<span id="cR">—</span></div>
+    <div class="stat">SATILDI<span id="cS">—</span></div>
+    <div class="stat">TOPLAM<span id="cT">—</span></div>
+  </div>
+</div>
+<div class="body">
+  <div class="plan-wrap">
+    <svg class="floorplan" viewBox="0 0 960 620" width="960" height="620" id="svg"></svg>
+  </div>
+  <div class="panel" id="panel">
+    <div class="panel-hdr">
+      <div><div class="panel-no" id="pNo">—</div><div class="panel-type">2+1 DUBLEKS</div></div>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="panel-body">
+      <div id="pBadge"></div>
+      <div class="pi"><span class="pi-l">Daire No</span><span class="pi-v" id="pNo2">—</span></div>
+      <div class="pi"><span class="pi-l">Tip</span><span class="pi-v">2+1 Dubleks</span></div>
+      <div class="pi"><span class="pi-l">Kat</span><span class="pi-v">3. Kat</span></div>
+      <div class="pi"><span class="pi-l">Peşinat</span><span class="pi-v gold">1,500,000 ₺</span></div>
+      <div class="pi"><span class="pi-l">Aylık Taksit</span><span class="pi-v gold">79,000 ₺</span></div>
+      <div class="pi"><span class="pi-l">Vade</span><span class="pi-v">36 Ay</span></div>
+      <div class="pi"><span class="pi-l">Toplam Bedel</span><span class="pi-v">4,344,000 ₺</span></div>
+    </div>
+    <div class="panel-btns" id="pBtns"></div>
+  </div>
+</div>
+<script>
+const UD=[{"no": "403", "pts": [[886.35, 476.29], [915.71, 478.55], [917.96, 449.19], [888.6, 446.93]], "cx": 902.2, "cy": 462.7}, {"no": "404", "pts": [[845.24, 473.14], [874.6, 475.39], [876.86, 446.03], [847.49, 443.77]], "cx": 861.0, "cy": 459.6}, {"no": "405", "pts": [[884.09, 505.66], [913.45, 507.91], [915.71, 478.55], [886.35, 476.29]], "cx": 899.9, "cy": 492.1}, {"no": "406", "pts": [[881.84, 535.02], [911.2, 537.27], [913.45, 507.91], [884.09, 505.66]], "cx": 897.6, "cy": 521.5}, {"no": "407", "pts": [[879.58, 564.38], [908.94, 566.64], [911.2, 537.27], [881.84, 535.02]], "cx": 895.4, "cy": 550.8}, {"no": "408", "pts": [[877.33, 593.75], [906.69, 596.0], [908.94, 566.64], [879.58, 564.38]], "cx": 893.1, "cy": 580.2}, {"no": "409", "pts": [[830.91, 568.38], [860.36, 568.38], [860.36, 538.93], [830.91, 538.93]], "cx": 845.6, "cy": 553.7}, {"no": "410", "pts": [[801.46, 568.38], [830.91, 568.38], [830.91, 538.93], [801.46, 538.93]], "cx": 816.2, "cy": 553.7}, {"no": "411", "pts": [[772.01, 527.15], [801.46, 527.15], [801.46, 497.7], [772.01, 497.7]], "cx": 786.7, "cy": 512.4}, {"no": "412", "pts": [[772.01, 568.38], [801.46, 568.38], [801.46, 538.93], [772.01, 538.93]], "cx": 786.7, "cy": 553.7}, {"no": "414", "pts": [[742.56, 568.38], [772.01, 568.38], [772.01, 538.93], [742.56, 538.93]], "cx": 757.3, "cy": 553.7}, {"no": "415", "pts": [[742.56, 527.15], [772.01, 527.15], [772.01, 497.7], [742.56, 497.7]], "cx": 757.3, "cy": 512.4}, {"no": "416", "pts": [[713.11, 568.38], [742.56, 568.38], [742.56, 538.93], [713.11, 538.93]], "cx": 727.8, "cy": 553.7}, {"no": "417", "pts": [[713.11, 527.15], [742.56, 527.15], [742.56, 497.7], [713.11, 497.7]], "cx": 727.8, "cy": 512.4}, {"no": "418", "pts": [[683.66, 568.38], [713.11, 568.38], [713.11, 538.93], [683.66, 538.93]], "cx": 698.4, "cy": 553.7}, {"no": "419", "pts": [[683.66, 527.15], [713.11, 527.15], [713.11, 497.7], [683.66, 497.7]], "cx": 698.4, "cy": 512.4}, {"no": "420", "pts": [[654.21, 568.38], [683.66, 568.38], [683.66, 538.93], [654.21, 538.93]], "cx": 668.9, "cy": 553.7}, {"no": "421", "pts": [[654.21, 527.15], [683.66, 527.15], [683.66, 497.7], [654.21, 497.7]], "cx": 668.9, "cy": 512.4}, {"no": "422", "pts": [[624.77, 568.38], [654.21, 568.38], [654.21, 538.93], [624.77, 538.93]], "cx": 639.5, "cy": 553.7}, {"no": "423", "pts": [[624.77, 527.15], [654.21, 527.15], [654.21, 497.7], [624.77, 497.7]], "cx": 639.5, "cy": 512.4}, {"no": "424", "pts": [[595.32, 568.38], [624.77, 568.38], [624.77, 538.93], [595.32, 538.93]], "cx": 610.0, "cy": 553.7}, {"no": "425", "pts": [[595.32, 527.15], [624.77, 527.15], [624.77, 497.7], [595.32, 497.7]], "cx": 610.0, "cy": 512.4}, {"no": "426", "pts": [[565.87, 568.38], [595.32, 568.38], [595.32, 538.93], [565.87, 538.93]], "cx": 580.6, "cy": 553.7}, {"no": "427", "pts": [[565.87, 527.15], [595.32, 527.15], [595.32, 497.7], [565.87, 497.7]], "cx": 580.6, "cy": 512.4}, {"no": "428", "pts": [[536.42, 568.38], [565.87, 568.38], [565.87, 538.93], [536.42, 538.93]], "cx": 551.1, "cy": 553.7}, {"no": "429", "pts": [[536.42, 527.15], [565.87, 527.15], [565.87, 497.7], [536.42, 497.7]], "cx": 551.1, "cy": 512.4}, {"no": "430", "pts": [[506.97, 568.38], [536.42, 568.38], [536.42, 538.93], [506.97, 538.93]], "cx": 521.7, "cy": 553.7}, {"no": "431", "pts": [[506.97, 527.15], [536.42, 527.15], [536.42, 497.7], [506.97, 497.7]], "cx": 521.7, "cy": 512.4}, {"no": "432", "pts": [[477.52, 568.38], [506.97, 568.38], [506.97, 538.93], [477.52, 538.93]], "cx": 492.2, "cy": 553.7}, {"no": "433", "pts": [[477.52, 527.15], [506.97, 527.15], [506.97, 497.7], [477.52, 497.7]], "cx": 492.2, "cy": 512.4}, {"no": "434", "pts": [[448.07, 568.38], [477.52, 568.38], [477.52, 538.93], [448.07, 538.93]], "cx": 462.8, "cy": 553.7}, {"no": "435", "pts": [[418.62, 568.38], [448.07, 568.38], [448.07, 538.93], [418.62, 538.93]], "cx": 433.3, "cy": 553.7}, {"no": "437", "pts": [[389.17, 568.38], [418.62, 568.38], [418.62, 538.93], [389.17, 538.93]], "cx": 403.9, "cy": 553.7}, {"no": "438", "pts": [[389.17, 527.15], [418.62, 527.15], [418.62, 497.7], [389.17, 497.7]], "cx": 403.9, "cy": 512.4}, {"no": "439", "pts": [[359.72, 568.38], [389.17, 568.38], [389.17, 538.93], [359.72, 538.93]], "cx": 374.4, "cy": 553.7}, {"no": "440", "pts": [[359.72, 527.15], [389.17, 527.15], [389.17, 497.7], [359.72, 497.7]], "cx": 374.4, "cy": 512.4}, {"no": "441", "pts": [[330.27, 568.38], [359.72, 568.38], [359.72, 538.93], [330.27, 538.93]], "cx": 345.0, "cy": 553.7}, {"no": "442", "pts": [[330.27, 527.15], [359.72, 527.15], [359.72, 497.7], [330.27, 497.7]], "cx": 345.0, "cy": 512.4}, {"no": "443", "pts": [[300.82, 568.38], [330.27, 568.38], [330.27, 538.93], [300.82, 538.93]], "cx": 315.5, "cy": 553.7}, {"no": "444", "pts": [[300.82, 527.15], [330.27, 527.15], [330.27, 497.7], [300.82, 497.7]], "cx": 315.5, "cy": 512.4}, {"no": "445", "pts": [[271.37, 568.38], [300.82, 568.38], [300.82, 538.93], [271.37, 538.93]], "cx": 286.1, "cy": 553.7}, {"no": "446", "pts": [[271.37, 527.15], [300.82, 527.15], [300.82, 497.7], [271.37, 497.7]], "cx": 286.1, "cy": 512.4}, {"no": "447", "pts": [[241.92, 568.38], [271.37, 568.38], [271.37, 538.93], [241.92, 538.93]], "cx": 256.6, "cy": 553.7}, {"no": "448", "pts": [[241.92, 527.15], [271.37, 527.15], [271.37, 497.7], [241.92, 497.7]], "cx": 256.6, "cy": 512.4}, {"no": "449", "pts": [[212.48, 568.38], [241.92, 568.38], [241.92, 538.93], [212.48, 538.93]], "cx": 227.2, "cy": 553.7}, {"no": "450", "pts": [[212.48, 527.15], [241.92, 527.15], [241.92, 497.7], [212.48, 497.7]], "cx": 227.2, "cy": 512.4}, {"no": "451", "pts": [[183.03, 568.38], [212.48, 568.38], [212.48, 538.93], [183.03, 538.93]], "cx": 197.8, "cy": 553.7}, {"no": "452", "pts": [[183.03, 527.15], [212.48, 527.15], [212.48, 497.7], [183.03, 497.7]], "cx": 197.8, "cy": 512.4}, {"no": "453", "pts": [[153.58, 568.38], [183.03, 568.38], [183.03, 538.93], [153.58, 538.93]], "cx": 168.3, "cy": 553.7}, {"no": "454", "pts": [[153.58, 527.15], [183.03, 527.15], [183.03, 497.7], [153.58, 497.7]], "cx": 168.3, "cy": 512.4}, {"no": "455", "pts": [[124.13, 568.38], [153.58, 568.38], [153.58, 538.93], [124.13, 538.93]], "cx": 138.9, "cy": 553.7}, {"no": "456", "pts": [[124.13, 527.15], [153.58, 527.15], [153.58, 497.7], [124.13, 497.7]], "cx": 138.9, "cy": 512.4}, {"no": "457", "pts": [[94.68, 568.38], [124.13, 568.38], [124.13, 538.93], [94.68, 538.93]], "cx": 109.4, "cy": 553.7}, {"no": "458", "pts": [[65.23, 568.38], [94.68, 568.38], [94.68, 538.93], [65.23, 538.93]], "cx": 80.0, "cy": 553.7}, {"no": "459", "pts": [[24.0, 584.67], [53.45, 584.67], [53.45, 555.22], [24.0, 555.22]], "cx": 38.7, "cy": 569.9}, {"no": "460", "pts": [[24.0, 555.22], [53.45, 555.22], [53.45, 525.77], [24.0, 525.77]], "cx": 38.7, "cy": 540.5}, {"no": "461", "pts": [[24.0, 525.77], [53.45, 525.77], [53.45, 496.32], [24.0, 496.32]], "cx": 38.7, "cy": 511.0}, {"no": "462", "pts": [[24.0, 496.32], [53.45, 496.32], [53.45, 466.88], [24.0, 466.88]], "cx": 38.7, "cy": 481.6}, {"no": "463", "pts": [[24.0, 466.88], [53.45, 466.88], [53.45, 437.43], [24.0, 437.43]], "cx": 38.7, "cy": 452.2}, {"no": "464", "pts": [[65.23, 466.88], [94.68, 466.88], [94.68, 437.43], [65.23, 437.43]], "cx": 80.0, "cy": 452.2}, {"no": "465", "pts": [[24.0, 437.43], [53.45, 437.43], [53.45, 407.98], [24.0, 407.98]], "cx": 38.7, "cy": 422.7}, {"no": "466", "pts": [[65.23, 437.43], [94.68, 437.43], [94.68, 407.98], [65.23, 407.98]], "cx": 80.0, "cy": 422.7}, {"no": "467", "pts": [[24.0, 407.98], [53.45, 407.98], [53.45, 378.53], [24.0, 378.53]], "cx": 38.7, "cy": 393.3}, {"no": "468", "pts": [[65.23, 407.98], [94.68, 407.98], [94.68, 378.53], [65.23, 378.53]], "cx": 80.0, "cy": 393.3}, {"no": "469", "pts": [[24.0, 378.53], [53.45, 378.53], [53.45, 349.08], [24.0, 349.08]], "cx": 38.7, "cy": 363.8}, {"no": "470", "pts": [[65.23, 378.53], [94.68, 378.53], [94.68, 349.08], [65.23, 349.08]], "cx": 80.0, "cy": 363.8}, {"no": "471", "pts": [[24.0, 349.08], [53.45, 349.08], [53.45, 319.63], [24.0, 319.63]], "cx": 38.7, "cy": 334.4}, {"no": "472", "pts": [[65.23, 349.08], [94.68, 349.08], [94.68, 319.63], [65.23, 319.63]], "cx": 80.0, "cy": 334.4}, {"no": "473", "pts": [[24.0, 319.63], [53.45, 319.63], [53.45, 290.18], [24.0, 290.18]], "cx": 38.7, "cy": 304.9}, {"no": "474", "pts": [[24.0, 290.18], [53.45, 290.18], [53.45, 260.73], [24.0, 260.73]], "cx": 38.7, "cy": 275.5}, {"no": "475", "pts": [[24.0, 260.73], [53.45, 260.73], [53.45, 231.28], [24.0, 231.28]], "cx": 38.7, "cy": 246.0}, {"no": "476", "pts": [[24.0, 231.28], [53.45, 231.28], [53.45, 201.83], [24.0, 201.83]], "cx": 38.7, "cy": 216.6}, {"no": "477", "pts": [[65.23, 248.95], [94.68, 248.95], [94.68, 219.5], [65.23, 219.5]], "cx": 80.0, "cy": 234.2}, {"no": "478", "pts": [[94.68, 248.95], [124.13, 248.95], [124.13, 219.5], [94.68, 219.5]], "cx": 109.4, "cy": 234.2}, {"no": "479", "pts": [[124.13, 248.95], [153.58, 248.95], [153.58, 219.5], [124.13, 219.5]], "cx": 138.9, "cy": 234.2}, {"no": "480", "pts": [[124.13, 290.18], [153.58, 290.18], [153.58, 260.73], [124.13, 260.73]], "cx": 138.9, "cy": 275.5}, {"no": "481", "pts": [[153.58, 248.95], [183.03, 248.95], [183.03, 219.5], [153.58, 219.5]], "cx": 168.3, "cy": 234.2}, {"no": "482", "pts": [[153.58, 290.18], [183.03, 290.18], [183.03, 260.73], [153.58, 260.73]], "cx": 168.3, "cy": 275.5}, {"no": "483", "pts": [[183.03, 248.95], [212.48, 248.95], [212.48, 219.5], [183.03, 219.5]], "cx": 197.8, "cy": 234.2}, {"no": "484", "pts": [[183.03, 290.18], [212.48, 290.18], [212.48, 260.73], [183.03, 260.73]], "cx": 197.8, "cy": 275.5}, {"no": "485", "pts": [[212.48, 248.95], [241.92, 248.95], [241.92, 219.5], [212.48, 219.5]], "cx": 227.2, "cy": 234.2}, {"no": "486", "pts": [[212.48, 290.18], [241.92, 290.18], [241.92, 260.73], [212.48, 260.73]], "cx": 227.2, "cy": 275.5}, {"no": "487", "pts": [[241.92, 248.95], [271.37, 248.95], [271.37, 219.5], [241.92, 219.5]], "cx": 256.6, "cy": 234.2}, {"no": "488", "pts": [[241.92, 290.18], [271.37, 290.18], [271.37, 260.73], [241.92, 260.73]], "cx": 256.6, "cy": 275.5}, {"no": "489", "pts": [[271.37, 248.95], [300.82, 248.95], [300.82, 219.5], [271.37, 219.5]], "cx": 286.1, "cy": 234.2}, {"no": "490", "pts": [[271.37, 290.18], [300.82, 290.18], [300.82, 260.73], [271.37, 260.73]], "cx": 286.1, "cy": 275.5}, {"no": "491", "pts": [[300.82, 248.95], [330.27, 248.95], [330.27, 219.5], [300.82, 219.5]], "cx": 315.5, "cy": 234.2}, {"no": "492", "pts": [[300.82, 290.18], [330.27, 290.18], [330.27, 260.73], [300.82, 260.73]], "cx": 315.5, "cy": 275.5}, {"no": "493", "pts": [[330.27, 248.95], [359.72, 248.95], [359.72, 219.5], [330.27, 219.5]], "cx": 345.0, "cy": 234.2}, {"no": "494", "pts": [[330.27, 290.18], [359.72, 290.18], [359.72, 260.73], [330.27, 260.73]], "cx": 345.0, "cy": 275.5}, {"no": "495", "pts": [[359.72, 248.95], [389.17, 248.95], [389.17, 219.5], [359.72, 219.5]], "cx": 374.4, "cy": 234.2}, {"no": "496", "pts": [[359.72, 290.18], [389.17, 290.18], [389.17, 260.73], [359.72, 260.73]], "cx": 374.4, "cy": 275.5}, {"no": "497", "pts": [[389.17, 248.95], [418.62, 248.95], [418.62, 219.5], [389.17, 219.5]], "cx": 403.9, "cy": 234.2}, {"no": "498", "pts": [[389.17, 290.18], [418.62, 290.18], [418.62, 260.73], [389.17, 260.73]], "cx": 403.9, "cy": 275.5}, {"no": "499", "pts": [[418.62, 248.95], [448.07, 248.95], [448.07, 219.5], [418.62, 219.5]], "cx": 433.3, "cy": 234.2}, {"no": "500", "pts": [[418.62, 290.18], [448.07, 290.18], [448.07, 260.73], [418.62, 260.73]], "cx": 433.3, "cy": 275.5}, {"no": "501", "pts": [[448.07, 248.95], [477.52, 248.95], [477.52, 219.5], [448.07, 219.5]], "cx": 462.8, "cy": 234.2}, {"no": "502", "pts": [[477.52, 248.95], [506.97, 248.95], [506.97, 219.5], [477.52, 219.5]], "cx": 492.2, "cy": 234.2}, {"no": "503", "pts": [[477.52, 290.18], [506.97, 290.18], [506.97, 260.73], [477.52, 260.73]], "cx": 492.2, "cy": 275.5}, {"no": "504", "pts": [[506.97, 248.95], [536.42, 248.95], [536.42, 219.5], [506.97, 219.5]], "cx": 521.7, "cy": 234.2}, {"no": "505", "pts": [[506.97, 290.18], [536.42, 290.18], [536.42, 260.73], [506.97, 260.73]], "cx": 521.7, "cy": 275.5}, {"no": "506", "pts": [[536.42, 248.95], [565.87, 248.95], [565.87, 219.5], [536.42, 219.5]], "cx": 551.1, "cy": 234.2}, {"no": "507", "pts": [[536.42, 290.18], [565.87, 290.18], [565.87, 260.73], [536.42, 260.73]], "cx": 551.1, "cy": 275.5}, {"no": "508", "pts": [[565.87, 248.95], [595.32, 248.95], [595.32, 219.5], [565.87, 219.5]], "cx": 580.6, "cy": 234.2}, {"no": "509", "pts": [[565.87, 290.18], [595.32, 290.18], [595.32, 260.73], [565.87, 260.73]], "cx": 580.6, "cy": 275.5}, {"no": "510", "pts": [[595.32, 248.95], [624.77, 248.95], [624.77, 219.5], [595.32, 219.5]], "cx": 610.0, "cy": 234.2}, {"no": "511", "pts": [[595.32, 290.18], [624.77, 290.18], [624.77, 260.73], [595.32, 260.73]], "cx": 610.0, "cy": 275.5}, {"no": "512", "pts": [[624.77, 248.95], [654.21, 248.95], [654.21, 219.5], [624.77, 219.5]], "cx": 639.5, "cy": 234.2}, {"no": "513", "pts": [[624.77, 290.18], [654.21, 290.18], [654.21, 260.73], [624.77, 260.73]], "cx": 639.5, "cy": 275.5}, {"no": "514", "pts": [[654.21, 248.95], [683.66, 248.95], [683.66, 219.5], [654.21, 219.5]], "cx": 668.9, "cy": 234.2}, {"no": "515", "pts": [[654.21, 290.18], [683.66, 290.18], [683.66, 260.73], [654.21, 260.73]], "cx": 668.9, "cy": 275.5}, {"no": "516", "pts": [[683.66, 248.95], [713.11, 248.95], [713.11, 219.5], [683.66, 219.5]], "cx": 698.4, "cy": 234.2}, {"no": "517", "pts": [[683.66, 290.18], [713.11, 290.18], [713.11, 260.73], [683.66, 260.73]], "cx": 698.4, "cy": 275.5}, {"no": "518", "pts": [[713.11, 248.95], [742.56, 248.95], [742.56, 219.5], [713.11, 219.5]], "cx": 727.8, "cy": 234.2}, {"no": "519", "pts": [[713.11, 290.18], [742.56, 290.18], [742.56, 260.73], [713.11, 260.73]], "cx": 727.8, "cy": 275.5}, {"no": "520", "pts": [[742.56, 248.95], [772.01, 248.95], [772.01, 219.5], [742.56, 219.5]], "cx": 757.3, "cy": 234.2}, {"no": "521", "pts": [[742.56, 290.18], [772.01, 290.18], [772.01, 260.73], [742.56, 260.73]], "cx": 757.3, "cy": 275.5}, {"no": "522", "pts": [[772.01, 248.95], [801.46, 248.95], [801.46, 219.5], [772.01, 219.5]], "cx": 786.7, "cy": 234.2}, {"no": "523", "pts": [[772.01, 290.18], [801.46, 290.18], [801.46, 260.73], [772.01, 260.73]], "cx": 786.7, "cy": 275.5}, {"no": "524", "pts": [[801.46, 248.95], [830.91, 248.95], [830.91, 219.5], [801.46, 219.5]], "cx": 816.2, "cy": 234.2}, {"no": "525", "pts": [[801.46, 290.18], [830.91, 290.18], [830.91, 260.73], [801.46, 260.73]], "cx": 816.2, "cy": 275.5}, {"no": "526", "pts": [[830.91, 248.95], [860.36, 248.95], [860.36, 219.5], [830.91, 219.5]], "cx": 845.6, "cy": 234.2}, {"no": "527", "pts": [[860.36, 248.95], [889.81, 248.95], [889.81, 219.5], [860.36, 219.5]], "cx": 875.1, "cy": 234.2}, {"no": "528", "pts": [[904.38, 241.39], [933.75, 243.65], [936.0, 214.28], [906.64, 212.03]], "cx": 920.2, "cy": 227.8}, {"no": "529", "pts": [[902.13, 270.75], [931.49, 273.01], [933.75, 243.65], [904.38, 241.39]], "cx": 917.9, "cy": 257.2}, {"no": "530", "pts": [[899.87, 300.12], [929.24, 302.37], [931.49, 273.01], [902.13, 270.75]], "cx": 915.7, "cy": 286.6}, {"no": "531", "pts": [[897.62, 329.48], [926.98, 331.73], [929.24, 302.37], [899.87, 300.12]], "cx": 913.4, "cy": 315.9}, {"no": "532", "pts": [[895.36, 358.84], [924.73, 361.1], [926.98, 331.73], [897.62, 329.48]], "cx": 911.2, "cy": 345.3}, {"no": "533", "pts": [[854.26, 355.69], [883.62, 357.94], [885.87, 328.58], [856.51, 326.32]], "cx": 870.1, "cy": 342.1}, {"no": "534", "pts": [[893.11, 388.21], [922.47, 390.46], [924.73, 361.1], [895.36, 358.84]], "cx": 908.9, "cy": 374.7}, {"no": "535", "pts": [[852.0, 385.05], [881.36, 387.3], [883.62, 357.94], [854.26, 355.69]], "cx": 867.8, "cy": 371.5}, {"no": "536", "pts": [[890.85, 417.57], [920.22, 419.82], [922.47, 390.46], [893.11, 388.21]], "cx": 906.7, "cy": 404.0}, {"no": "537", "pts": [[849.75, 414.41], [879.11, 416.67], [881.36, 387.3], [852.0, 385.05]], "cx": 865.6, "cy": 400.9}, {"no": "538", "pts": [[888.6, 446.93], [917.96, 449.19], [920.22, 419.82], [890.85, 417.57]], "cx": 904.4, "cy": 433.4}, {"no": "539", "pts": [[847.49, 443.77], [876.86, 446.03], [879.11, 416.67], [849.75, 414.41]], "cx": 863.3, "cy": 430.2}];
+const SB_URL='https://lbmzjhvgunkitpatijut.supabase.co';
+const SB_KEY='sb_publishable_59-PLGkxMNiaL_lKUXyDbQ_ubzKmEcY';
+const UT='2+1 Dubleks';
+const CM={available:'#5DBD84',reserved:'#E8A96E',sold:'#E87070'};
+const SL={available:'Boş',reserved:'Rezerve',sold:'Satıldı'};
+const SC={available:'s-av',reserved:'s-re',sold:'s-so'};
+let US={},CF='all',SEL=null;
+
+async function loadStatus(){
+  try{
+    const enc=encodeURIComponent(UT);
+    const r=await fetch(SB_URL+'/rest/v1/jewels_units?select=unit_no,status&type=eq.'+enc,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+    const d=await r.json();
+    if(Array.isArray(d))d.forEach(u=>US[u.unit_no]=u.status);
+  }catch(e){}
+  render();
+}
+
+function render(){
+  const svg=document.getElementById('svg');
+  let b=0,r=0,s=0,h='';
+  UD.forEach(u=>{
+    const st=US[u.no]||'available';
+    if(st==='available')b++;else if(st==='reserved')r++;else s++;
+    const c=CM[st];
+    const pts=u.pts.map(p=>p[0]+','+p[1]).join(' ');
+    const hid=(CF!=='all'&&CF!==st)?' hidden':'';
+    const sel=(SEL===u.no)?' stroke-width="2.5"':' stroke-width="0.8"';
+    h+=`<g class="unit${hid}" data-no="${u.no}" data-st="${st}" onclick="sel('${u.no}')"><polygon points="${pts}" fill="${c}" fill-opacity="0.72" stroke="${c}"${sel}/><text class="unit-lbl" x="${u.cx}" y="${u.cy}">${u.no}</text></g>`;
+  });
+  svg.innerHTML=h;
+  document.getElementById('cB').textContent=b;
+  document.getElementById('cR').textContent=r;
+  document.getElementById('cS').textContent=s;
+  document.getElementById('cT').textContent=UD.length;
+}
+
+function flt(v,btn){CF=v;document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.unit').forEach(el=>el.classList.toggle('hidden',v!=='all'&&v!==el.dataset.st));}
+
+function sel(no){
+  SEL=no;
+  const st=US[no]||'available';
+  document.getElementById('pNo').textContent='Daire '+no;
+  document.getElementById('pNo2').textContent=no;
+  document.getElementById('pBadge').innerHTML='<span class="sbadge '+SC[st]+'">'+SL[st]+'</span>';
+  let btns='';
+  if(st==='available'){btns='<button class="pbtn pbtn-gold" onclick="doReserve()">REZERVE ET</button><button class="pbtn pbtn-ghost" onclick="doContract()">SÖZLEŞME HAZIRLA</button>';}
+  else if(st==='reserved'){btns='<button class="pbtn pbtn-gold" onclick="doContract()">SÖZLEŞME HAZIRLA</button><button class="pbtn pbtn-ghost" onclick="doCancel()" style="color:var(--red)">Rezervasyonu Kaldır</button>';}
+  else{btns='<button class="pbtn pbtn-ghost" disabled>Satıldı</button>';}
+  document.getElementById('pBtns').innerHTML=btns;
+  document.getElementById('panel').classList.add('open');
+  document.querySelectorAll('.unit polygon').forEach(p=>p.setAttribute('stroke-width',p.parentElement.dataset.no===no?'2.5':'0.8'));
+}
+
+function closePanel(){SEL=null;document.getElementById('panel').classList.remove('open');document.querySelectorAll('.unit polygon').forEach(p=>p.setAttribute('stroke-width','0.8'));}
+
+async function doReserve(){
+  if(!SEL)return;
+  try{await fetch(SB_URL+'/rest/v1/jewels_units?unit_no=eq.'+SEL+'&type=eq.'+encodeURIComponent(UT),{method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({status:'reserved'})});}catch(e){}
+  US[SEL]='reserved';render();sel(SEL);
+}
+
+async function doCancel(){
+  if(!SEL)return;
+  try{await fetch(SB_URL+'/rest/v1/jewels_units?unit_no=eq.'+SEL+'&type=eq.'+encodeURIComponent(UT),{method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({status:'available'})});}catch(e){}
+  US[SEL]='available';render();sel(SEL);
+}
+
+function doContract(){
+  window.parent.postMessage({type:'jwContract',no:SEL,type2:UT,floor:3}, '*');
+  if(window === window.top)alert('Sözleşme için acenta panelinden erişin: Daire '+SEL);
+}
+
+loadStatus();
+</script>
+</body>
+</html>
