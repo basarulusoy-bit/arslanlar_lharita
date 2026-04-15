@@ -1083,15 +1083,15 @@ function jwCountChange(val) {
 var jwAraIdx = 0;
 function jwAddAraOdeme() {
   var idx = jwAraIdx++;
-  jwPlanState.araOdemeler.push({ idx: idx, amount: 0, month: 1 });
+  jwPlanState.araOdemeler.push({idx:idx, amount:0, month:1});
   var container = document.getElementById('jwAraOdemeler');
   var div = document.createElement('div');
   div.id = 'ara-' + idx;
   div.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px;';
-  div.innerHTML = '<input type="number" placeholder="Tutar (₺)" style="flex:2;background:var(--b4);border:1px solid var(--border);color:var(--white);padding:6px 8px;font-family:Montserrat,sans-serif;font-size:11px;outline:none;" oninput="jwAraChange(' + idx + ','amount',this.value)">' +
-    '<select style="flex:1;background:var(--b4);border:1px solid var(--border);color:var(--white);padding:6px 8px;font-family:Montserrat,sans-serif;font-size:11px;outline:none;" onchange="jwAraChange(' + idx + ','month',this.value)">' +
-    Array.from({length:35},function(_,i){return '<option value="'+(i+1)+'">'+(i+1)+'. ay</option>';}).join('') +
-    '</select>' +
+  var opts =  + opts + ;
+  div.innerHTML =
+    '<input type="number" placeholder="Tutar" style="flex:2;background:var(--b4);border:1px solid var(--border);color:var(--white);padding:6px 8px;font-size:11px;outline:none;" oninput="jwAraChange(' + idx + ',\'amount\',this.value)">' +
+    '<select style="flex:1;background:var(--b4);border:1px solid var(--border);color:var(--white);padding:6px 4px;font-size:11px;outline:none;" onchange="jwAraChange(' + idx + ',\'month\',this.value)">' + opts + '</select>' +
     '<button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:0 4px;" onclick="jwRemoveAra(' + idx + ')">×</button>';
   container.appendChild(div);
 }
