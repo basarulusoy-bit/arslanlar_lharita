@@ -872,15 +872,21 @@ async function loadJewelsStats() {
 // Kat planından gelen sözleşme mesajı
 window.addEventListener('message', function(e) {
   if (e.data && e.data.type === 'jwContract') {
-    jwCurUnit = {id: e.data.no, unit_no: e.data.no, type: e.data.type2, floor: e.data.floor,
-      block: '—', area_m2: '—', garden_m2: null, status: 'available'};
-    const p = JW_PLANS[e.data.type2] || {};
-    document.getElementById('jwModalTitle').textContent = 'Daire ' + e.data.no + ' — ' + e.data.type2;
-    document.getElementById('jwUnitDetail').innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
-      '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd);width:40%">Daire No</td><td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:500">' + e.data.no + '</td></tr>' +
-      '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Tip</td><td style="padding:7px 10px;border-bottom:1px solid var(--border)">' + e.data.type2 + '</td></tr>' +
-      '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Kat</td><td style="padding:7px 10px;border-bottom:1px solid var(--border)">' + e.data.floor + '. Kat</td></tr>' +
-      '<tr><td style="padding:7px 10px;color:var(--wd)">Peşinat</td><td style="padding:7px 10px;color:var(--gold)">' + (p.down||0).toLocaleString('tr-TR') + ' ₺</td></tr></table>';
+    const ut = e.data.unitType || e.data.type2 || '';
+    const fl = e.data.floor || 0;
+    const no = e.data.no || '';
+    jwCurUnit = {id: no, unit_no: no, type: ut, floor: fl, block: '—', area_m2: '—', garden_m2: null, status: 'available'};
+    const p = JW_PLANS[ut] || {};
+    document.getElementById('jwModalTitle').textContent = 'Daire ' + no + ' — ' + (ut||'—');
+    document.getElementById('jwUnitDetail').innerHTML =
+      '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+      '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd);width:40%">Daire No</td><td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:500">' + no + '</td></tr>' +
+      '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Tip</td><td style="padding:7px 10px;border-bottom:1px solid var(--border)">' + (ut||'—') + '</td></tr>' +
+      '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Kat</td><td style="padding:7px 10px;border-bottom:1px solid var(--border)">' + fl + '. Kat</td></tr>' +
+      '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Peşinat</td><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--gold)">' + (p.down||0).toLocaleString('tr-TR') + ' ₺</td></tr>' +
+      '<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--wd)">Aylık Taksit</td><td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--gold)">' + (p.monthly||0).toLocaleString('tr-TR') + ' ₺ × ' + (p.count||36) + ' ay</td></tr>' +
+      '<tr><td style="padding:7px 10px;color:var(--wd)">Toplam Bedel</td><td style="padding:7px 10px;font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--white)">' + (p.total||0).toLocaleString('tr-TR') + ' ₺</td></tr>' +
+      '</table>';
     document.getElementById('jwDown').value    = p.down    || 0;
     document.getElementById('jwMonthly').value = p.monthly || 0;
     document.getElementById('jwCount').value   = p.count   || 36;
