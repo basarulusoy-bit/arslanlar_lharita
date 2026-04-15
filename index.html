@@ -271,7 +271,7 @@
 .dp-hero-ov{position:absolute;inset:0;background:linear-gradient(transparent 20%,rgba(0,0,0,.82));display:flex;flex-direction:column;justify-content:flex-end;padding:20px}
 .dp-badge{font-size:8px;letter-spacing:3px;color:#C9A96E;text-transform:uppercase;margin-bottom:5px}
 .dp-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:#F5F0E8;line-height:1.1;margin-bottom:3px}
-.dp-sub{font-size:11px;color:rgba(245,240,232,.5)}
+.dp-sub{font-size:12px;color:rgba(245,240,232,.5);padding:12px 18px;line-height:1.7;border-bottom:1px solid rgba(201,169,110,.08)}
 .dp-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
 .dp-chip{background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.22);color:#C9A96E;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 9px}
 .dp-grid{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid rgba(201,169,110,.09)}
@@ -1900,7 +1900,8 @@ async function dpSendForm() {
   <div class="dp-body">
     <!-- GENEL -->
     <div class="dps on" id="dps-g">
-      <div class="dp-hero"><img id="dp-hi" src="" alt=""><div class="dp-hero-ov"><div class="dp-badge" id="dp-badge"></div><div class="dp-title" id="dp-title"></div><div class="dp-sub" id="dp-sub"></div><div class="dp-chips" id="dp-chips"></div></div></div>
+      <div class="dp-hero"><img id="dp-hi" src="" alt=""><div class="dp-hero-ov"><div class="dp-badge" id="dp-badge"></div><div class="dp-title" id="dp-title"></div><div class="dp-chips" id="dp-chips"></div></div></div>
+      <div id="dp-sub" style="padding:12px 18px;font-size:12px;color:rgba(245,240,232,.55);line-height:1.7;border-bottom:1px solid rgba(201,169,110,.1);"></div>
       <div class="dp-grid" id="dp-grid"></div>
       <div class="dp-stl">Proje Hakkında</div>
       <div class="dp-desc" id="dp-desc"></div>
