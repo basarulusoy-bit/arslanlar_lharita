@@ -140,7 +140,7 @@ async function load(){
 }
 
 function render(){
-  const svg=document.getElementById('svg');
+  const svg=document.getElementById('svg'); const _bgEl=svg.querySelector('#bg-layer');
   let b=0,p=0,r=0,s=0,h='';
   UD.forEach(u=>{
     const d=US[u.no]||{};
@@ -153,6 +153,7 @@ function render(){
     h+=`<g class="unit${dim}" data-no="${u.no}" data-st="${st}" onclick="sel('${u.no}')"><polygon points="${pts}" fill="${c}" fill-opacity="0.85" stroke="rgba(0,0,0,0.4)" stroke-width="${sw}"/><text class="ulbl" x="${u.cx}" y="${u.cy}">${u.no}</text></g>`;
   });
   svg.innerHTML=h;
+if(_bgEl&&!svg.querySelector('#bg-layer'))svg.insertBefore(_bgEl,svg.firstChild);
   document.getElementById('cB').textContent=b;
   document.getElementById('cP').textContent=p;
   document.getElementById('cR').textContent=r;
