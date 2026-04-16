@@ -19,7 +19,7 @@ html,body{height:100%;overflow:hidden;background:var(--black);color:var(--white)
 .st span{font-family:'Cormorant Garamond',serif;font-size:14px;margin-left:2px;color:var(--gold);}
 .body{flex:1;display:flex;overflow:hidden;min-height:0;}
 
-/* SVG container — fills remaining space, no scroll */
+/* SVG container â fills remaining space, no scroll */
 .plan-area{flex:1;overflow:hidden;padding:6px;display:flex;align-items:stretch;}
 svg.fp{
   display:block;
@@ -71,25 +71,25 @@ svg.fp{
 <body>
 <div class="wrap">
   <div class="toolbar">
-    <span class="kat-title">3. KAT · 2+1 DUBLEKS</span>
-    <button class="fbtn active" onclick="flt('all',this)">TÜMÜ</button>
-    <button class="fbtn" onclick="flt('available',this)">BOŞ</button>
-    <button class="fbtn" onclick="flt('pending',this)">ONAY BEKLİYOR</button>
+    <span class="kat-title">3. KAT Â· 2+1 DUBLEKS</span>
+    <button class="fbtn active" onclick="flt('all',this)">TÃMÃ</button>
+    <button class="fbtn" onclick="flt('available',this)">BOÅ</button>
+    <button class="fbtn" onclick="flt('pending',this)">ONAY BEKLÄ°YOR</button>
     <button class="fbtn" onclick="flt('reserved',this)">REZERVE</button>
     <button class="fbtn" onclick="flt('sold',this)">SATILDI</button>
     <div class="legend">
-      <span><span class="ld" style="background:#5DBD84"></span>BOŞ</span>
+      <span><span class="ld" style="background:#5DBD84"></span>BOÅ</span>
       <span><span class="ld" style="background:#C9A96E"></span>ONAY</span>
       <span><span class="ld" style="background:#E8A96E"></span>REZERVE</span>
       <span><span class="ld" style="background:#E87070"></span>SATILDI</span>
     </div>
   </div>
   <div class="statsbar">
-    <div class="st">BOŞ<span id="cB">—</span></div>
-    <div class="st">ONAY BEKLİYOR<span id="cP">—</span></div>
-    <div class="st">REZERVE<span id="cR">—</span></div>
-    <div class="st">SATILDI<span id="cS">—</span></div>
-    <div class="st" style="margin-left:auto">TOPLAM<span id="cT">—</span></div>
+    <div class="st">BOÅ<span id="cB">â</span></div>
+    <div class="st">ONAY BEKLÄ°YOR<span id="cP">â</span></div>
+    <div class="st">REZERVE<span id="cR">â</span></div>
+    <div class="st">SATILDI<span id="cS">â</span></div>
+    <div class="st" style="margin-left:auto">TOPLAM<span id="cT">â</span></div>
   </div>
   <div class="body">
     <div class="plan-area">
@@ -97,23 +97,24 @@ svg.fp{
     </div>
     <div class="rpanel" id="rpanel">
       <div class="rp-hdr">
-        <div><div class="rp-no" id="pNo">—</div><div class="rp-tip">2+1 DUBLEKS</div></div>
-        <button class="rp-close" onclick="closePanel()">✕</button>
+        <div><div class="rp-no" id="pNo">â</div><div class="rp-tip">2+1 DUBLEKS</div></div>
+        <button class="rp-close" onclick="closePanel()">â</button>
       </div>
       <div class="rp-body">
         <div id="pBadge"></div>
-        <div class="pi"><span class="pi-l">Daire No</span><span class="pi-v" id="pNo2">—</span></div>
-        <div class="pi"><span class="pi-l">Tip</span><span class="pi-v">2+1 Dubleks</span></div>
+        <div class="pi"><span class="pi-l">Daire No</span><span class="pi-v" id="pNo2">â</span></div>
+        <div class="pi"><span class="pi-l">Tip</span><span class="pi-v" id="pTip">2+1 Dubleks</span></div>
         <div class="pi"><span class="pi-l">Kat</span><span class="pi-v">3. Kat</span></div>
-        <div class="pi"><span class="pi-l">Peşinat</span><span class="pi-v gold">1,500,000 ₺</span></div>
-        <div class="pi"><span class="pi-l">Aylık Taksit</span><span class="pi-v gold">79,000 ₺</span></div>
+        <div class="pi"><span class="pi-l">Alan</span><span class="pi-v" id="pAlan">—</span></div>
+        <div class="pi"><span class="pi-l">PeÅinat</span><span class="pi-v gold">1,500,000 âº</span></div>
+        <div class="pi"><span class="pi-l">AylÄ±k Taksit</span><span class="pi-v gold">79,000 âº</span></div>
         <div class="pi"><span class="pi-l">Vade</span><span class="pi-v">36 Ay</span></div>
-        <div class="pi"><span class="pi-l">Toplam</span><span class="pi-v">4,344,000 ₺</span></div>
+        <div class="pi"><span class="pi-l">Toplam</span><span class="pi-v">4,344,000 âº</span></div>
         <div id="pExtra" style="margin-top:4px;"></div>
       </div>
       <div class="rform" id="rform">
         <div class="rform-lbl">Rezervasyon Bilgileri</div>
-        <input class="rfi" id="rfName" placeholder="Müşteri Adı Soyadı *">
+        <input class="rfi" id="rfName" placeholder="MÃ¼Återi AdÄ± SoyadÄ± *">
         <input class="rfi" id="rfTel"  placeholder="Telefon *">
         <input class="rfi" id="rfNote" placeholder="Not (opsiyonel)">
       </div>
@@ -179,6 +180,10 @@ function sel(no){
   document.getElementById('pBtns').innerHTML=btns;
   document.getElementById('rform').classList.remove('open');
   document.getElementById('rpanel').classList.add('open');
+    const _alanMap={'1+1 Loft Bahçeli':'45–50 m²','1+1 Loft':'40–45 m²','2+1 Dübleks':'50–55 m²'};
+    const _pTip=document.getElementById('pTip');
+    const _pAlan=document.getElementById('pAlan');
+    if(_pTip&&_pAlan) _pAlan.textContent=_alanMap[_pTip.textContent]||'—';
   document.querySelectorAll('.unit polygon').forEach(p=>p.setAttribute('stroke-width',p.parentElement.dataset.no===no?'80':'20'));
 }
 
