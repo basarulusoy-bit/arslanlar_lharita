@@ -180,6 +180,15 @@ function sel(no){
   document.getElementById('pBtns').innerHTML=btns;
   document.getElementById('rform').classList.remove('open');
   document.getElementById('rpanel').classList.add('open');
+    var _t2=document.getElementById('pTip');
+    var _a2=document.getElementById('pAlan');
+    if(_t2&&_a2){
+      var _tv=_t2.textContent;
+      if(_tv.indexOf('Bah')>-1) _a2.textContent='45-50 m2';
+      else if(_tv.indexOf('bleks')>-1) _a2.textContent='50-55 m2';
+      else if(_tv.indexOf('Loft')>-1) _a2.textContent='40-45 m2';
+      else _a2.textContent='-';
+    }
     var _tip=document.getElementById('pTip');
     var _alan=document.getElementById('pAlan');
     if(_tip&&_alan){
