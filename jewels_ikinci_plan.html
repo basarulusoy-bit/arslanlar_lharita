@@ -19,7 +19,7 @@ html,body{height:100%;overflow:hidden;background:var(--black);color:var(--white)
 .st span{font-family:'Cormorant Garamond',serif;font-size:14px;margin-left:2px;color:var(--gold);}
 .body{flex:1;display:flex;overflow:hidden;min-height:0;}
 
-/* SVG container Ã¢ÂÂ fills remaining space, no scroll */
+/* SVG container — fills remaining space, no scroll */
 .plan-area{flex:1;overflow:hidden;padding:6px;display:flex;align-items:stretch;}
 svg.fp{
   display:block;
@@ -71,25 +71,25 @@ svg.fp{
 <body>
 <div class="wrap">
   <div class="toolbar">
-    <span class="kat-title">2. KAT ÃÂ· 1+1 LOFT</span>
-    <button class="fbtn active" onclick="flt('all',this)">TÃÂMÃÂ</button>
-    <button class="fbtn" onclick="flt('available',this)">BOÃÂ</button>
-    <button class="fbtn" onclick="flt('pending',this)">ONAY BEKLÃÂ°YOR</button>
+    <span class="kat-title">2. KAT · 1+1 LOFT</span>
+    <button class="fbtn active" onclick="flt('all',this)">TÜMÜ</button>
+    <button class="fbtn" onclick="flt('available',this)">BOŞ</button>
+    <button class="fbtn" onclick="flt('pending',this)">ONAY BEKLİYOR</button>
     <button class="fbtn" onclick="flt('reserved',this)">REZERVE</button>
     <button class="fbtn" onclick="flt('sold',this)">SATILDI</button>
     <div class="legend">
-      <span><span class="ld" style="background:#5DBD84"></span>BOÃÂ</span>
+      <span><span class="ld" style="background:#5DBD84"></span>BOŞ</span>
       <span><span class="ld" style="background:#C9A96E"></span>ONAY</span>
       <span><span class="ld" style="background:#E8A96E"></span>REZERVE</span>
       <span><span class="ld" style="background:#E87070"></span>SATILDI</span>
     </div>
   </div>
   <div class="statsbar">
-    <div class="st">BOÃÂ<span id="cB">Ã¢ÂÂ</span></div>
-    <div class="st">ONAY BEKLÃÂ°YOR<span id="cP">Ã¢ÂÂ</span></div>
-    <div class="st">REZERVE<span id="cR">Ã¢ÂÂ</span></div>
-    <div class="st">SATILDI<span id="cS">Ã¢ÂÂ</span></div>
-    <div class="st" style="margin-left:auto">TOPLAM<span id="cT">Ã¢ÂÂ</span></div>
+    <div class="st">BOŞ<span id="cB">—</span></div>
+    <div class="st">ONAY BEKLİYOR<span id="cP">—</span></div>
+    <div class="st">REZERVE<span id="cR">—</span></div>
+    <div class="st">SATILDI<span id="cS">—</span></div>
+    <div class="st" style="margin-left:auto">TOPLAM<span id="cT">—</span></div>
   </div>
   <div class="body">
     <div class="plan-area">
@@ -97,24 +97,24 @@ svg.fp{
     </div>
     <div class="rpanel" id="rpanel">
       <div class="rp-hdr">
-        <div><div class="rp-no" id="pNo">Ã¢ÂÂ</div><div class="rp-tip">1+1 LOFT</div></div>
-        <button class="rp-close" onclick="closePanel()">Ã¢ÂÂ</button>
+        <div><div class="rp-no" id="pNo">—</div><div class="rp-tip">1+1 LOFT</div></div>
+        <button class="rp-close" onclick="closePanel()">✕</button>
       </div>
       <div class="rp-body">
         <div id="pBadge"></div>
-        <div class="pi"><span class="pi-l">Daire No</span><span class="pi-v" id="pNo2">Ã¢ÂÂ</span></div>
+        <div class="pi"><span class="pi-l">Daire No</span><span class="pi-v" id="pNo2">—</span></div>
         <div class="pi"><span class="pi-l">Tip</span><span class="pi-v" id="pTip">1+1 Loft</span></div>
         <div class="pi"><span class="pi-l">Kat</span><span class="pi-v">2. Kat</span></div>
-        <div class="pi"><span class="pi-l">Alan</span><span class="pi-v" id="pAlan">â</span></div>
-        <div class="pi"><span class="pi-l">PeÃÂinat</span><span class="pi-v gold">1,000,000 Ã¢ÂÂº</span></div>
-        <div class="pi"><span class="pi-l">AylÃÂ±k Taksit</span><span class="pi-v gold">59,000 Ã¢ÂÂº</span></div>
+        <div class="pi"><span class="pi-l">Alan</span><span class="pi-v" id="pAlan">-</span></div>
+        <div class="pi"><span class="pi-l">Peşinat</span><span class="pi-v gold">1,000,000 ₺</span></div>
+        <div class="pi"><span class="pi-l">Aylık Taksit</span><span class="pi-v gold">59,000 ₺</span></div>
         <div class="pi"><span class="pi-l">Vade</span><span class="pi-v">36 Ay</span></div>
-        <div class="pi"><span class="pi-l">Toplam</span><span class="pi-v">3,124,000 Ã¢ÂÂº</span></div>
+        <div class="pi"><span class="pi-l">Toplam</span><span class="pi-v">3,124,000 ₺</span></div>
         <div id="pExtra" style="margin-top:4px;"></div>
       </div>
       <div class="rform" id="rform">
         <div class="rform-lbl">Rezervasyon Bilgileri</div>
-        <input class="rfi" id="rfName" placeholder="MÃÂ¼ÃÂteri AdÃÂ± SoyadÃÂ± *">
+        <input class="rfi" id="rfName" placeholder="Müşteri Adı Soyadı *">
         <input class="rfi" id="rfTel"  placeholder="Telefon *">
         <input class="rfi" id="rfNote" placeholder="Not (opsiyonel)">
       </div>
@@ -180,28 +180,7 @@ function sel(no){
   document.getElementById('pBtns').innerHTML=btns;
   document.getElementById('rform').classList.remove('open');
   document.getElementById('rpanel').classList.add('open');
-    var _t2=document.getElementById('pTip');
-    var _a2=document.getElementById('pAlan');
-    if(_t2&&_a2){
-      var _tv=_t2.textContent;
-      if(_tv.indexOf('Bah')>-1) _a2.textContent='45-50 m2';
-      else if(_tv.indexOf('bleks')>-1) _a2.textContent='50-55 m2';
-      else if(_tv.indexOf('Loft')>-1) _a2.textContent='40-45 m2';
-      else _a2.textContent='-';
-    }
-    var _tip=document.getElementById('pTip');
-    var _alan=document.getElementById('pAlan');
-    if(_tip&&_alan){
-      var _t=_tip.textContent;
-      if(_t.indexOf('Bah')>-1) _alan.textContent='45–50 m²';
-      else if(_t.indexOf('bleks')>-1) _alan.textContent='50–55 m²';
-      else if(_t.indexOf('Loft')>-1) _alan.textContent='40–45 m²';
-      else _alan.textContent='—';
-    }
-    const _alanMap={'1+1 Loft BahÃ§eli':'45â50 mÂ²','1+1 Loft':'40â45 mÂ²','2+1 DÃ¼bleks':'50â55 mÂ²'};
-    const _pTip=document.getElementById('pTip');
-    const _pAlan=document.getElementById('pAlan');
-    if(_pTip&&_pAlan) _pAlan.textContent=_alanMap[_pTip.textContent]||'â';
+var _t2=document.getElementById('pTip');var _a2=document.getElementById('pAlan');if(_t2&&_a2){var _tv=_t2.textContent;if(_tv.indexOf('Bah')>-1)_a2.textContent='45-50 m2';else if(_tv.indexOf('bleks')>-1)_a2.textContent='50-55 m2';else if(_tv.indexOf('Loft')>-1)_a2.textContent='40-45 m2';else _a2.textContent='-';}
   document.querySelectorAll('.unit polygon').forEach(p=>p.setAttribute('stroke-width',p.parentElement.dataset.no===no?'80':'20'));
 }
 
