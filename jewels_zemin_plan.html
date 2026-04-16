@@ -243,5 +243,22 @@ async function cancelReq(){
 
 load();
 </script>
+
+<script id="bg-loader">
+(function(){
+  fetch('./zemin_plan_bg.svg')
+    .then(r=>r.text())
+    .then(txt=>{
+      var parser=new DOMParser();
+      var doc=parser.parseFromString(txt,'image/svg+xml');
+      var bgGroup=document.getElementById('bg-layer');
+      if(bgGroup){
+        Array.from(doc.documentElement.childNodes).forEach(function(n){
+          bgGroup.appendChild(document.importNode(n,true));
+        });
+      }
+    }).catch(function(){});
+})();
+</script>
 </body>
 </html>
