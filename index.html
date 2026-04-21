@@ -1130,7 +1130,17 @@ function addProjectMarkers() {
         box-shadow:0 10px 24px rgba(0,0,0,.3);
         border:1px solid rgba(255,255,255,.2);
         transition:transform .2s,box-shadow .2s;">
-        ${completed ? '✓ ' : ''}${project.name}
+        ${completed ? `<div class="sold-stamp" style="
+          position:absolute;top:-30px;left:50%;
+          transform:translateX(-50%) rotate(-5deg);
+          font-family:'Cormorant Garamond',serif;font-style:italic;
+          font-size:12px;font-weight:600;letter-spacing:2px;
+          color:#E8C98A;background:rgba(10,10,10,.9);
+          border:1.5px solid #C9A96E;padding:4px 12px;
+          text-transform:uppercase;white-space:nowrap;
+          box-shadow:0 0 18px rgba(201,169,110,.45),inset 0 0 8px rgba(201,169,110,.1);
+          border-radius:2px;pointer-events:none;">✦ Satış Tamamlandı ✦</div>` : ''}
+        ${project.name}
         <div style="position:absolute;bottom:3px;left:8px;right:8px;height:3px;
           background:linear-gradient(to right,transparent,${completed ? '#fff' : barColor},transparent);
           overflow:hidden;border-radius:2px;">
@@ -1169,7 +1179,7 @@ function launchFireworks(markerId) {
     const angle = (i / 18) * Math.PI * 2;
     const dist  = 28 + Math.random() * 22;
     const size  = 3 + Math.random() * 3;
-    const colors = ['#FFD700','#28AE60','#5DBD84','#fff','#ADFF2F','#00FF7F'];
+    const colors = ['#C9A96E','#E8C98A','#FFD700','#fff','#F5F0E8','#FFF5CC'];
     const color  = colors[Math.floor(Math.random() * colors.length)];
     spark.style.cssText = `
       position:fixed;z-index:9999;

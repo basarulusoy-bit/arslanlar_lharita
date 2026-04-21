@@ -356,6 +356,20 @@ html,body{min-height:100%;background:var(--black);color:var(--white);font-family
               <div class="field-hint">Dosya yükleyince URL otomatik dolar</div>
             </div>
           </div>
+          <div class="card" style="margin-top:14px;">
+            <div class="card-title">Satış Durumu</div>
+            <label style="display:flex;align-items:center;gap:14px;cursor:pointer;padding:8px 0;">
+              <span style="position:relative;display:inline-block;width:44px;height:22px;flex-shrink:0;">
+                <input type="checkbox" id="pe-satis-tamamlandi" style="opacity:0;width:0;height:0;" onchange="toggleSatisSwitchUI()">
+                <span id="pe-satis-track" style="position:absolute;inset:0;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:12px;transition:.25s;"></span>
+                <span id="pe-satis-thumb" style="position:absolute;top:2px;left:2px;width:16px;height:16px;background:var(--wd);border-radius:50%;transition:.25s;"></span>
+              </span>
+              <span style="flex:1;">
+                <div style="font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--white);">Satış Tamamlandı <span style="color:var(--gold)">✨</span></div>
+                <div class="field-hint" style="margin-top:4px;">Açık olursa ana haritada proje üzerinde altın "Satış Tamamlandı" damgası + havai fişek animasyonu gösterilir.</div>
+              </span>
+            </label>
+          </div>
         </div>
 
         <!-- Sağ: Olanaklar + Daire tipleri -->
@@ -1100,6 +1114,8 @@ function openProjectPanel(projectId) {
   document.getElementById('pe-alan').value    = p.toplam_alan || '';
   document.getElementById('pe-aciklama').value = p.aciklama || '';
   document.getElementById('pe-render').value  = p.render_url || '';
+  document.getElementById('pe-satis-tamamlandi').checked = !!p.satis_tamamlandi;
+  toggleSatisSwitchUI();
   previewRender();
 
   // Tags
@@ -1119,6 +1135,24 @@ function previewRender() {
   prev.innerHTML = url
     ? `<img src="${url}" onerror="this.parentElement.innerHTML='<span class=render-empty>Görsel yüklenemedi</span>'">`
     : '<span class="render-empty">Henüz görsel yok</span>';
+}
+
+function toggleSatisSwitchUI() {
+  const cb = document.getElementById('pe-satis-tamamlandi');
+  const track = document.getElementById('pe-satis-track');
+  const thumb = document.getElementById('pe-satis-thumb');
+  if (!cb || !track || !thumb) return;
+  if (cb.checked) {
+    track.style.background = 'rgba(201,169,110,.25)';
+    track.style.borderColor = 'var(--gold)';
+    thumb.style.background = 'var(--gold)';
+    thumb.style.transform  = 'translateX(22px)';
+  } else {
+    track.style.background = 'rgba(255,255,255,.08)';
+    track.style.borderColor = 'var(--border)';
+    thumb.style.background = 'var(--wd)';
+    thumb.style.transform  = 'translateX(0)';
+  }
 }
 
 async function uploadRender() {
@@ -1190,6 +1224,7 @@ async function saveProject(stay = false) {
     aciklama:    document.getElementById('pe-aciklama').value.trim(),
     render_url:  document.getElementById('pe-render').value.trim(),
     ozellikler:  currentTags,
+    satis_tamamlandi: document.getElementById('pe-satis-tamamlandi').checked,
   };
 
   // Update project
