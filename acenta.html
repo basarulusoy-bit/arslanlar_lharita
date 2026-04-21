@@ -201,6 +201,8 @@ html,body{height:100%;background:var(--black);color:var(--white);font-family:'Mo
       <div class="sb-item" onclick="showPanel('addoffer',this)">+ Yeni Teklif</div>
       <div class="sb-sec">Hesap</div>
       <div class="sb-item" onclick="showPanel('profile',this)">◉ Profilim</div>
+      <div class="sb-sec">Proje Satış</div>
+      <div class="sb-item" onclick="showPanel('projectstock',this);apsInit()">◈ Birim Satış (Tüm Projeler)</div>
       <div class="sb-sec" style="color:rgba(201,169,110,.7);">Jewels Kampanyası</div>
       <div class="sb-item" onclick="showPanel('jewels',this)">◈ Stok & Satış</div>
     </div>
@@ -402,6 +404,24 @@ html,body{height:100%;background:var(--black);color:var(--white);font-family:'Mo
         <iframe id="jwPlanFrame" src="/jewels_zemin_plan.html"
           style="flex:1;width:100%;border:none;min-height:600px;margin-top:8px;"
           allow="same-origin"></iframe>
+      </div>
+
+      <!-- ══ PROJE BİRİM SATIŞ PANELİ (Jewels dışı) ══ -->
+      <div class="panel" id="panel-projectstock">
+        <div class="ptitle">Birim <em>Satış</em></div>
+        <div class="psub">Proje seç, kat planı üzerinden daire rezerve et</div>
+        <div class="gline"></div>
+        <div class="fc" style="margin-top:16px;">
+          <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+            <div class="field" style="flex:1;min-width:240px;margin:0">
+              <label style="color:var(--gold);font-size:10px;letter-spacing:2px;text-transform:uppercase">Proje Seç</label>
+              <select id="aps-project" onchange="apsLoadProject(this.value)" style="width:100%;background:var(--wf);border:1px solid var(--border);color:var(--white);padding:10px;font-size:12px;margin-top:6px;"></select>
+            </div>
+            <div id="aps-stats" style="font-size:11px;letter-spacing:1.2px;color:var(--wd);">—</div>
+          </div>
+          <div id="aps-floor-tabs" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:16px;"></div>
+        </div>
+        <div class="fc" style="margin-top:16px;min-height:400px;" id="aps-svg-box"></div>
       </div>
 
     </div>
@@ -1396,6 +1416,183 @@ function jwPrintContract() {
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) await loadUser(session.user);
 })();
+</script>
+
+<!-- BİRİM DÜZENLE MODALİ (Faz 4 — Acenta) -->
+<div id="aps-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);z-index:9100;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;">
+  <div style="background:#0D0D0D;border:1px solid var(--borderhi);width:100%;max-width:560px;">
+    <div style="padding:20px 28px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div id="aps-m-sub" style="font-size:10px;letter-spacing:3px;color:var(--gold);text-transform:uppercase">—</div>
+        <div id="aps-m-title" style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;color:var(--white);margin-top:4px;">Daire —</div>
+      </div>
+      <button onclick="apsCloseEdit()" style="background:none;border:none;color:var(--wd);font-size:24px;cursor:pointer;padding:4px 10px;">×</button>
+    </div>
+    <div style="padding:24px 28px;">
+      <div class="field">
+        <label style="color:var(--gold);font-size:10px;letter-spacing:2px;text-transform:uppercase">Durum</label>
+        <select id="aps-m-status" style="width:100%;background:var(--wf);border:1px solid var(--border);color:var(--white);padding:10px;font-size:12px;margin-top:6px;">
+          <option value="musait">Müsait</option>
+          <option value="opsiyonlu">Rezerve (Opsiyonlu)</option>
+        </select>
+      </div>
+      <div class="field" style="margin-top:14px;">
+        <label style="color:var(--gold);font-size:10px;letter-spacing:2px;text-transform:uppercase">Müşteri Adı Soyadı</label>
+        <input type="text" id="aps-m-cname" style="width:100%;background:var(--wf);border:1px solid var(--border);color:var(--white);padding:10px;font-size:12px;margin-top:6px;" placeholder="—">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;">
+        <div class="field" style="margin:0">
+          <label style="color:var(--gold);font-size:10px;letter-spacing:2px;text-transform:uppercase">Telefon</label>
+          <input type="tel" id="aps-m-ctel" style="width:100%;background:var(--wf);border:1px solid var(--border);color:var(--white);padding:10px;font-size:12px;margin-top:6px;" placeholder="+90 ...">
+        </div>
+        <div class="field" style="margin:0">
+          <label style="color:var(--gold);font-size:10px;letter-spacing:2px;text-transform:uppercase">E-posta</label>
+          <input type="email" id="aps-m-cemail" style="width:100%;background:var(--wf);border:1px solid var(--border);color:var(--white);padding:10px;font-size:12px;margin-top:6px;" placeholder="—">
+        </div>
+      </div>
+      <div class="field" style="margin-top:14px;">
+        <label style="color:var(--gold);font-size:10px;letter-spacing:2px;text-transform:uppercase">Rezervasyon Notu</label>
+        <textarea id="aps-m-note" rows="3" style="width:100%;background:var(--wf);border:1px solid var(--border);color:var(--white);padding:10px;font-size:12px;margin-top:6px;font-family:Montserrat,sans-serif;" placeholder="—"></textarea>
+      </div>
+    </div>
+    <div style="padding:16px 28px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="apsCloseEdit()" style="background:transparent;border:1px solid var(--border);color:var(--wd);font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:12px 24px;cursor:pointer;">İptal</button>
+      <button onclick="apsSaveUnit()" style="background:rgba(201,169,110,.15);border:1px solid var(--gold);color:var(--gold);font-family:Montserrat,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:12px 28px;cursor:pointer;">Rezerve Et</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// ACENTA — PROJE BİRİM SATIŞ (Faz 4)
+// ═══════════════════════════════════════════
+let apsUnits = [];
+let apsCurProj = null;
+let apsFloorIdx = 0;
+let apsEditingUnit = null;
+
+const APS_COL = {
+  musait:    { fill:'#1f6b3e', stroke:'#5DBD84' },
+  opsiyonlu: { fill:'#8a5a22', stroke:'#E8A96E' },
+  rezerve:   { fill:'#8a5a22', stroke:'#E8A96E' },
+  satildi:   { fill:'#7a2a2a', stroke:'#E87070' },
+};
+
+async function apsInit() {
+  const sel = document.getElementById('aps-project');
+  // projects'ı supabase'den al (jewels dışı)
+  const { data } = await sb.from('projects').select('id,name').neq('id','jewels').order('sira');
+  sel.innerHTML = '<option value="">Proje seç...</option>' +
+    (data||[]).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+}
+
+async function apsLoadProject(projId) {
+  apsCurProj = projId;
+  if (!projId) { apsUnits = []; apsRender(); return; }
+  const { data, error } = await sb.from('units').select('*').eq('project_id', projId).order('kat_sirasi').order('unit_no');
+  if (error) { alert('Yüklenemedi: ' + error.message); return; }
+  apsUnits = data || [];
+  apsFloorIdx = 0;
+  apsRender();
+}
+
+function apsFloors() {
+  const by = {};
+  apsUnits.forEach(u => {
+    const k = (u.kat_sirasi ?? 0) + '|' + (u.floor_name || 'Kat');
+    (by[k] ??= []).push(u);
+  });
+  return Object.keys(by).map(k => {
+    const [s, n] = k.split('|');
+    return { kat_sirasi: +s, kat_adi: n, units: by[k] };
+  }).sort((a, b) => a.kat_sirasi - b.kat_sirasi);
+}
+
+function apsRender() {
+  // Stats
+  const c = { musait:0, opsiyonlu:0, satildi:0 };
+  apsUnits.forEach(u => { const k = (u.status || 'musait').toLowerCase(); if (c[k] !== undefined) c[k]++; });
+  document.getElementById('aps-stats').textContent = apsUnits.length ? `Müsait ${c.musait} · Rezerve ${c.opsiyonlu} · Satıldı ${c.satildi} · Toplam ${apsUnits.length}` : '—';
+
+  const floors = apsFloors();
+  const tabsEl = document.getElementById('aps-floor-tabs');
+  const svgEl  = document.getElementById('aps-svg-box');
+  if (!floors.length) { tabsEl.innerHTML = ''; svgEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--wd)">Proje seç.</div>'; return; }
+  if (apsFloorIdx >= floors.length) apsFloorIdx = 0;
+  tabsEl.innerHTML = floors.map((f, i) => `<button class="abtn ${i === apsFloorIdx ? 'active' : ''}" onclick="apsFloorIdx=${i};apsRender()" style="font-size:9px;">${f.kat_adi}</button>`).join('');
+  apsDrawFloor(floors[apsFloorIdx]);
+}
+
+function apsDrawFloor(floor) {
+  const svgEl = document.getElementById('aps-svg-box');
+  const units = floor.units;
+  if (!units.length) { svgEl.innerHTML = ''; return; }
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const u of units) for (const pt of (u.polygon_points || [])) {
+    const fy = -pt.y;
+    if (pt.x < minX) minX = pt.x; if (fy < minY) minY = fy;
+    if (pt.x > maxX) maxX = pt.x; if (fy > maxY) maxY = fy;
+  }
+  const pad = 80; minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+  const w = maxX - minX, h = maxY - minY;
+  const polys = units.map(u => {
+    const pts = (u.polygon_points || []).map(p => `${p.x},${-p.y}`).join(' ');
+    const cx = (u.polygon_points || []).reduce((a, p) => a + p.x, 0) / (u.polygon_points?.length || 1);
+    const cy = (u.polygon_points || []).reduce((a, p) => a + (-p.y), 0) / (u.polygon_points?.length || 1);
+    const st = (u.status || 'musait').toLowerCase();
+    const c = APS_COL[st] || APS_COL.musait;
+    const label = u.unit_no || 'K';
+    return `<g class="aps-unit" onclick="apsOpenEdit('${u.id}')" style="cursor:pointer">
+      <title>Daire ${label} · ${u.unit_type || ''} · ${st.toUpperCase()}${u.customer_name ? ' · ' + u.customer_name : ''}</title>
+      <polygon points="${pts}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="8" stroke-linejoin="round"/>
+      <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" fill="#fff" font-family="Montserrat,sans-serif" font-weight="600" font-size="120" pointer-events="none">${label}</text>
+    </g>`;
+  }).join('');
+  svgEl.innerHTML = `<svg viewBox="${minX} ${minY} ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:70vh;background:#0A0A0A;border:1px solid var(--border);">${polys}</svg>`;
+}
+
+function apsOpenEdit(uid) {
+  const u = apsUnits.find(x => x.id === uid || x.id == uid);
+  if (!u) return;
+  apsEditingUnit = u;
+  document.getElementById('aps-m-sub').textContent   = (u.floor_name || '') + ' · ' + (u.unit_type || '');
+  document.getElementById('aps-m-title').textContent = 'Daire ' + (u.unit_no || 'K');
+  document.getElementById('aps-m-status').value = ((u.status || 'musait').toLowerCase() === 'satildi') ? 'opsiyonlu' : (u.status || 'musait').toLowerCase();
+  document.getElementById('aps-m-cname').value  = u.customer_name || '';
+  document.getElementById('aps-m-ctel').value   = u.customer_tel || '';
+  document.getElementById('aps-m-cemail').value = u.customer_email || '';
+  document.getElementById('aps-m-note').value   = u.reservation_note || '';
+  document.getElementById('aps-modal-bg').style.display = 'flex';
+}
+
+function apsCloseEdit() {
+  document.getElementById('aps-modal-bg').style.display = 'none';
+  apsEditingUnit = null;
+}
+
+async function apsSaveUnit() {
+  if (!apsEditingUnit) return;
+  const status = document.getElementById('aps-m-status').value;
+  const cname  = document.getElementById('aps-m-cname').value.trim() || null;
+  const ctel   = document.getElementById('aps-m-ctel').value.trim() || null;
+  const cemail = document.getElementById('aps-m-cemail').value.trim() || null;
+  const note   = document.getElementById('aps-m-note').value.trim() || null;
+  const update = {
+    status,
+    customer_name: cname,
+    customer_tel:  ctel,
+    customer_email: cemail,
+    reservation_note: note,
+    reserved_by_name: (window.currentAcenta?.ad_soyad || window.currentUser?.email || null),
+    reserved_at: (status !== 'musait') ? (apsEditingUnit.reserved_at || new Date().toISOString()) : null,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await sb.from('units').update(update).eq('id', apsEditingUnit.id);
+  if (error) { alert('Kayıt hatası: ' + error.message); return; }
+  Object.assign(apsEditingUnit, update);
+  apsCloseEdit();
+  apsRender();
+}
 </script>
 
 <script>

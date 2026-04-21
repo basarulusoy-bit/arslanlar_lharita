@@ -175,6 +175,32 @@ html,body{min-height:100%;background:var(--black);color:var(--white);font-family
   letter-spacing:2.5px;text-transform:uppercase;padding:13px 28px;cursor:pointer;transition:background .2s;
 }
 .btn-primary:hover{background:var(--gold-l);}
+.btn-tab{
+  background:transparent;border:none;color:var(--wd);
+  font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;
+}
+.btn-tab:hover{color:var(--gold-l);}
+.btn-tab.on{color:var(--gold);border-bottom-color:var(--gold);}
+/* UM tablosu */
+#um-list-tbl table{width:100%;border-collapse:collapse;font-size:12px;}
+#um-list-tbl th{text-align:left;padding:10px 8px;background:rgba(201,169,110,.06);color:var(--gold);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+#um-list-tbl td{padding:10px 8px;border-bottom:1px solid rgba(245,240,232,.06);color:var(--white);}
+#um-list-tbl tr{cursor:pointer;transition:background .15s;}
+#um-list-tbl tr:hover td{background:rgba(201,169,110,.04);}
+.um-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+.um-dot.musait{background:#5DBD84;}
+.um-dot.opsiyonlu,.um-dot.rezerve{background:#E8A96E;}
+.um-dot.satildi{background:#E87070;}
+.um-badge{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border:1px solid;border-radius:2px;}
+.um-badge.musait{color:#5DBD84;border-color:rgba(93,189,132,.35);}
+.um-badge.opsiyonlu,.um-badge.rezerve{color:#E8A96E;border-color:rgba(232,169,110,.35);}
+.um-badge.satildi{color:#E87070;border-color:rgba(232,112,112,.35);}
+/* UM plan SVG */
+.um-floor-tab{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--wd);font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:1.3px;text-transform:uppercase;padding:6px 12px;cursor:pointer;border-radius:2px;}
+.um-floor-tab.on{background:rgba(201,169,110,.15);border-color:var(--gold);color:var(--gold);}
+.um-svg-unit polygon{cursor:pointer;transition:filter .15s;}
+.um-svg-unit:hover polygon{filter:brightness(1.3);}
 .btn-secondary{
   background:none;color:var(--wd);border:1px solid var(--border);
   font-family:'Montserrat',sans-serif;font-size:10px;
@@ -283,6 +309,9 @@ html,body{min-height:100%;background:var(--black);color:var(--white);font-family
     <div class="sb-section">Yönetim</div>
     <div class="sb-item" onclick="showPanel('status',this)">
       <span>🏠</span><span>Daire Durumları</span>
+    </div>
+    <div class="sb-item" onclick="showPanel('units',this);umInit()">
+      <span>🏗️</span><span>Birim Yönetimi</span>
     </div>
     <div class="sb-item" onclick="showPanel('transit',this)">
       <span>🚇</span><span>Transit Hatları</span>
@@ -656,6 +685,53 @@ html,body{min-height:100%;background:var(--black);color:var(--white);font-family
 
 
         </div><!-- /panel-pois -->
+
+    <!-- BİRİM YÖNETİMİ (Faz 4) -->
+    <div class="panel" id="panel-units">
+      <div class="page-title">Birim <em>Yönetimi</em></div>
+      <div class="page-sub">Daire bazında durum ve müşteri bilgisi yönetimi</div>
+      <div class="gold-line"></div>
+
+      <div class="card">
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+          <div class="field" style="flex:1;min-width:220px;margin:0">
+            <label>Proje Seç</label>
+            <select id="um-project" onchange="umLoadProject(this.value)"></select>
+          </div>
+          <div class="field" style="min-width:160px;margin:0">
+            <label>Kat</label>
+            <select id="um-floor-filter" onchange="umRender()"><option value="">Tümü</option></select>
+          </div>
+          <div class="field" style="min-width:140px;margin:0">
+            <label>Durum</label>
+            <select id="um-status-filter" onchange="umRender()">
+              <option value="">Tümü</option>
+              <option value="musait">Müsait</option>
+              <option value="opsiyonlu">Rezerve</option>
+              <option value="satildi">Satıldı</option>
+            </select>
+          </div>
+          <div class="field" style="min-width:140px;margin:0">
+            <label>Ara (daire no / müşteri)</label>
+            <input type="text" id="um-search" oninput="umRender()" placeholder="Ör. 12">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px;border-bottom:1px solid var(--border);">
+          <button id="um-tab-list" class="btn-tab on" onclick="umTab('list')">📋 Liste</button>
+          <button id="um-tab-plan" class="btn-tab" onclick="umTab('plan')">🏢 Kat Planı</button>
+          <div style="flex:1"></div>
+          <div id="um-stats" style="font-size:10px;letter-spacing:1.2px;color:var(--wd);padding:6px 0;">—</div>
+        </div>
+      </div>
+
+      <div class="card" id="um-list-view">
+        <div id="um-list-tbl" style="overflow-x:auto;"></div>
+      </div>
+      <div class="card" id="um-plan-view" style="display:none">
+        <div id="um-plan-tabs" style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:10px;border-bottom:1px solid var(--border);"></div>
+        <div id="um-plan-svg" style="padding-top:12px;min-height:400px;"></div>
+      </div>
+    </div><!-- /panel-units -->
 
     <!-- CRM: ACENTALAR -->
     <div class="panel" id="panel-crm-acentalar">
@@ -2539,6 +2615,273 @@ async function uploadUtImages(evt) {
 function removeUtImage(i) {
   utDraft.images.splice(i, 1);
   renderUtImagesGrid();
+}
+</script>
+
+<!-- BİRİM DÜZENLE MODALİ (Faz 4) -->
+<div id="um-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);z-index:9100;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;">
+  <div style="background:#0D0D0D;border:1px solid var(--borderhi);width:100%;max-width:560px;">
+    <div style="padding:20px 28px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:10px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;" id="um-m-sub">—</div>
+        <div id="um-m-title" style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;color:var(--white);margin-top:4px;">Daire —</div>
+      </div>
+      <button onclick="umCloseEdit()" style="background:none;border:none;color:var(--wd);font-size:24px;cursor:pointer;padding:4px 10px;">×</button>
+    </div>
+    <div style="padding:24px 28px;">
+      <div class="field">
+        <label>Durum</label>
+        <select id="um-m-status">
+          <option value="musait">Müsait</option>
+          <option value="opsiyonlu">Rezerve (Opsiyonlu)</option>
+          <option value="satildi">Satıldı</option>
+        </select>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>Müşteri Adı Soyadı</label>
+        <input type="text" id="um-m-cname" placeholder="—">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+        <div class="field" style="margin:0">
+          <label>Telefon</label>
+          <input type="tel" id="um-m-ctel" placeholder="+90 ...">
+        </div>
+        <div class="field" style="margin:0">
+          <label>E-posta</label>
+          <input type="email" id="um-m-cemail" placeholder="—">
+        </div>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>Rezervasyon Notu</label>
+        <textarea id="um-m-note" rows="3" placeholder="—"></textarea>
+      </div>
+    </div>
+    <div style="padding:16px 28px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:space-between;">
+      <button type="button" onclick="umClearCustomer()" style="background:transparent;border:1px solid rgba(232,112,112,.35);color:#E87070;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:12px 18px;cursor:pointer;">Müşteriyi Temizle</button>
+      <div style="display:flex;gap:10px;">
+        <button type="button" onclick="umCloseEdit()" style="background:transparent;border:1px solid var(--border);color:var(--wd);font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:12px 24px;cursor:pointer;">İptal</button>
+        <button type="button" onclick="umSaveUnit()" style="background:rgba(201,169,110,.15);border:1px solid var(--gold);color:var(--gold);font-family:Montserrat,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:12px 28px;cursor:pointer;">Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// BİRİM YÖNETİMİ (Faz 4)
+// ═══════════════════════════════════════════
+let umAllUnits = [];       // aktif projenin tüm birimleri
+let umCurrentProj = null;
+let umViewMode = 'list';   // 'list' | 'plan'
+let umEditingUnit = null;
+
+function umInit() {
+  // Proje dropdown'u doldur
+  const sel = document.getElementById('um-project');
+  sel.innerHTML = '<option value="">Proje seç...</option>' +
+    projects.filter(p => p.id !== 'jewels').map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+}
+
+async function umLoadProject(projId) {
+  umCurrentProj = projId;
+  if (!projId) {
+    umAllUnits = [];
+    document.getElementById('um-floor-filter').innerHTML = '<option value="">Tümü</option>';
+    umRender();
+    return;
+  }
+  const { data, error } = await sb.from('units').select('*').eq('project_id', projId).order('kat_sirasi').order('unit_no');
+  if (error) { toast('Yüklenemedi: ' + error.message, '✕', true); return; }
+  umAllUnits = data || [];
+  // Kat filtresi seçeneklerini doldur
+  const floors = [...new Set(umAllUnits.map(u => u.floor_name))].filter(Boolean);
+  document.getElementById('um-floor-filter').innerHTML =
+    '<option value="">Tümü</option>' + floors.map(f => `<option value="${f}">${f}</option>`).join('');
+  umRender();
+}
+
+function umTab(mode) {
+  umViewMode = mode;
+  document.getElementById('um-tab-list').classList.toggle('on', mode === 'list');
+  document.getElementById('um-tab-plan').classList.toggle('on', mode === 'plan');
+  document.getElementById('um-list-view').style.display = mode === 'list' ? 'block' : 'none';
+  document.getElementById('um-plan-view').style.display = mode === 'plan' ? 'block' : 'none';
+  umRender();
+}
+
+function umFilter() {
+  const fFloor = document.getElementById('um-floor-filter').value;
+  const fStatus = document.getElementById('um-status-filter').value;
+  const fSearch = (document.getElementById('um-search').value || '').toLowerCase();
+  return umAllUnits.filter(u =>
+    (!fFloor || u.floor_name === fFloor) &&
+    (!fStatus || (u.status || '').toLowerCase() === fStatus.toLowerCase()) &&
+    (!fSearch || (u.unit_no || '').toLowerCase().includes(fSearch) || (u.customer_name || '').toLowerCase().includes(fSearch))
+  );
+}
+
+function umRender() {
+  const rows = umFilter();
+  // Stats
+  const c = { musait:0, opsiyonlu:0, satildi:0 };
+  umAllUnits.forEach(u => { const k = (u.status || 'musait').toLowerCase(); if (c[k] !== undefined) c[k]++; });
+  document.getElementById('um-stats').textContent = `Toplam ${umAllUnits.length} • Müsait ${c.musait} • Rezerve ${c.opsiyonlu} • Satıldı ${c.satildi}`;
+
+  if (umViewMode === 'list') {
+    umRenderList(rows);
+  } else {
+    umRenderPlan();
+  }
+}
+
+function umRenderList(rows) {
+  const tbl = document.getElementById('um-list-tbl');
+  if (!rows.length) { tbl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--wd);font-size:11px;">Birim bulunamadı.</div>'; return; }
+  tbl.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Daire No</th><th>Kat</th><th>Tip</th><th>Durum</th><th>Müşteri</th><th>Telefon</th><th>Tarih</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(u => {
+          const st = (u.status || 'musait').toLowerCase();
+          const d = u.reserved_at ? new Date(u.reserved_at).toLocaleDateString('tr-TR') : '—';
+          return `<tr onclick="umOpenEdit('${u.id}')">
+            <td style="font-weight:600;color:var(--gold)">${u.unit_no || 'K'}</td>
+            <td>${u.floor_name || ''}</td>
+            <td>${u.unit_type || ''}</td>
+            <td><span class="um-badge ${st}">${st}</span></td>
+            <td>${u.customer_name || '—'}</td>
+            <td>${u.customer_tel || '—'}</td>
+            <td style="color:var(--wd);font-size:11px">${d}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+function umRenderPlan() {
+  const filtered = umFilter();
+  // Kat bazında grupla
+  const byFloor = {};
+  filtered.forEach(u => {
+    const key = (u.kat_sirasi ?? 0) + '|' + (u.floor_name || 'Kat');
+    (byFloor[key] ??= []).push(u);
+  });
+  const floors = Object.keys(byFloor).map(k => {
+    const [s, n] = k.split('|');
+    return { kat_sirasi: +s, kat_adi: n, units: byFloor[k] };
+  }).sort((a, b) => a.kat_sirasi - b.kat_sirasi);
+
+  const tabsEl = document.getElementById('um-plan-tabs');
+  const svgEl = document.getElementById('um-plan-svg');
+  if (!floors.length) { tabsEl.innerHTML = ''; svgEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--wd)">Kat planı yok.</div>'; return; }
+  const idx = parseInt(tabsEl.dataset.idx || '0');
+  const curIdx = idx < floors.length ? idx : 0;
+  tabsEl.innerHTML = floors.map((f, i) => `<button class="um-floor-tab ${i === curIdx ? 'on' : ''}" onclick="umPlanSelectFloor(${i})">${f.kat_adi}</button>`).join('');
+  tabsEl.dataset.floors = JSON.stringify(floors.map(f => ({ kat_sirasi: f.kat_sirasi, kat_adi: f.kat_adi, uIds: f.units.map(u => u.id) })));
+  umDrawPlanFloor(floors[curIdx]);
+}
+
+function umPlanSelectFloor(idx) {
+  const tabsEl = document.getElementById('um-plan-tabs');
+  tabsEl.dataset.idx = idx;
+  umRenderPlan();
+}
+
+function umDrawPlanFloor(floor) {
+  const svgEl = document.getElementById('um-plan-svg');
+  const units = floor.units;
+  if (!units.length) { svgEl.innerHTML = ''; return; }
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const u of units) for (const pt of (u.polygon_points || [])) {
+    const fy = -pt.y;
+    if (pt.x < minX) minX = pt.x; if (fy < minY) minY = fy;
+    if (pt.x > maxX) maxX = pt.x; if (fy > maxY) maxY = fy;
+  }
+  const pad = 80;
+  minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+  const w = maxX - minX, h = maxY - minY;
+
+  const COL = {
+    musait: { fill:'#1f6b3e', stroke:'#5DBD84' },
+    opsiyonlu: { fill:'#8a5a22', stroke:'#E8A96E' },
+    rezerve: { fill:'#8a5a22', stroke:'#E8A96E' },
+    satildi: { fill:'#7a2a2a', stroke:'#E87070' },
+  };
+
+  const polys = units.map(u => {
+    const pts = (u.polygon_points || []).map(p => `${p.x},${-p.y}`).join(' ');
+    const cx = (u.polygon_points || []).reduce((a, p) => a + p.x, 0) / (u.polygon_points?.length || 1);
+    const cy = (u.polygon_points || []).reduce((a, p) => a + (-p.y), 0) / (u.polygon_points?.length || 1);
+    const st = (u.status || 'musait').toLowerCase();
+    const c = COL[st] || COL.musait;
+    const label = u.unit_no || 'K';
+    return `<g class="um-svg-unit" onclick="umOpenEdit('${u.id}')">
+      <title>Daire ${label} · ${u.unit_type || ''} · ${st.toUpperCase()}${u.customer_name ? ' · ' + u.customer_name : ''}</title>
+      <polygon points="${pts}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="8" stroke-linejoin="round"/>
+      <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" fill="#fff" font-family="Montserrat,sans-serif" font-weight="600" font-size="120" pointer-events="none">${label}</text>
+    </g>`;
+  }).join('');
+
+  svgEl.innerHTML = `<svg viewBox="${minX} ${minY} ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:70vh;background:#0A0A0A;border:1px solid var(--border);">${polys}</svg>`;
+}
+
+function umOpenEdit(uid) {
+  const u = umAllUnits.find(x => x.id === uid || x.id == uid);
+  if (!u) return;
+  umEditingUnit = u;
+  document.getElementById('um-m-sub').textContent   = (u.floor_name || '') + ' · ' + (u.unit_type || '');
+  document.getElementById('um-m-title').textContent = 'Daire ' + (u.unit_no || 'K');
+  document.getElementById('um-m-status').value = (u.status || 'musait').toLowerCase();
+  document.getElementById('um-m-cname').value  = u.customer_name || '';
+  document.getElementById('um-m-ctel').value   = u.customer_tel || '';
+  document.getElementById('um-m-cemail').value = u.customer_email || '';
+  document.getElementById('um-m-note').value   = u.reservation_note || '';
+  document.getElementById('um-modal-bg').style.display = 'flex';
+}
+
+function umCloseEdit() {
+  document.getElementById('um-modal-bg').style.display = 'none';
+  umEditingUnit = null;
+}
+
+function umClearCustomer() {
+  document.getElementById('um-m-cname').value = '';
+  document.getElementById('um-m-ctel').value  = '';
+  document.getElementById('um-m-cemail').value = '';
+  document.getElementById('um-m-note').value   = '';
+  document.getElementById('um-m-status').value = 'musait';
+}
+
+async function umSaveUnit() {
+  if (!umEditingUnit) return;
+  const status = document.getElementById('um-m-status').value;
+  const cname  = document.getElementById('um-m-cname').value.trim() || null;
+  const ctel   = document.getElementById('um-m-ctel').value.trim() || null;
+  const cemail = document.getElementById('um-m-cemail').value.trim() || null;
+  const note   = document.getElementById('um-m-note').value.trim() || null;
+  const update = {
+    status,
+    customer_name: cname,
+    customer_tel:  ctel,
+    customer_email: cemail,
+    reservation_note: note,
+    reserved_at: (status !== 'musait' && !umEditingUnit.reserved_at) ? new Date().toISOString() : umEditingUnit.reserved_at,
+    updated_at: new Date().toISOString(),
+  };
+  if (status === 'musait') {
+    update.reserved_at = null;
+    update.approved_at = null;
+  }
+  const { error } = await sb.from('units').update(update).eq('id', umEditingUnit.id);
+  if (error) { toast('Kayıt hatası: ' + error.message, '✕', true); return; }
+  // Local state güncelle
+  Object.assign(umEditingUnit, update);
+  umCloseEdit();
+  umRender();
+  toast('Kaydedildi', '✓');
 }
 </script>
 
