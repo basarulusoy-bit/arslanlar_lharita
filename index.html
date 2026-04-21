@@ -731,27 +731,8 @@ async function initMap() {
     } catch(e) {}
 
 
-    try {
-      if (!map.getSource('satellite-underlay')) {
-        map.addSource('satellite-underlay', {
-          type: 'raster',
-          tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-          tileSize: 256,
-          attribution: '© Esri World Imagery',
-          maxzoom: 19
-        });
-        // Add satellite as the very first layer (bottom of stack)
-        const firstLayerId = (map.getStyle().layers || [])[0]?.id;
-        map.addLayer({
-          id: 'satellite-underlay',
-          type: 'raster',
-          source: 'satellite-underlay',
-          paint: {
-            'raster-opacity': 0
-          }
-        }, firstLayerId);
-      }
-    } catch(e) { console.warn('satellite underlay failed', e); }
+    // Uydu katmanı: Google Map Tiles (session tabanlı) — başarısız olursa Esri'ye fallback
+    initSatelliteLayer();
 
     const buildSource = findBuildingSource();
     if (buildSource) {
@@ -791,6 +772,72 @@ async function initMap() {
     });
     finishLoading();
   });
+}
+
+// ── GOOGLE MAP TILES SESSION ─────────────────────────────────────────────
+const GOOGLE_MAPS_KEY = 'AIzaSyD4JLGCE71U1n9YmhLFQRv7CDCjmrUigkA';
+let googleSatSession = null;
+let googleSatExpiry  = 0;
+
+async function getGoogleSatSession() {
+  const now = Math.floor(Date.now() / 1000);
+  if (googleSatSession && now < googleSatExpiry - 60) return googleSatSession;
+  try {
+    const res = await fetch(`https://tile.googleapis.com/v1/createSession?key=${GOOGLE_MAPS_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mapType: 'satellite',
+        language: 'tr-TR',
+        region: 'TR',
+        layerTypes: ['layerRoadmap'],
+        highDpi: true,
+        scale: 'scaleFactor2x'
+      })
+    });
+    if (!res.ok) throw new Error('createSession HTTP ' + res.status);
+    const data = await res.json();
+    if (data && data.session) {
+      googleSatSession = data.session;
+      googleSatExpiry  = parseInt(data.expiry) || (now + 60*60*24);
+      return googleSatSession;
+    }
+  } catch(e) { console.warn('Google sat session failed:', e); }
+  return null;
+}
+
+async function initSatelliteLayer() {
+  if (!map || map.getSource('satellite-underlay')) return;
+  const session = await getGoogleSatSession();
+  let tiles, maxzoom, attribution;
+  if (session) {
+    tiles = [`https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session=${session}&key=${GOOGLE_MAPS_KEY}`];
+    maxzoom = 22;
+    attribution = '© Google';
+  } else {
+    // Fallback: Esri World Imagery
+    tiles = ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'];
+    maxzoom = 19;
+    attribution = '© Esri World Imagery';
+  }
+  try {
+    map.addSource('satellite-underlay', { type: 'raster', tiles, tileSize: 256, attribution, maxzoom });
+    const firstLayerId = (map.getStyle().layers || [])[0]?.id;
+    map.addLayer({
+      id: 'satellite-underlay',
+      type: 'raster',
+      source: 'satellite-underlay',
+      paint: { 'raster-opacity': satelliteVisible ? 1 : 0 }
+    }, firstLayerId);
+    // Eğer kullanıcı layer yüklenmeden Uydu'ya tıkladıysa landcover fillerini de hemen gizle
+    if (satelliteVisible) {
+      map.getStyle().layers.forEach(layer => {
+        if (layer.type === 'fill' && (layer['source-layer'] === 'landcover' || layer['source-layer'] === 'landuse')) {
+          map.setPaintProperty(layer.id, 'fill-opacity', 0);
+        }
+      });
+    }
+  } catch(e) { console.warn('satellite underlay failed', e); }
 }
 
 // ── MAP MODE (Harita / Uydu hibrit) ──────────────────────────────────────
