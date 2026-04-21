@@ -535,6 +535,7 @@ let unitTypesMap = {};   // project_id → [unit_types]
 let unitStatusMap = {};  // project_id → [unit_status]
 let projectImagesMap = {}; // project_id → [{url, sira}]
 let projectFloorsMap = {}; // project_id → [{kat_adi, kat_sirasi, pdf_url}]
+let projectUnitsMap = {};  // project_id → [{floor_no, floor_name, kat_sirasi, unit_no, unit_type, status, polygon_points}]
 
 let projectPoisMap = {};   // project_id → [pois]
 let transitLines = [];
@@ -543,12 +544,13 @@ let poiEnabled = true;
 let transitEnabled = true;
 
 async function loadSupabaseData() {
-  const [pRes, utRes, usRes, imgRes, floorRes, poisRes, linesRes, stopsRes] = await Promise.all([
+  const [pRes, utRes, usRes, imgRes, floorRes, unitsRes, poisRes, linesRes, stopsRes] = await Promise.all([
     sb.from('projects').select('*').order('sira'),
     sb.from('unit_types').select('*').order('sira'),
     sb.from('unit_status').select('*'),
     sb.from('project_images').select('*').order('sira'),
     sb.from('project_floors').select('*').order('kat_sirasi'),
+    sb.from('units').select('project_id,floor_no,floor_name,kat_sirasi,unit_no,unit_type,status,polygon_points,customer_name').order('kat_sirasi').order('unit_no'),
     sb.from('project_pois').select('*').eq('visible', true).order('sira'),
     sb.from('transit_lines').select('*').eq('visible', true),
     sb.from('transit_stops').select('*'),
@@ -563,6 +565,11 @@ async function loadSupabaseData() {
   (floorRes.data || []).forEach(f => {
     if (!projectFloorsMap[f.project_id]) projectFloorsMap[f.project_id] = [];
     projectFloorsMap[f.project_id].push(f);
+  });
+  projectUnitsMap = {};
+  (unitsRes.data || []).forEach(u => {
+    if (!projectUnitsMap[u.project_id]) projectUnitsMap[u.project_id] = [];
+    projectUnitsMap[u.project_id].push(u);
   });
   unitTypesMap = {};
   (utRes.data || []).forEach(ut => {
@@ -1822,6 +1829,77 @@ function dpClose() {
 }
 
 let dpFloorsCurrent = [];
+let dpSvgFloorsCurrent = [];
+
+const UNIT_STATUS_COLORS = {
+  musait:    { fill:'#1f6b3e', stroke:'#5DBD84', text:'#fff' },
+  opsiyonlu: { fill:'#8a5a22', stroke:'#E8A96E', text:'#fff' },
+  rezerve:   { fill:'#8a5a22', stroke:'#E8A96E', text:'#fff' },
+  satildi:   { fill:'#7a2a2a', stroke:'#E87070', text:'#fff' },
+  sold:      { fill:'#7a2a2a', stroke:'#E87070', text:'#fff' },
+  reserved:  { fill:'#8a5a22', stroke:'#E8A96E', text:'#fff' },
+};
+
+function dpSvgFloorSelect(idx) {
+  const f = dpSvgFloorsCurrent[idx];
+  const viewer = document.getElementById('dp-floors-viewer');
+  document.querySelectorAll('#dp-floors-tabs .dp-floor-tab').forEach((el, i) => {
+    el.classList.toggle('on', i === idx);
+  });
+  if (!f || !f.units || !f.units.length) {
+    viewer.innerHTML = '<div class="dp-floor-empty">Birim bulunamadı.</div>';
+    return;
+  }
+  // BBox hesapla (y'yi flip ederek — DXF Y-up → SVG Y-down)
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const u of f.units) {
+    for (const pt of (u.polygon_points || [])) {
+      const fy = -pt.y;
+      if (pt.x < minX) minX = pt.x; if (fy < minY) minY = fy;
+      if (pt.x > maxX) maxX = pt.x; if (fy > maxY) maxY = fy;
+    }
+  }
+  const pad = 60;
+  minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+  const w = maxX - minX, h = maxY - minY;
+
+  // Durum sayıları
+  const counts = { musait:0, opsiyonlu:0, rezerve:0, satildi:0 };
+  f.units.forEach(u => {
+    const key = (u.status || 'musait').toLowerCase();
+    if (counts[key] !== undefined) counts[key]++;
+    else counts.musait++;
+  });
+
+  // SVG render — her polygon'un y'sini negate et (flip)
+  const polys = f.units.map(u => {
+    const ptsArr = u.polygon_points || [];
+    const pts = ptsArr.map(p => `${p.x},${-p.y}`).join(' ');
+    const cx = ptsArr.reduce((a,p) => a + p.x, 0) / (ptsArr.length || 1);
+    const cy = ptsArr.reduce((a,p) => a + (-p.y), 0) / (ptsArr.length || 1);
+    const statusKey = (u.status || 'musait').toLowerCase();
+    const col = UNIT_STATUS_COLORS[statusKey] || UNIT_STATUS_COLORS.musait;
+    const label = u.unit_no || 'K';
+    const title = `${u.floor_name || ''} · Daire ${label} · ${u.unit_type || ''} · ${statusKey.toUpperCase()}`;
+    return `
+      <g class="dp-svg-unit" data-unit="${label}" data-status="${statusKey}">
+        <title>${title.replace(/</g,'&lt;')}</title>
+        <polygon points="${pts}" fill="${col.fill}" stroke="${col.stroke}" stroke-width="8" stroke-linejoin="round"/>
+        <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" fill="${col.text}" font-family="Montserrat,sans-serif" font-weight="600" font-size="120">${label}</text>
+      </g>`;
+  }).join('');
+
+  viewer.innerHTML = `
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:10px;font-size:10px;letter-spacing:1.2px;color:var(--wd)">
+      <span><span style="display:inline-block;width:10px;height:10px;background:#1f6b3e;border:1px solid #5DBD84;vertical-align:middle;margin-right:4px"></span>Müsait ${counts.musait}</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#8a5a22;border:1px solid #E8A96E;vertical-align:middle;margin-right:4px"></span>Rezerve ${counts.opsiyonlu + counts.rezerve}</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#7a2a2a;border:1px solid #E87070;vertical-align:middle;margin-right:4px"></span>Satıldı ${counts.satildi}</span>
+    </div>
+    <svg class="dp-svg-plan" viewBox="${minX} ${minY} ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:65vh;background:#0A0A0A;border:1px solid var(--border)">
+      ${polys}
+    </svg>
+  `;
+}
 
 function dpFloorSelect(idx) {
   const f = dpFloorsCurrent[idx];
@@ -1945,16 +2023,36 @@ function dpFill(p) {
       (hasExtras ? dpUtDetailHtml(ut, idx) : '');
   }).join('') : '<div style="padding:16px;color:rgba(245,240,232,.25);font-size:12px">Daire tipi girilmedi.</div>';
 
-  // Kat Planları (PDF)
-  const floors = (projectFloorsMap[p.id] || []).slice().sort((a,b) => (a.kat_sirasi||0) - (b.kat_sirasi||0));
+  // Kat Planları — SVG (units tablosundan) veya PDF (project_floors'tan)
+  const pdfFloors = (projectFloorsMap[p.id] || []).slice().sort((a,b) => (a.kat_sirasi||0) - (b.kat_sirasi||0));
+  const unitsByFloor = {};
+  (projectUnitsMap[p.id] || []).forEach(u => {
+    const key = (u.kat_sirasi ?? 0) + '|' + (u.floor_name || 'Kat');
+    (unitsByFloor[key] ??= []).push(u);
+  });
+  const svgFloors = Object.keys(unitsByFloor).map(k => {
+    const [sira, name] = k.split('|');
+    return { kat_sirasi: parseInt(sira), kat_adi: name, units: unitsByFloor[k] };
+  }).sort((a,b) => a.kat_sirasi - b.kat_sirasi);
+
   const kpTab = document.getElementById('dp-tab-kp');
-  if (floors.length > 0) {
+  if (svgFloors.length > 0) {
+    // İnteraktif SVG (units tablosu)
     kpTab.style.display = '';
     const tabsEl = document.getElementById('dp-floors-tabs');
-    tabsEl.innerHTML = floors.map((f, i) =>
+    tabsEl.innerHTML = svgFloors.map((f, i) =>
+      `<button class="dp-floor-tab${i === 0 ? ' on' : ''}" onclick="dpSvgFloorSelect(${i})">${(f.kat_adi||'Kat').replace(/</g,'&lt;')}</button>`
+    ).join('');
+    dpSvgFloorsCurrent = svgFloors;
+    dpSvgFloorSelect(0);
+  } else if (pdfFloors.length > 0) {
+    // PDF fallback
+    kpTab.style.display = '';
+    const tabsEl = document.getElementById('dp-floors-tabs');
+    tabsEl.innerHTML = pdfFloors.map((f, i) =>
       `<button class="dp-floor-tab${i === 0 ? ' on' : ''}" onclick="dpFloorSelect(${i})">${(f.kat_adi||'Kat').replace(/</g,'&lt;')}</button>`
     ).join('');
-    dpFloorsCurrent = floors;
+    dpFloorsCurrent = pdfFloors;
     dpFloorSelect(0);
   } else {
     kpTab.style.display = 'none';
