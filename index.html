@@ -296,7 +296,17 @@
 .dp-gal{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px}
 .dp-gal img{width:100%;aspect-ratio:16/9;object-fit:cover;cursor:pointer;display:block}
 .dp-gal img.full{grid-column:1/-1;aspect-ratio:16/7}
-.dp-type{background:#141414;border:1px solid rgba(201,169,110,.1);margin:0 14px 7px;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start}
+.dp-type{background:#141414;border:1px solid rgba(201,169,110,.1);margin:0 14px 7px;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;transition:border-color .2s,background .2s}
+.dp-type:hover{border-color:rgba(201,169,110,.3)}
+.dp-tbadge{display:inline-block;font-family:'Montserrat',sans-serif;font-size:8px;letter-spacing:1.3px;text-transform:uppercase;color:#C9A96E;background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25);padding:2px 7px;margin-left:6px;vertical-align:middle;border-radius:2px;font-weight:500}
+.dp-ut-det{grid-column:1/-1;max-height:0;overflow:hidden;transition:max-height .35s ease;border-top:1px solid rgba(201,169,110,.08);margin-top:8px}
+.dp-ut-det.on{max-height:1400px;padding-top:14px}
+.dp-ut-plan{display:block;width:100%;max-height:360px;object-fit:contain;background:#0A0A0A;border:1px solid rgba(201,169,110,.1);cursor:pointer;margin-bottom:10px}
+.dp-ut-acik{font-size:12px;color:rgba(245,240,232,.55);line-height:1.65;margin:8px 0 10px}
+.dp-ut-imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:4px;margin-top:8px}
+.dp-ut-imgs img{width:100%;aspect-ratio:1;object-fit:cover;cursor:pointer;display:block}
+.dp-ut-tour{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.35);color:#C9A96E;font-family:Montserrat,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;margin-top:4px;transition:background .2s}
+.dp-ut-tour:hover{background:rgba(201,169,110,.2)}
 .dp-tn{font-family:'Cormorant Garamond',serif;font-size:19px;color:#C9A96E}
 .dp-tm{font-size:10px;color:rgba(245,240,232,.3);margin:1px 0 5px}
 .dp-tp{font-family:'Cormorant Garamond',serif;font-size:17px;color:#F5F0E8;text-align:right}
@@ -1799,6 +1809,31 @@ function dpClose() {
   if (dpMiniMap) { try { dpMiniMap.remove(); } catch(e){} dpMiniMap = null; }
 }
 
+function dpUtDetailHtml(ut, idx) {
+  const parts = [];
+  if (ut.plan_url) {
+    parts.push(`<img class="dp-ut-plan" src="${ut.plan_url}" alt="Kat planı" onclick="event.stopPropagation();dpLb(this.src)">`);
+  }
+  if (ut.aciklama) {
+    parts.push(`<div class="dp-ut-acik">${(ut.aciklama||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>`);
+  }
+  if (ut.tour_url) {
+    parts.push(`<a href="${ut.tour_url}" target="_blank" rel="noopener" class="dp-ut-tour" onclick="event.stopPropagation()">✦ Sanal Tur Başlat →</a>`);
+  }
+  if (ut.images && ut.images.length) {
+    parts.push('<div class="dp-ut-imgs">' +
+      ut.images.map(u => `<img src="${u}" onclick="event.stopPropagation();dpLb(this.src)">`).join('') +
+      '</div>');
+  }
+  return `<div class="dp-ut-det" id="dp-ut-det-${idx}">${parts.join('')}</div>`;
+}
+
+function dpUtToggle(idx) {
+  const el = document.getElementById('dp-ut-det-' + idx);
+  if (!el) return;
+  el.classList.toggle('on');
+}
+
 function dpTab(el, sec) {
   document.querySelectorAll('.dp-tab').forEach(t => t.classList.remove('on'));
   document.querySelectorAll('.dps').forEach(s => s.classList.remove('on'));
@@ -1862,10 +1897,12 @@ function dpFill(p) {
   document.getElementById('dp-gal').innerHTML = galHtml;
 
   // Daire tipleri
-  document.getElementById('dp-types').innerHTML = uts.length ? uts.map(ut => {
+  document.getElementById('dp-types').innerHTML = uts.length ? uts.map((ut, idx) => {
     const us = uss.find(s => s.unit_type_id===ut.id)||{musait:ut.toplam_adet,opsiyonlu:0,satildi:0};
-    return '<div class="dp-type"><div>' +
-      '<div class="dp-tn">'+ut.tip+'</div>' +
+    const hasExtras = !!(ut.plan_url || ut.tour_url || ut.aciklama || (ut.images && ut.images.length));
+    const detailBadge = hasExtras ? '<span class="dp-tbadge">+ Detay</span>' : '';
+    return '<div class="dp-type" '+(hasExtras ? `onclick="dpUtToggle(${idx})"` : '')+' style="'+(hasExtras ? 'cursor:pointer;' : '')+'" data-ut-idx="'+idx+'"><div>' +
+      '<div class="dp-tn">'+ut.tip+' '+detailBadge+'</div>' +
       '<div class="dp-tm">'+ut.m2_min+'–'+ut.m2_max+' m²</div>' +
       (li ? '<div class="dp-st">' +
         '<span class="dp-sp" style="color:#5DBD84;border-color:rgba(93,189,132,.3)">Müsait: '+us.musait+'</span>' +
@@ -1874,8 +1911,9 @@ function dpFill(p) {
       '</div><div>' +
       (li && ut.fiyat ? '<div class="dp-tp">'+ut.fiyat+'</div>' : '') +
       '<div class="dp-ta">'+ut.toplam_adet+' ad.</div>' +
-      (li ? '<button onclick="location.href=\"/acenta.html?tab=addoffer&proje='+p.id+'\"" style="margin-top:8px;background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.2);color:rgba(201,169,110,.7);font-family:Montserrat,sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:5px 10px;cursor:pointer;width:100%">Teklif Oluştur →</button>' : '') +
-      '</div></div>';
+      (li ? '<button onclick="event.stopPropagation();location.href=\"/acenta.html?tab=addoffer&proje='+p.id+'\"" style="margin-top:8px;background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.2);color:rgba(201,169,110,.7);font-family:Montserrat,sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:5px 10px;cursor:pointer;width:100%">Teklif Oluştur →</button>' : '') +
+      '</div></div>' +
+      (hasExtras ? dpUtDetailHtml(ut, idx) : '');
   }).join('') : '<div style="padding:16px;color:rgba(245,240,232,.25);font-size:12px">Daire tipi girilmedi.</div>';
 
   // Olanaklar

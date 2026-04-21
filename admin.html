@@ -1337,19 +1337,25 @@ function removeTag(i) { currentTags.splice(i,1); renderTags(); }
 // Unit rows
 function renderUnitRows() {
   const tbody = document.getElementById('pe-units');
-  tbody.innerHTML = currentUnitRows.map((r,i) => `
+  tbody.innerHTML = currentUnitRows.map((r,i) => {
+    const hasExtras = !!(r.plan_url || r.tour_url || r.aciklama || (r.images && r.images.length));
+    const badge = hasExtras ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);margin-right:6px;vertical-align:middle;"></span>' : '';
+    return `
     <tr>
       <td><input value="${r.tip||''}" placeholder="2+1" oninput="currentUnitRows[${i}].tip=this.value"></td>
       <td><input type="number" value="${r.m2_min||''}" placeholder="85" oninput="currentUnitRows[${i}].m2_min=+this.value" style="width:70px"></td>
       <td><input type="number" value="${r.m2_max||''}" placeholder="100" oninput="currentUnitRows[${i}].m2_max=+this.value" style="width:70px"></td>
       <td><input value="${r.fiyat||''}" placeholder="3.400.000 ₺" oninput="currentUnitRows[${i}].fiyat=this.value"></td>
       <td><input type="number" value="${r.toplam_adet||0}" oninput="currentUnitRows[${i}].toplam_adet=+this.value" style="width:70px"></td>
-      <td><button class="del-btn" onclick="removeUnitRow(${i})">Sil</button></td>
+      <td>
+        <button type="button" onclick="openUtDetail(${i})" style="background:rgba(201,169,110,.1);border:1px solid var(--borderhi);color:var(--gold);font-family:Montserrat,sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:6px 10px;cursor:pointer;border-radius:2px;margin-right:4px;">${badge}Detay</button>
+        <button class="del-btn" onclick="removeUnitRow(${i})">Sil</button>
+      </td>
     </tr>
-  `).join('');
+  `;}).join('');
 }
 function addUnitRow() {
-  currentUnitRows.push({ tip:'', m2_min:0, m2_max:0, fiyat:'', toplam_adet:0 });
+  currentUnitRows.push({ tip:'', m2_min:0, m2_max:0, fiyat:'', toplam_adet:0, plan_url:null, tour_url:null, aciklama:null, images:[] });
   renderUnitRows();
 }
 function removeUnitRow(i) { currentUnitRows.splice(i,1); renderUnitRows(); }
@@ -1384,7 +1390,11 @@ async function saveProject(stay = false) {
     const rows = currentUnitRows.map((r, i) => ({
       project_id: editingProjectId,
       tip: r.tip, m2_min: r.m2_min, m2_max: r.m2_max,
-      fiyat: r.fiyat, toplam_adet: r.toplam_adet, sira: i
+      fiyat: r.fiyat, toplam_adet: r.toplam_adet, sira: i,
+      plan_url: r.plan_url || null,
+      tour_url: r.tour_url || null,
+      aciklama: r.aciklama || null,
+      images:   r.images || [],
     }));
     const { error: utErr } = await sb.from('unit_types').insert(rows);
     if (utErr) { toast('Daire tipi kayıt hatası: ' + utErr.message, '✕', true); return; }
@@ -2234,6 +2244,184 @@ function showToast(msg) {
   setTimeout(()=>t.style.opacity='0',3000);
 }
 
+</script>
+
+<!-- ═══ DAİRE TİPİ DETAY MODALİ (Faz 2) ═══ -->
+<div id="ut-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);z-index:9000;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;">
+  <div id="ut-modal" style="background:#0D0D0D;border:1px solid var(--borderhi);width:100%;max-width:720px;max-height:calc(100vh - 80px);overflow-y:auto;">
+    <div style="padding:20px 28px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:10px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;">Daire Tipi Detay</div>
+        <div id="ut-modal-title" style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;color:var(--white);margin-top:4px;">—</div>
+      </div>
+      <button onclick="closeUtDetail(false)" style="background:none;border:none;color:var(--wd);font-size:24px;cursor:pointer;padding:4px 10px;">×</button>
+    </div>
+    <div style="padding:24px 28px;">
+      <div class="card">
+        <div class="card-title">Kat Planı Görseli</div>
+        <div id="ut-plan-preview" style="min-height:120px;background:#111;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;color:rgba(245,240,232,.3);font-size:11px;"></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:12px;">
+          <label style="flex:1;background:rgba(201,169,110,.1);border:1px solid var(--borderhi);color:var(--gold);font-family:Montserrat,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;text-align:center;">
+            &#128193; Plan Yükle
+            <input type="file" id="ut-plan-file" accept="image/*" style="display:none" onchange="uploadUtPlan(event)">
+          </label>
+          <button type="button" id="ut-plan-clear" onclick="clearUtPlan()" style="background:transparent;border:1px solid var(--border);color:var(--wd);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:10px 14px;cursor:pointer;">Temizle</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <div class="card-title">Sanal Tur (HomeStyler vb.)</div>
+        <div class="field">
+          <label>Tur URL</label>
+          <input type="url" id="ut-tour-url" placeholder="https://www.homestyler.com/3d/...">
+          <div class="field-hint">Boş bırakırsan detay panelinde "Sanal Tur" butonu gösterilmez.</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <div class="card-title">Tanıtım Metni</div>
+        <div class="field">
+          <textarea id="ut-aciklama" rows="4" placeholder="Bu daire tipine özel tanıtım..."></textarea>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <div class="card-title">İç Mekan Görselleri <span id="ut-imgs-count" style="color:var(--wd);font-weight:400;font-size:11px;margin-left:8px;">(0 / 5)</span></div>
+        <div id="ut-imgs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;min-height:100px;padding:8px;background:rgba(255,255,255,.02);border:1px dashed var(--border);border-radius:4px;"></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:10px;">
+          <label id="ut-imgs-add" style="flex:1;background:rgba(201,169,110,.1);border:1px solid var(--borderhi);color:var(--gold);font-family:Montserrat,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:10px;cursor:pointer;text-align:center;">
+            + Görsel Ekle
+            <input type="file" id="ut-imgs-file" accept="image/*" multiple style="display:none" onchange="uploadUtImages(event)">
+          </label>
+          <div id="ut-imgs-status" style="font-size:10px;color:var(--wd);min-width:70px;"></div>
+        </div>
+        <div class="field-hint" style="margin-top:6px;">Max 5 iç mekan fotoğrafı.</div>
+      </div>
+    </div>
+
+    <div style="padding:16px 28px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" onclick="closeUtDetail(false)" style="background:transparent;border:1px solid var(--border);color:var(--wd);font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:12px 24px;cursor:pointer;">İptal</button>
+      <button type="button" onclick="closeUtDetail(true)" style="background:rgba(201,169,110,.15);border:1px solid var(--gold);color:var(--gold);font-family:Montserrat,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:12px 28px;cursor:pointer;">Tamam</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// UNIT TYPE DETAY MODALİ (Faz 2)
+// ═══════════════════════════════════════════
+const UT_IMG_MAX = 5;
+let utEditingIndex = null;
+let utDraft = null;
+
+function openUtDetail(idx) {
+  utEditingIndex = idx;
+  const r = currentUnitRows[idx];
+  utDraft = {
+    plan_url: r.plan_url || null,
+    tour_url: r.tour_url || null,
+    aciklama: r.aciklama || null,
+    images:   Array.isArray(r.images) ? [...r.images] : [],
+  };
+  document.getElementById('ut-modal-title').textContent = (r.tip || 'Yeni Tip') + (r.m2_min && r.m2_max ? ` · ${r.m2_min}-${r.m2_max} m²` : '');
+  document.getElementById('ut-tour-url').value = utDraft.tour_url || '';
+  document.getElementById('ut-aciklama').value = utDraft.aciklama || '';
+  renderUtPlanPreview();
+  renderUtImagesGrid();
+  document.getElementById('ut-modal-bg').style.display = 'flex';
+}
+
+function closeUtDetail(save) {
+  if (save && utDraft && utEditingIndex !== null) {
+    utDraft.tour_url = document.getElementById('ut-tour-url').value.trim() || null;
+    utDraft.aciklama = document.getElementById('ut-aciklama').value.trim() || null;
+    Object.assign(currentUnitRows[utEditingIndex], utDraft);
+    renderUnitRows();
+  }
+  document.getElementById('ut-modal-bg').style.display = 'none';
+  utEditingIndex = null;
+  utDraft = null;
+}
+
+function renderUtPlanPreview() {
+  const box = document.getElementById('ut-plan-preview');
+  if (utDraft.plan_url) {
+    box.innerHTML = `<img src="${utDraft.plan_url}" style="max-width:100%;max-height:280px;object-fit:contain;">`;
+  } else {
+    box.innerHTML = '<span>Henüz plan görseli yüklenmedi</span>';
+  }
+}
+
+async function uploadUtPlan(evt) {
+  const file = evt.target.files[0];
+  if (!file || !editingProjectId || utEditingIndex === null) return;
+  const r = currentUnitRows[utEditingIndex];
+  const tipSlug = (r.tip || 'tip').replace(/[^a-zA-Z0-9]/g, '_');
+  const ext = file.name.split('.').pop();
+  const path = `${editingProjectId}/${tipSlug}-plan-${Date.now()}.${ext}`;
+  const { error } = await sb.storage.from('unit-type-media').upload(path, file, { contentType: file.type });
+  if (error) { toast('Plan yükleme hatası: ' + error.message, 'x', true); return; }
+  const { data: urlData } = sb.storage.from('unit-type-media').getPublicUrl(path);
+  utDraft.plan_url = urlData.publicUrl;
+  renderUtPlanPreview();
+  evt.target.value = '';
+  toast('Plan yüklendi', '✓');
+}
+
+function clearUtPlan() {
+  utDraft.plan_url = null;
+  renderUtPlanPreview();
+}
+
+function renderUtImagesGrid() {
+  const grid = document.getElementById('ut-imgs-grid');
+  const count = document.getElementById('ut-imgs-count');
+  const addLbl = document.getElementById('ut-imgs-add');
+  count.textContent = `(${utDraft.images.length} / ${UT_IMG_MAX})`;
+  if (utDraft.images.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(245,240,232,.3);font-size:10px;padding:20px 0;">Henüz iç mekan fotoğrafı yok.</div>';
+  } else {
+    grid.innerHTML = utDraft.images.map((url, i) => `
+      <div style="position:relative;aspect-ratio:1;background:#111;border:1px solid var(--border);border-radius:3px;overflow:hidden;">
+        <img src="${url}" style="width:100%;height:100%;object-fit:cover;">
+        <button type="button" onclick="removeUtImage(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border:none;background:rgba(232,112,112,.85);color:#fff;border-radius:50%;cursor:pointer;font-size:11px;padding:0;">×</button>
+      </div>
+    `).join('');
+  }
+  addLbl.style.opacity = utDraft.images.length >= UT_IMG_MAX ? '0.4' : '1';
+  addLbl.style.pointerEvents = utDraft.images.length >= UT_IMG_MAX ? 'none' : 'auto';
+}
+
+async function uploadUtImages(evt) {
+  const files = Array.from(evt.target.files || []);
+  if (!files.length || utEditingIndex === null || !editingProjectId) return;
+  const slotsLeft = UT_IMG_MAX - utDraft.images.length;
+  const toUpload = files.slice(0, slotsLeft);
+  const status = document.getElementById('ut-imgs-status');
+  const r = currentUnitRows[utEditingIndex];
+  const tipSlug = (r.tip || 'tip').replace(/[^a-zA-Z0-9]/g, '_');
+  status.textContent = `0 / ${toUpload.length}`;
+  let done = 0;
+  for (const file of toUpload) {
+    const ext = file.name.split('.').pop();
+    const path = `${editingProjectId}/${tipSlug}-${Date.now()}-${Math.random().toString(36).slice(2,6)}.${ext}`;
+    const { error } = await sb.storage.from('unit-type-media').upload(path, file, { contentType: file.type });
+    if (error) { toast('Yükleme hatası: ' + error.message, 'x', true); continue; }
+    const { data: urlData } = sb.storage.from('unit-type-media').getPublicUrl(path);
+    utDraft.images.push(urlData.publicUrl);
+    done++;
+    status.textContent = `${done} / ${toUpload.length}`;
+  }
+  renderUtImagesGrid();
+  status.textContent = '✓ ' + done;
+  setTimeout(() => status.textContent = '', 2000);
+  evt.target.value = '';
+}
+
+function removeUtImage(i) {
+  utDraft.images.splice(i, 1);
+  renderUtImagesGrid();
+}
 </script>
 
 <script>
