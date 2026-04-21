@@ -1173,32 +1173,46 @@ function launchFireworks(markerId) {
   if (!el) return;
   const rect = el.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
-  const cy = rect.top + rect.height / 2;
-  for (let i = 0; i < 18; i++) {
-    const spark = document.createElement('div');
-    const angle = (i / 18) * Math.PI * 2;
-    const dist  = 28 + Math.random() * 22;
-    const size  = 3 + Math.random() * 3;
-    const colors = ['#C9A96E','#E8C98A','#FFD700','#fff','#F5F0E8','#FFF5CC'];
-    const color  = colors[Math.floor(Math.random() * colors.length)];
-    spark.style.cssText = `
-      position:fixed;z-index:9999;
-      width:${size}px;height:${size}px;border-radius:50%;
-      background:${color};
-      left:${cx}px;top:${cy}px;
-      pointer-events:none;
-      transition:all 0.7s cubic-bezier(0.1,0.8,0.3,1);
-      opacity:1;
-    `;
-    document.body.appendChild(spark);
-    requestAnimationFrame(() => {
-      spark.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
-      spark.style.opacity = '0';
-    });
-    setTimeout(() => spark.remove(), 800);
+  const cy = rect.top + rect.height / 2 - 18;
+  const COLORS = ['#C9A96E','#E8C98A','#FFD700','#fff','#F5F0E8','#FFF5CC','#FFB347'];
+
+  function burst(centerX, centerY, count, radiusMin, radiusMax, sizeMin, sizeMax, duration, gravity) {
+    for (let i = 0; i < count; i++) {
+      const spark = document.createElement('div');
+      const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
+      const dist  = radiusMin + Math.random() * (radiusMax - radiusMin);
+      const size  = sizeMin + Math.random() * (sizeMax - sizeMin);
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist + gravity;
+      spark.style.cssText = `
+        position:fixed;z-index:9999;pointer-events:none;
+        width:${size}px;height:${size}px;border-radius:50%;
+        background:${color};
+        left:${centerX}px;top:${centerY}px;
+        margin-left:${-size/2}px;margin-top:${-size/2}px;
+        box-shadow:0 0 ${size*2}px ${color},0 0 ${size*5}px ${color};
+        transition:transform ${duration}s cubic-bezier(0.12,0.55,0.25,1),opacity ${duration}s ease-out;
+        opacity:1;
+      `;
+      document.body.appendChild(spark);
+      requestAnimationFrame(() => {
+        spark.style.transform = `translate(${dx}px,${dy}px) scale(0.35)`;
+        spark.style.opacity = '0';
+      });
+      setTimeout(() => spark.remove(), duration * 1000 + 50);
+    }
   }
-  // tekrar ateşle
-  setTimeout(() => launchFireworks(markerId), 3000 + Math.random() * 2000);
+
+  // Ana patlama: geniş çaplı, büyük sparklar
+  burst(cx, cy, 42, 70, 130, 4, 9, 1.5, 28);
+  // İkinci dalga (küçük gecikme, merkez etrafında kısa)
+  setTimeout(() => burst(cx, cy, 22, 35, 70, 3, 6, 1.1, 18), 180);
+  // Üçüncü dalga (çevresel parıltı)
+  setTimeout(() => burst(cx + (Math.random()-0.5)*40, cy + (Math.random()-0.5)*20, 18, 25, 55, 3, 5, 0.9, 12), 380);
+
+  // Tekrar ateşle
+  setTimeout(() => launchFireworks(markerId), 1600 + Math.random() * 1400);
 }
 
 
