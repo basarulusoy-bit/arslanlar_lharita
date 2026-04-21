@@ -1754,7 +1754,6 @@ function dpFill(p) {
   hi.src = p.render_url || ''; hi.style.display = p.render_url ? 'block' : 'none';
   document.getElementById('dp-badge').textContent = (p.tip||'Proje') + (p.teslim ? ' · '+p.teslim : '');
   document.getElementById('dp-title').textContent = p.name;
-  document.getElementById('dp-sub').textContent   = p.aciklama || '';
   document.getElementById('dp-chips').innerHTML   = uts.map(ut => '<span class="dp-chip">'+ut.tip+'</span>').join('');
 
   // Künye grid
@@ -1901,7 +1900,6 @@ async function dpSendForm() {
     <!-- GENEL -->
     <div class="dps on" id="dps-g">
       <div class="dp-hero"><img id="dp-hi" src="" alt=""><div class="dp-hero-ov"><div class="dp-badge" id="dp-badge"></div><div class="dp-title" id="dp-title"></div><div class="dp-chips" id="dp-chips"></div></div></div>
-      <div id="dp-sub" style="padding:12px 18px;font-size:12px;color:rgba(245,240,232,.55);line-height:1.7;border-bottom:1px solid rgba(201,169,110,.1);"></div>
       <div class="dp-grid" id="dp-grid"></div>
       <div class="dp-stl">Proje Hakkında</div>
       <div class="dp-desc" id="dp-desc"></div>
