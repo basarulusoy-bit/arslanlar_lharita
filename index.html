@@ -196,6 +196,11 @@
   .sat-label{font-size:9px;letter-spacing:1.5px;color:var(--wd);text-transform:uppercase;}
   .sat-slider{-webkit-appearance:none;width:90px;height:2px;background:var(--border);outline:none;cursor:pointer;}
   .sat-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--gold);border-radius:50%;cursor:pointer;}
+  .mode-toggle{display:inline-flex;background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:2px;overflow:hidden;}
+  .mode-btn{background:transparent;border:none;color:var(--wd);font-family:'Montserrat',sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:6px 12px;cursor:pointer;transition:all .2s;}
+  .mode-btn.active{background:rgba(201,169,110,.18);color:var(--gold);}
+  .mode-btn:hover:not(.active){color:var(--gold-l);}
+  .mode-btn+.mode-btn{border-left:1px solid var(--border);}
   .poi-marker{
     background:rgba(10,10,10,.88);border:1px solid rgba(255,255,255,.12);
     color:rgba(245,240,232,.75);font-size:9px;letter-spacing:.5px;
@@ -420,8 +425,10 @@
 </div>
 <div class="sat-badge">
   <div class="sat-row" style="display:flex;align-items:center;gap:8px">
-    <span class="sat-label">Uydu</span>
-    <input type="range" class="sat-slider" min="0" max="100" value="35" id="satSlider" oninput="setSatOpacity(this.value)">
+    <div class="mode-toggle">
+      <button type="button" class="mode-btn active" id="mode-harita" onclick="setMapMode('harita')">Harita</button>
+      <button type="button" class="mode-btn" id="mode-uydu" onclick="setMapMode('uydu')">Uydu</button>
+    </div>
   </div>
   <div class="sat-divider"></div>
   <div class="sat-row" style="display:flex;align-items:center;gap:8px">
@@ -740,10 +747,7 @@ async function initMap() {
           type: 'raster',
           source: 'satellite-underlay',
           paint: {
-            'raster-opacity': 0.35,
-            'raster-saturation': -0.2,
-            'raster-contrast': 0.1,
-            'raster-brightness-min': 0.05
+            'raster-opacity': 0
           }
         }, firstLayerId);
       }
@@ -789,22 +793,38 @@ async function initMap() {
   });
 }
 
-// ── SATELLITE OPACITY ────────────────────────────────────────────────────
-function setSatOpacity(val) {
-  const opacity = parseInt(val) / 100;
-  if (map && map.getLayer('satellite-underlay')) {
-    map.setPaintProperty('satellite-underlay', 'raster-opacity', opacity);
+// ── MAP MODE (Harita / Uydu hibrit) ──────────────────────────────────────
+function setMapMode(mode) {
+  const isUydu = mode === 'uydu';
+  satelliteVisible = isUydu;
+
+  // UI state
+  const hb = document.getElementById('mode-harita');
+  const ub = document.getElementById('mode-uydu');
+  if (hb) hb.classList.toggle('active', !isUydu);
+  if (ub) ub.classList.toggle('active',  isUydu);
+
+  if (!map) return;
+
+  // Uydu raster: tam opacity (gerçek uydu) ya da tamamen kapalı
+  if (map.getLayer('satellite-underlay')) {
+    map.setPaintProperty('satellite-underlay', 'raster-opacity', isUydu ? 1 : 0);
   }
-  // Also adjust vector tile opacity for true hybrid feel
-  // When satellite is strong, make road/label layers slightly more transparent
-  const roadOpacity = Math.max(0.4, 1 - opacity * 0.4);
+
+  // Uydu modunda zemin (landcover/landuse) fill'lerini gizle ki uydu görünsün;
+  // yollar ve etiketler üstte kaldığı için hibrit görünüm otomatik oluşur.
   try {
     map.getStyle().layers.forEach(layer => {
       if (layer.type === 'fill' && (layer['source-layer'] === 'landcover' || layer['source-layer'] === 'landuse')) {
-        map.setPaintProperty(layer.id, 'fill-opacity', opacity > 0.1 ? 0 : 0.32);
+        map.setPaintProperty(layer.id, 'fill-opacity', isUydu ? 0 : 0.32);
       }
     });
   } catch(e) {}
+}
+
+// Geri uyumluluk: eski çağrılar (slider/toggle) hala çalışsın
+function setSatOpacity(val) {
+  setMapMode(parseInt(val) > 0 ? 'uydu' : 'harita');
 }
 
 // ── LIVE OSM POIs (Overpass API) ─────────────────────────────────────────
