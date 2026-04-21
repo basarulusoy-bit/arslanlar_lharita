@@ -518,6 +518,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let PROJECTS = [];
 let unitTypesMap = {};   // project_id → [unit_types]
 let unitStatusMap = {};  // project_id → [unit_status]
+let projectImagesMap = {}; // project_id → [{url, sira}]
 
 let projectPoisMap = {};   // project_id → [pois]
 let transitLines = [];
@@ -526,15 +527,21 @@ let poiEnabled = true;
 let transitEnabled = true;
 
 async function loadSupabaseData() {
-  const [pRes, utRes, usRes, poisRes, linesRes, stopsRes] = await Promise.all([
+  const [pRes, utRes, usRes, imgRes, poisRes, linesRes, stopsRes] = await Promise.all([
     sb.from('projects').select('*').order('sira'),
     sb.from('unit_types').select('*').order('sira'),
     sb.from('unit_status').select('*'),
+    sb.from('project_images').select('*').order('sira'),
     sb.from('project_pois').select('*').eq('visible', true).order('sira'),
     sb.from('transit_lines').select('*').eq('visible', true),
     sb.from('transit_stops').select('*'),
   ]);
   PROJECTS = pRes.data || [];
+  projectImagesMap = {};
+  (imgRes.data || []).forEach(im => {
+    if (!projectImagesMap[im.project_id]) projectImagesMap[im.project_id] = [];
+    projectImagesMap[im.project_id].push(im);
+  });
   unitTypesMap = {};
   (utRes.data || []).forEach(ut => {
     if (!unitTypesMap[ut.project_id]) unitTypesMap[ut.project_id] = [];
@@ -1806,9 +1813,11 @@ function dpFill(p) {
   const uss = unitStatusMap[p.id] || [];
   const li  = !!window.acentaSession;
 
-  // Hero
+  // Hero — galeri varsa ilk görsel, yoksa render_url
+  const firstGalImg = (projectImagesMap[p.id] || []).sort((a,b) => (a.sira||0) - (b.sira||0))[0];
+  const heroSrc = (firstGalImg && firstGalImg.url) || p.render_url || '';
   const hi = document.getElementById('dp-hi');
-  hi.src = p.render_url || ''; hi.style.display = p.render_url ? 'block' : 'none';
+  hi.src = heroSrc; hi.style.display = heroSrc ? 'block' : 'none';
   document.getElementById('dp-badge').textContent = (p.tip||'Proje') + (p.teslim ? ' · '+p.teslim : '');
   document.getElementById('dp-title').textContent = p.name;
   document.getElementById('dp-chips').innerHTML   = uts.map(ut => '<span class="dp-chip">'+ut.tip+'</span>').join('');
@@ -1837,10 +1846,20 @@ function dpFill(p) {
     '<a href="https://wa.me/'+wa+'?text='+encodeURIComponent(p.name+' projesi hakkında bilgi almak istiyorum.')+'" target="_blank" class="dp-btn dp-btn-w">WhatsApp</a>' +
     (p.campaign_url ? '<a href="'+p.campaign_url+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:4px;padding:10px;background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.35);color:#C9A96E;font-family:Montserrat,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:all .2s;" onmouseover="this.style.background=\'rgba(201,169,110,.2)\'" onmouseout="this.style.background=\'rgba(201,169,110,.1)\'">✦ Kampanya &amp; Ödeme Planı →</a>' : '');
 
-  // Görseller
-  document.getElementById('dp-gal').innerHTML = p.render_url
-    ? '<img class="full" src="'+p.render_url+'" alt="'+p.name+'" onclick="dpLb(this.src)">'
-    : '<div style="grid-column:1/-1;padding:28px;text-align:center;color:rgba(245,240,232,.25);font-size:12px">Görsel henüz yüklenmedi.</div>';
+  // Görseller — önce project_images galerisinden, yoksa render_url, yoksa boş
+  const galImgs = (projectImagesMap[p.id] || []).slice().sort((a,b) => (a.sira||0) - (b.sira||0));
+  let galHtml = '';
+  if (galImgs.length > 0) {
+    // İlk görsel tam genişlik (hero benzeri), kalanlar 2'li grid
+    galHtml = galImgs.map((im, i) =>
+      `<img class="${i === 0 ? 'full' : ''}" src="${im.url}" alt="${p.name}" onclick="dpLb(this.src)">`
+    ).join('');
+  } else if (p.render_url) {
+    galHtml = '<img class="full" src="'+p.render_url+'" alt="'+p.name+'" onclick="dpLb(this.src)">';
+  } else {
+    galHtml = '<div style="grid-column:1/-1;padding:28px;text-align:center;color:rgba(245,240,232,.25);font-size:12px">Görsel henüz yüklenmedi.</div>';
+  }
+  document.getElementById('dp-gal').innerHTML = galHtml;
 
   // Daire tipleri
   document.getElementById('dp-types').innerHTML = uts.length ? uts.map(ut => {

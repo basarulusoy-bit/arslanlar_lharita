@@ -370,6 +370,34 @@ html,body{min-height:100%;background:var(--black);color:var(--white);font-family
               </span>
             </label>
           </div>
+
+          <div class="card" style="margin-top:14px;">
+            <div class="card-title">İletişim</div>
+            <div class="field">
+              <label>Telefon</label>
+              <input type="tel" id="pe-telefon" placeholder="+90 312 000 00 00">
+            </div>
+            <div class="field" style="margin-top:10px;">
+              <label>WhatsApp</label>
+              <input type="tel" id="pe-whatsapp" placeholder="+90 5XX XXX XX XX">
+              <div class="field-hint">Boş bırakılırsa telefon kullanılır.</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px;">
+            <div class="card-title">Proje Galerisi <span id="pe-gal-count" style="color:var(--wd);font-weight:400;font-size:11px;margin-left:8px;">(0 / 10)</span></div>
+            <div id="pe-gallery-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;min-height:120px;padding:10px;background:rgba(255,255,255,.02);border:1px dashed var(--border);border-radius:4px;">
+              <div id="pe-gal-empty" style="grid-column:1/-1;text-align:center;color:rgba(245,240,232,.35);font-size:11px;padding:20px 0;">Henüz görsel yok. Sürükleyip sıralayabilirsin.</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;margin-top:12px;">
+              <label id="pe-gal-add-label" style="flex:1;background:rgba(201,169,110,.1);border:1px solid var(--borderhi);color:var(--gold);font-family:Montserrat,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;text-align:center;transition:background .2s;">
+                &#43; Görsel Ekle
+                <input type="file" id="pe-gal-file" accept="image/*" multiple style="display:none" onchange="uploadGalleryImages(event)">
+              </label>
+              <div id="pe-gal-status" style="font-size:10px;color:var(--wd);letter-spacing:1px;min-width:80px;"></div>
+            </div>
+            <div class="field-hint" style="margin-top:8px;">Max 10 görsel. Sürükle-bırak ile sıralayabilirsin.</div>
+          </div>
         </div>
 
         <!-- Sağ: Olanaklar + Daire tipleri -->
@@ -1114,9 +1142,12 @@ function openProjectPanel(projectId) {
   document.getElementById('pe-alan').value    = p.toplam_alan || '';
   document.getElementById('pe-aciklama').value = p.aciklama || '';
   document.getElementById('pe-render').value  = p.render_url || '';
+  document.getElementById('pe-telefon').value = p.telefon || '';
+  document.getElementById('pe-whatsapp').value = p.whatsapp || '';
   document.getElementById('pe-satis-tamamlandi').checked = !!p.satis_tamamlandi;
   toggleSatisSwitchUI();
   previewRender();
+  loadGallery(projectId);
 
   // Tags
   currentTags = [...(p.ozellikler || [])];
@@ -1135,6 +1166,120 @@ function previewRender() {
   prev.innerHTML = url
     ? `<img src="${url}" onerror="this.parentElement.innerHTML='<span class=render-empty>Görsel yüklenemedi</span>'">`
     : '<span class="render-empty">Henüz görsel yok</span>';
+}
+
+// ═══════════════════════════════════════════
+// PROJECT GALLERY (Faz 1a)
+// ═══════════════════════════════════════════
+const GALLERY_MAX = 10;
+let galleryItems = []; // [{id, project_id, url, sira}]
+let draggedGalIndex = null;
+
+async function loadGallery(projectId) {
+  galleryItems = [];
+  renderGalleryGrid();
+  const { data, error } = await sb.from('project_images')
+    .select('*').eq('project_id', projectId).order('sira', { ascending: true });
+  if (error) { console.warn('gallery load', error); return; }
+  galleryItems = data || [];
+  renderGalleryGrid();
+}
+
+function renderGalleryGrid() {
+  const grid    = document.getElementById('pe-gallery-grid');
+  const empty   = document.getElementById('pe-gal-empty');
+  const count   = document.getElementById('pe-gal-count');
+  const addLbl  = document.getElementById('pe-gal-add-label');
+  if (!grid) return;
+  count.textContent = `(${galleryItems.length} / ${GALLERY_MAX})`;
+  if (galleryItems.length === 0) {
+    grid.innerHTML = '<div id="pe-gal-empty" style="grid-column:1/-1;text-align:center;color:rgba(245,240,232,.35);font-size:11px;padding:20px 0;">Henüz görsel yok. Sürükleyip sıralayabilirsin.</div>';
+  } else {
+    grid.innerHTML = galleryItems.map((it, i) => `
+      <div class="gal-tile" draggable="true"
+           data-idx="${i}"
+           ondragstart="galDragStart(${i})"
+           ondragover="event.preventDefault();"
+           ondrop="galDrop(${i})"
+           style="position:relative;aspect-ratio:1;background:#111;border:1px solid var(--border);border-radius:3px;overflow:hidden;cursor:grab;">
+        <img src="${it.url}" style="width:100%;height:100%;object-fit:cover;pointer-events:none;">
+        <div style="position:absolute;top:3px;left:3px;background:rgba(10,10,10,.75);color:var(--gold);font-size:10px;font-weight:600;padding:2px 6px;border-radius:2px;pointer-events:none;">${i + 1}</div>
+        <button onclick="deleteGalleryImage('${it.id}')" style="position:absolute;top:3px;right:3px;width:22px;height:22px;border:none;background:rgba(232,112,112,.85);color:#fff;border-radius:50%;cursor:pointer;font-size:13px;line-height:1;padding:0;">×</button>
+      </div>
+    `).join('');
+  }
+  if (addLbl) {
+    if (galleryItems.length >= GALLERY_MAX) {
+      addLbl.style.opacity = '0.4';
+      addLbl.style.pointerEvents = 'none';
+    } else {
+      addLbl.style.opacity = '1';
+      addLbl.style.pointerEvents = 'auto';
+    }
+  }
+}
+
+function galDragStart(i) { draggedGalIndex = i; }
+async function galDrop(targetIdx) {
+  if (draggedGalIndex === null || draggedGalIndex === targetIdx) return;
+  const item = galleryItems.splice(draggedGalIndex, 1)[0];
+  galleryItems.splice(targetIdx, 0, item);
+  draggedGalIndex = null;
+  renderGalleryGrid();
+  // Persist yeni sırayı
+  const updates = galleryItems.map((it, i) =>
+    sb.from('project_images').update({ sira: i }).eq('id', it.id)
+  );
+  await Promise.all(updates);
+}
+
+async function uploadGalleryImages(evt) {
+  const files = Array.from(evt.target.files || []);
+  if (!files.length || !editingProjectId) return;
+  const status = document.getElementById('pe-gal-status');
+  const slotsLeft = GALLERY_MAX - galleryItems.length;
+  const toUpload  = files.slice(0, slotsLeft);
+  if (!toUpload.length) { toast('Galeri dolu (max 10)', 'x', true); evt.target.value = ''; return; }
+
+  status.textContent = `0 / ${toUpload.length}`;
+  let done = 0;
+  const newRows = [];
+  for (const file of toUpload) {
+    const ext = file.name.split('.').pop();
+    const path = `${editingProjectId}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+    const { error: upErr } = await sb.storage.from('project-images').upload(path, file, { contentType: file.type });
+    if (upErr) { toast('Yükleme hatası: ' + upErr.message, 'x', true); continue; }
+    const { data: urlData } = sb.storage.from('project-images').getPublicUrl(path);
+    const sira = galleryItems.length + newRows.length;
+    const { data: row, error: insErr } = await sb.from('project_images').insert({
+      project_id: editingProjectId, url: urlData.publicUrl, sira
+    }).select().single();
+    if (insErr) { toast('Kayıt hatası: ' + insErr.message, 'x', true); continue; }
+    newRows.push(row);
+    done++;
+    status.textContent = `${done} / ${toUpload.length}`;
+  }
+  galleryItems.push(...newRows);
+  renderGalleryGrid();
+  status.textContent = '✓ ' + done;
+  setTimeout(() => status.textContent = '', 2000);
+  evt.target.value = '';
+  if (done) toast(`${done} görsel yüklendi`, '✓');
+}
+
+async function deleteGalleryImage(id) {
+  if (!confirm('Bu görseli kaldırmak istediğine emin misin?')) return;
+  const { error } = await sb.from('project_images').delete().eq('id', id);
+  if (error) { toast('Silme hatası: ' + error.message, 'x', true); return; }
+  galleryItems = galleryItems.filter(x => x.id !== id);
+  // Sıraları düzelt
+  const updates = galleryItems.map((it, i) => {
+    it.sira = i;
+    return sb.from('project_images').update({ sira: i }).eq('id', it.id);
+  });
+  await Promise.all(updates);
+  renderGalleryGrid();
+  toast('Görsel silindi', '✓');
 }
 
 function toggleSatisSwitchUI() {
@@ -1225,6 +1370,8 @@ async function saveProject(stay = false) {
     render_url:  document.getElementById('pe-render').value.trim(),
     ozellikler:  currentTags,
     satis_tamamlandi: document.getElementById('pe-satis-tamamlandi').checked,
+    telefon:     document.getElementById('pe-telefon').value.trim() || null,
+    whatsapp:    document.getElementById('pe-whatsapp').value.trim() || null,
   };
 
   // Update project
