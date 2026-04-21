@@ -307,6 +307,11 @@
 .dp-ut-imgs img{width:100%;aspect-ratio:1;object-fit:cover;cursor:pointer;display:block}
 .dp-ut-tour{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.35);color:#C9A96E;font-family:Montserrat,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;margin-top:4px;transition:background .2s}
 .dp-ut-tour:hover{background:rgba(201,169,110,.2)}
+.dp-floor-tab{background:transparent;border:1px solid rgba(201,169,110,.15);color:rgba(245,240,232,.55);font-family:Montserrat,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:7px 14px;cursor:pointer;border-radius:2px;transition:all .2s}
+.dp-floor-tab:hover{border-color:rgba(201,169,110,.4);color:var(--gold-l)}
+.dp-floor-tab.on{background:rgba(201,169,110,.15);border-color:var(--gold);color:var(--gold)}
+.dp-floor-pdf{width:100%;height:70vh;max-height:620px;border:1px solid var(--border);background:#0A0A0A;margin-top:10px}
+.dp-floor-empty{padding:40px 18px;text-align:center;color:rgba(245,240,232,.3);font-size:12px}
 .dp-tn{font-family:'Cormorant Garamond',serif;font-size:19px;color:#C9A96E}
 .dp-tm{font-size:10px;color:rgba(245,240,232,.3);margin:1px 0 5px}
 .dp-tp{font-family:'Cormorant Garamond',serif;font-size:17px;color:#F5F0E8;text-align:right}
@@ -529,6 +534,7 @@ let PROJECTS = [];
 let unitTypesMap = {};   // project_id → [unit_types]
 let unitStatusMap = {};  // project_id → [unit_status]
 let projectImagesMap = {}; // project_id → [{url, sira}]
+let projectFloorsMap = {}; // project_id → [{kat_adi, kat_sirasi, pdf_url}]
 
 let projectPoisMap = {};   // project_id → [pois]
 let transitLines = [];
@@ -537,11 +543,12 @@ let poiEnabled = true;
 let transitEnabled = true;
 
 async function loadSupabaseData() {
-  const [pRes, utRes, usRes, imgRes, poisRes, linesRes, stopsRes] = await Promise.all([
+  const [pRes, utRes, usRes, imgRes, floorRes, poisRes, linesRes, stopsRes] = await Promise.all([
     sb.from('projects').select('*').order('sira'),
     sb.from('unit_types').select('*').order('sira'),
     sb.from('unit_status').select('*'),
     sb.from('project_images').select('*').order('sira'),
+    sb.from('project_floors').select('*').order('kat_sirasi'),
     sb.from('project_pois').select('*').eq('visible', true).order('sira'),
     sb.from('transit_lines').select('*').eq('visible', true),
     sb.from('transit_stops').select('*'),
@@ -551,6 +558,11 @@ async function loadSupabaseData() {
   (imgRes.data || []).forEach(im => {
     if (!projectImagesMap[im.project_id]) projectImagesMap[im.project_id] = [];
     projectImagesMap[im.project_id].push(im);
+  });
+  projectFloorsMap = {};
+  (floorRes.data || []).forEach(f => {
+    if (!projectFloorsMap[f.project_id]) projectFloorsMap[f.project_id] = [];
+    projectFloorsMap[f.project_id].push(f);
   });
   unitTypesMap = {};
   (utRes.data || []).forEach(ut => {
@@ -1809,6 +1821,23 @@ function dpClose() {
   if (dpMiniMap) { try { dpMiniMap.remove(); } catch(e){} dpMiniMap = null; }
 }
 
+let dpFloorsCurrent = [];
+
+function dpFloorSelect(idx) {
+  const f = dpFloorsCurrent[idx];
+  const viewer = document.getElementById('dp-floors-viewer');
+  document.querySelectorAll('#dp-floors-tabs .dp-floor-tab').forEach((el, i) => {
+    el.classList.toggle('on', i === idx);
+  });
+  if (!f) {
+    viewer.innerHTML = '<div class="dp-floor-empty">Kat bulunamadı.</div>';
+    return;
+  }
+  viewer.innerHTML =
+    `<iframe class="dp-floor-pdf" src="${f.pdf_url}#toolbar=0&navpanes=0" title="${(f.kat_adi||'Kat').replace(/"/g,'&quot;')}"></iframe>` +
+    `<div style="margin-top:8px;text-align:right"><a href="${f.pdf_url}" target="_blank" rel="noopener" style="color:var(--gold);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;">PDF'i aç →</a></div>`;
+}
+
 function dpUtDetailHtml(ut, idx) {
   const parts = [];
   if (ut.plan_url) {
@@ -1916,6 +1945,23 @@ function dpFill(p) {
       (hasExtras ? dpUtDetailHtml(ut, idx) : '');
   }).join('') : '<div style="padding:16px;color:rgba(245,240,232,.25);font-size:12px">Daire tipi girilmedi.</div>';
 
+  // Kat Planları (PDF)
+  const floors = (projectFloorsMap[p.id] || []).slice().sort((a,b) => (a.kat_sirasi||0) - (b.kat_sirasi||0));
+  const kpTab = document.getElementById('dp-tab-kp');
+  if (floors.length > 0) {
+    kpTab.style.display = '';
+    const tabsEl = document.getElementById('dp-floors-tabs');
+    tabsEl.innerHTML = floors.map((f, i) =>
+      `<button class="dp-floor-tab${i === 0 ? ' on' : ''}" onclick="dpFloorSelect(${i})">${(f.kat_adi||'Kat').replace(/</g,'&lt;')}</button>`
+    ).join('');
+    dpFloorsCurrent = floors;
+    dpFloorSelect(0);
+  } else {
+    kpTab.style.display = 'none';
+    document.getElementById('dp-floors-tabs').innerHTML = '';
+    document.getElementById('dp-floors-viewer').innerHTML = '';
+  }
+
   // Olanaklar
   const ozs = p.ozellikler||[];
   const icons = {'Havuz':'🏊','Spor':'🏋','Otopark':'🅿','Sauna':'♨','Çocuk':'🎠','Kafeterya':'☕','Hamam':'🧖','Güvenlik':'🔒','Peyzaj':'🌿','Squash':'🎾','Tuz':'🧂'};
@@ -2005,6 +2051,7 @@ async function dpSendForm() {
     <div class="dp-tab on"  onclick="dpTab(this,'g')">Genel</div>
     <div class="dp-tab" onclick="dpTab(this,'gv')">Görseller</div>
     <div class="dp-tab" onclick="dpTab(this,'d')">Daire Tipleri</div>
+    <div class="dp-tab" id="dp-tab-kp" style="display:none" onclick="dpTab(this,'kp')">Kat Planları</div>
     <div class="dp-tab" onclick="dpTab(this,'ol')">Olanaklar</div>
     <div class="dp-tab" onclick="dpTab(this,'k')">Konum</div>
     <div class="dp-tab" onclick="dpTab(this,'t3')">3D / Tur</div>
@@ -2028,6 +2075,12 @@ async function dpSendForm() {
     <div class="dps" id="dps-d">
       <div class="dp-stl">Daire Tipleri</div>
       <div id="dp-types" style="padding-top:8px"></div>
+    </div>
+    <!-- KAT PLANLARI -->
+    <div class="dps" id="dps-kp">
+      <div class="dp-stl">Kat Planları</div>
+      <div id="dp-floors-tabs" style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 14px 0"></div>
+      <div id="dp-floors-viewer" style="padding:8px 14px 16px"></div>
     </div>
     <!-- OLANAKLAR -->
     <div class="dps" id="dps-ol">

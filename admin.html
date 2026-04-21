@@ -385,6 +385,21 @@ html,body{min-height:100%;background:var(--black);color:var(--white);font-family
           </div>
 
           <div class="card" style="margin-top:14px;">
+            <div class="card-title">Kat Planları (PDF) <span id="pe-floors-count" style="color:var(--wd);font-weight:400;font-size:11px;margin-left:8px;">0 kat</span></div>
+            <div id="pe-floors-list" style="display:flex;flex-direction:column;gap:8px;min-height:60px;padding:8px;background:rgba(255,255,255,.02);border:1px dashed var(--border);border-radius:4px;">
+              <div id="pe-floors-empty" style="text-align:center;color:rgba(245,240,232,.3);font-size:11px;padding:16px 0;">Henüz kat planı yüklenmedi.</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;margin-top:10px;">
+              <label style="flex:1;background:rgba(201,169,110,.1);border:1px solid var(--borderhi);color:var(--gold);font-family:Montserrat,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;text-align:center;">
+                &#128193; Yeni Kat PDF Yükle
+                <input type="file" id="pe-floor-file" accept="application/pdf" style="display:none" onchange="uploadFloorPdf(event)">
+              </label>
+              <div id="pe-floor-status" style="font-size:10px;color:var(--wd);min-width:80px;"></div>
+            </div>
+            <div class="field-hint" style="margin-top:8px;">PDF yüklendikten sonra kat adı ve sırasını düzenleyebilirsin.</div>
+          </div>
+
+          <div class="card" style="margin-top:14px;">
             <div class="card-title">Proje Galerisi <span id="pe-gal-count" style="color:var(--wd);font-weight:400;font-size:11px;margin-left:8px;">(0 / 10)</span></div>
             <div id="pe-gallery-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;min-height:120px;padding:10px;background:rgba(255,255,255,.02);border:1px dashed var(--border);border-radius:4px;">
               <div id="pe-gal-empty" style="grid-column:1/-1;text-align:center;color:rgba(245,240,232,.35);font-size:11px;padding:20px 0;">Henüz görsel yok. Sürükleyip sıralayabilirsin.</div>
@@ -1148,6 +1163,7 @@ function openProjectPanel(projectId) {
   toggleSatisSwitchUI();
   previewRender();
   loadGallery(projectId);
+  loadFloors(projectId);
 
   // Tags
   currentTags = [...(p.ozellikler || [])];
@@ -1280,6 +1296,108 @@ async function deleteGalleryImage(id) {
   await Promise.all(updates);
   renderGalleryGrid();
   toast('Görsel silindi', '✓');
+}
+
+// ═══════════════════════════════════════════
+// PROJECT FLOORS / KAT PLANLARI (Faz 3)
+// ═══════════════════════════════════════════
+let floorItems = []; // [{id, project_id, kat_adi, kat_sirasi, pdf_url}]
+
+async function loadFloors(projectId) {
+  floorItems = [];
+  renderFloorsList();
+  const { data, error } = await sb.from('project_floors')
+    .select('*').eq('project_id', projectId).order('kat_sirasi', { ascending: true });
+  if (error) { console.warn('floors load', error); return; }
+  floorItems = data || [];
+  renderFloorsList();
+}
+
+function renderFloorsList() {
+  const list = document.getElementById('pe-floors-list');
+  const count = document.getElementById('pe-floors-count');
+  if (!list) return;
+  count.textContent = `${floorItems.length} kat`;
+  if (floorItems.length === 0) {
+    list.innerHTML = '<div id="pe-floors-empty" style="text-align:center;color:rgba(245,240,232,.3);font-size:11px;padding:16px 0;">Henüz kat planı yüklenmedi.</div>';
+    return;
+  }
+  list.innerHTML = floorItems.map((f, i) => `
+    <div style="display:grid;grid-template-columns:70px 1fr auto auto auto;gap:8px;align-items:center;padding:8px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:3px;">
+      <input type="number" value="${f.kat_sirasi}" onchange="updateFloorField('${f.id}','kat_sirasi',+this.value)" title="Sıra" style="width:60px;text-align:center;">
+      <input type="text" value="${(f.kat_adi||'').replace(/"/g,'&quot;')}" onchange="updateFloorField('${f.id}','kat_adi',this.value)" placeholder="Zemin / 1. Kat">
+      <a href="${f.pdf_url}" target="_blank" rel="noopener" style="color:var(--gold);font-size:11px;text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:2px;">PDF →</a>
+      <label style="background:rgba(201,169,110,.08);border:1px solid var(--border);color:var(--wd);font-size:9px;letter-spacing:1.3px;text-transform:uppercase;padding:6px 10px;cursor:pointer;border-radius:2px;">
+        Değiştir
+        <input type="file" accept="application/pdf" style="display:none" onchange="replaceFloorPdf(event,'${f.id}')">
+      </label>
+      <button onclick="deleteFloor('${f.id}')" class="del-btn" style="padding:6px 10px;">Sil</button>
+    </div>
+  `).join('');
+}
+
+async function uploadFloorPdf(evt) {
+  const file = evt.target.files[0];
+  if (!file || !editingProjectId) return;
+  const status = document.getElementById('pe-floor-status');
+  status.textContent = 'Yükleniyor...';
+  status.style.color = 'var(--gold)';
+  const path = `${editingProjectId}/${Date.now()}.pdf`;
+  const { error: upErr } = await sb.storage.from('project-floors').upload(path, file, { contentType: 'application/pdf' });
+  if (upErr) { status.textContent = 'Hata'; toast('Yükleme hatası: ' + upErr.message, 'x', true); return; }
+  const { data: urlData } = sb.storage.from('project-floors').getPublicUrl(path);
+  const nextSira = floorItems.length ? Math.max(...floorItems.map(f => f.kat_sirasi || 0)) + 1 : 0;
+  const { data: row, error: insErr } = await sb.from('project_floors').insert({
+    project_id: editingProjectId,
+    kat_adi: 'Yeni Kat',
+    kat_sirasi: nextSira,
+    pdf_url: urlData.publicUrl,
+  }).select().single();
+  if (insErr) { toast('Kayıt hatası: ' + insErr.message, 'x', true); return; }
+  floorItems.push(row);
+  floorItems.sort((a,b) => (a.kat_sirasi||0) - (b.kat_sirasi||0));
+  renderFloorsList();
+  status.textContent = '✓';
+  setTimeout(() => status.textContent = '', 2000);
+  evt.target.value = '';
+  toast('Kat planı eklendi', '✓');
+}
+
+async function replaceFloorPdf(evt, floorId) {
+  const file = evt.target.files[0];
+  if (!file || !editingProjectId) return;
+  const path = `${editingProjectId}/${Date.now()}-replace.pdf`;
+  const { error: upErr } = await sb.storage.from('project-floors').upload(path, file, { contentType: 'application/pdf' });
+  if (upErr) { toast('Yükleme hatası: ' + upErr.message, 'x', true); return; }
+  const { data: urlData } = sb.storage.from('project-floors').getPublicUrl(path);
+  const { error } = await sb.from('project_floors').update({ pdf_url: urlData.publicUrl }).eq('id', floorId);
+  if (error) { toast('Güncelleme hatası: ' + error.message, 'x', true); return; }
+  const f = floorItems.find(x => x.id === floorId);
+  if (f) f.pdf_url = urlData.publicUrl;
+  renderFloorsList();
+  toast('PDF değiştirildi', '✓');
+  evt.target.value = '';
+}
+
+async function updateFloorField(floorId, field, value) {
+  const f = floorItems.find(x => x.id === floorId);
+  if (!f) return;
+  f[field] = value;
+  const { error } = await sb.from('project_floors').update({ [field]: value }).eq('id', floorId);
+  if (error) { toast('Güncelleme hatası: ' + error.message, 'x', true); return; }
+  if (field === 'kat_sirasi') {
+    floorItems.sort((a,b) => (a.kat_sirasi||0) - (b.kat_sirasi||0));
+    renderFloorsList();
+  }
+}
+
+async function deleteFloor(floorId) {
+  if (!confirm('Bu kat planını silmek istediğine emin misin?')) return;
+  const { error } = await sb.from('project_floors').delete().eq('id', floorId);
+  if (error) { toast('Silme hatası: ' + error.message, 'x', true); return; }
+  floorItems = floorItems.filter(x => x.id !== floorId);
+  renderFloorsList();
+  toast('Kat planı silindi', '✓');
 }
 
 function toggleSatisSwitchUI() {
