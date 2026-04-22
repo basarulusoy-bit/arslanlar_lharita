@@ -201,10 +201,10 @@ html,body{height:100%;background:var(--black);color:var(--white);font-family:'Mo
       <div class="sb-item" onclick="showPanel('addoffer',this)">+ Yeni Teklif</div>
       <div class="sb-sec">Hesap</div>
       <div class="sb-item" onclick="showPanel('profile',this)">◉ Profilim</div>
-      <div class="sb-sec">Proje Satış</div>
-      <div class="sb-item" onclick="showPanel('projectstock',this);apsInit()">◈ Birim Satış (Tüm Projeler)</div>
-      <div class="sb-sec" style="color:rgba(201,169,110,.7);">Jewels Kampanyası</div>
-      <div class="sb-item" onclick="showPanel('jewels',this)">◈ Stok & Satış</div>
+      <div class="sb-sec" style="color:rgba(201,169,110,.7);">Projeler</div>
+      <div id="apsProjectList">
+        <div style="padding:10px 16px;color:rgba(245,240,232,.3);font-size:11px;">Yükleniyor...</div>
+      </div>
     </div>
     <div class="main">
 
@@ -406,22 +406,20 @@ html,body{height:100%;background:var(--black);color:var(--white);font-family:'Mo
           allow="same-origin"></iframe>
       </div>
 
-      <!-- ══ PROJE BİRİM SATIŞ PANELİ (Jewels dışı) ══ -->
+      <!-- ══ PROJE BİRİM SATIŞ PANELİ ══ -->
       <div class="panel" id="panel-projectstock">
-        <div class="ptitle">Birim <em>Satış</em></div>
-        <div class="psub">Proje seç, kat planı üzerinden daire rezerve et</div>
+        <div class="ptitle" id="aps-title">Proje <em>—</em></div>
+        <div class="psub" id="aps-subtitle">Kat planı üzerinden daire rezerve et</div>
         <div class="gline"></div>
         <div class="fc" style="margin-top:16px;">
-          <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
-            <div class="field" style="flex:1;min-width:240px;margin:0">
-              <label style="color:var(--gold);font-size:10px;letter-spacing:2px;text-transform:uppercase">Proje Seç</label>
-              <select id="aps-project" onchange="apsLoadProject(this.value)" style="width:100%;background:var(--wf);border:1px solid var(--border);color:var(--white);padding:10px;font-size:12px;margin-top:6px;"></select>
-            </div>
+          <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:space-between;">
             <div id="aps-stats" style="font-size:11px;letter-spacing:1.2px;color:var(--wd);">—</div>
           </div>
           <div id="aps-floor-tabs" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:16px;"></div>
         </div>
-        <div class="fc" style="margin-top:16px;min-height:400px;" id="aps-svg-box"></div>
+        <div class="fc" style="margin-top:16px;min-height:400px;" id="aps-svg-box">
+          <div style="padding:40px;text-align:center;color:var(--wd);font-size:11px;">Sol menüden bir proje seçin.</div>
+        </div>
       </div>
 
     </div>
@@ -1415,6 +1413,7 @@ function jwPrintContract() {
 (async()=>{
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) await loadUser(session.user);
+  apsBuildSidebar().catch(() => {});
 })();
 </script>
 
@@ -1478,12 +1477,44 @@ const APS_COL = {
   satildi:   { fill:'#7a2a2a', stroke:'#E87070' },
 };
 
-async function apsInit() {
-  const sel = document.getElementById('aps-project');
-  // projects'ı supabase'den al (jewels dışı)
-  const { data } = await sb.from('projects').select('id,name').neq('id','jewels').order('sira');
-  sel.innerHTML = '<option value="">Proje seç...</option>' +
-    (data||[]).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+let apsProjectsList = []; // sidebar'dan erişmek için
+
+async function apsBuildSidebar() {
+  // Satışı tamamlanmamış tüm projeleri çek
+  const { data, error } = await sb.from('projects')
+    .select('id,name,tip,satis_tamamlandi')
+    .or('satis_tamamlandi.is.null,satis_tamamlandi.eq.false')
+    .order('sira');
+  if (error) { console.warn('projects load', error); return; }
+  apsProjectsList = data || [];
+  const box = document.getElementById('apsProjectList');
+  if (!box) return;
+  if (!apsProjectsList.length) {
+    box.innerHTML = '<div style="padding:10px 16px;color:rgba(245,240,232,.3);font-size:11px;">Satışta proje yok.</div>';
+    return;
+  }
+  box.innerHTML = apsProjectsList.map(p => {
+    const short = (p.name || '').replace(/^ARSLANLAR\s+/i, '');
+    return `<div class="sb-item" data-proj="${p.id}" onclick="apsOpenProject('${p.id}', this)">◈ ${short}</div>`;
+  }).join('');
+}
+
+function apsOpenProject(projId, el) {
+  const p = apsProjectsList.find(x => x.id === projId);
+  if (!p) return;
+  // Sidebar active state
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  if (el) el.classList.add('active');
+  // Jewels özel — mevcut iframe akışına git
+  if (projId === 'jewels') {
+    showPanel('jewels', null);
+    return;
+  }
+  // Diğer projeler — generic SVG paneli
+  showPanel('projectstock', null);
+  document.getElementById('aps-title').innerHTML = 'Proje <em>' + (p.name || '').replace(/^ARSLANLAR\s+/i, '') + '</em>';
+  document.getElementById('aps-subtitle').textContent = (p.tip || '') + ' · Kat planı üzerinden daire rezerve et';
+  apsLoadProject(projId);
 }
 
 async function apsLoadProject(projId) {

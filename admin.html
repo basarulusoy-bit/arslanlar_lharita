@@ -313,6 +313,10 @@ html,body{min-height:100%;background:var(--black);color:var(--white);font-family
     <div class="sb-item" onclick="showPanel('units',this);umInit()">
       <span>🏗️</span><span>Birim Yönetimi</span>
     </div>
+    <div class="sb-item" onclick="showPanel('reservations',this);resLoad()">
+      <span>⏳</span><span>Rezervasyon Onayları</span>
+      <span id="resBadge" style="margin-left:auto;background:#E8A96E;color:#0A0A0A;font-size:9px;padding:1px 6px;border-radius:8px;display:none;"></span>
+    </div>
     <div class="sb-item" onclick="showPanel('transit',this)">
       <span>🚇</span><span>Transit Hatları</span>
     </div>
@@ -733,6 +737,33 @@ html,body{min-height:100%;background:var(--black);color:var(--white);font-family
       </div>
     </div><!-- /panel-units -->
 
+    <!-- REZERVASYON ONAYLARI (Faz 4 genişleme) -->
+    <div class="panel" id="panel-reservations">
+      <div class="page-title">Rezervasyon <em>Onayları</em></div>
+      <div class="page-sub">Acentaların rezerve ettiği birimler burada onaylanır (Jewels için "Onay Bekleyenler" ayrı)</div>
+      <div class="gold-line"></div>
+
+      <div class="card">
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+          <div class="field" style="min-width:200px;margin:0">
+            <label>Proje</label>
+            <select id="res-project-filter" onchange="resRender()">
+              <option value="">Tümü</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1;min-width:200px;margin:0">
+            <label>Ara (daire no / müşteri / telefon)</label>
+            <input type="text" id="res-search" oninput="resRender()" placeholder="—">
+          </div>
+          <div id="res-stats" style="font-size:10px;letter-spacing:1.2px;color:var(--wd);padding-top:18px;">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div id="res-tbl" style="overflow-x:auto;"></div>
+      </div>
+    </div><!-- /panel-reservations -->
+
     <!-- CRM: ACENTALAR -->
     <div class="panel" id="panel-crm-acentalar">
       <div class="page-title">Acenta <em>Yönetimi</em></div>
@@ -1109,6 +1140,7 @@ async function startApp() {
   buildDashboard();
   buildStatusSelector();
   await loadTransitData();
+  resInitBadge().catch(() => {});
 }
 
 async function loadAllData() {
@@ -2853,6 +2885,142 @@ function umClearCustomer() {
   document.getElementById('um-m-cemail').value = '';
   document.getElementById('um-m-note').value   = '';
   document.getElementById('um-m-status').value = 'musait';
+}
+
+// ═══════════════════════════════════════════
+// REZERVASYON ONAYLARI (tüm projeler — units tablosu)
+// ═══════════════════════════════════════════
+let resItems = [];
+
+async function resLoad() {
+  const { data, error } = await sb.from('units')
+    .select('*')
+    .eq('status', 'opsiyonlu')
+    .order('reserved_at', { ascending: false });
+  if (error) { toast('Yüklenemedi: ' + error.message, '✕', true); return; }
+  resItems = data || [];
+  // Proje filtresi seçeneklerini doldur
+  const projIds = [...new Set(resItems.map(r => r.project_id))];
+  const sel = document.getElementById('res-project-filter');
+  const prevVal = sel.value;
+  sel.innerHTML = '<option value="">Tümü</option>' +
+    projIds.map(pid => {
+      const p = projects.find(x => x.id === pid);
+      return `<option value="${pid}">${p?.name || pid}</option>`;
+    }).join('');
+  sel.value = prevVal;
+  // Sidebar badge'i
+  resRefreshBadge(resItems.length);
+  resRender();
+}
+
+function resRefreshBadge(n) {
+  const b = document.getElementById('resBadge');
+  if (!b) return;
+  if (n > 0) { b.textContent = n; b.style.display = 'inline-block'; }
+  else       { b.style.display = 'none'; }
+}
+
+function resFilter() {
+  const fProj = document.getElementById('res-project-filter').value;
+  const fSearch = (document.getElementById('res-search').value || '').toLowerCase();
+  return resItems.filter(r =>
+    (!fProj || r.project_id === fProj) &&
+    (!fSearch ||
+      (r.unit_no || '').toLowerCase().includes(fSearch) ||
+      (r.customer_name || '').toLowerCase().includes(fSearch) ||
+      (r.customer_tel || '').toLowerCase().includes(fSearch))
+  );
+}
+
+function resRender() {
+  const rows = resFilter();
+  document.getElementById('res-stats').textContent =
+    `Toplam onay bekleyen: ${resItems.length}${rows.length !== resItems.length ? ' · Filtrelenen: ' + rows.length : ''}`;
+  const tbl = document.getElementById('res-tbl');
+  if (!rows.length) {
+    tbl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--wd);font-size:11px;">Onay bekleyen rezervasyon yok.</div>';
+    return;
+  }
+  tbl.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:10px 8px;background:rgba(201,169,110,.06);color:var(--gold);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);">Proje</th>
+          <th style="text-align:left;padding:10px 8px;background:rgba(201,169,110,.06);color:var(--gold);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);">Daire</th>
+          <th style="text-align:left;padding:10px 8px;background:rgba(201,169,110,.06);color:var(--gold);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);">Kat · Tip</th>
+          <th style="text-align:left;padding:10px 8px;background:rgba(201,169,110,.06);color:var(--gold);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);">Müşteri</th>
+          <th style="text-align:left;padding:10px 8px;background:rgba(201,169,110,.06);color:var(--gold);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);">Telefon</th>
+          <th style="text-align:left;padding:10px 8px;background:rgba(201,169,110,.06);color:var(--gold);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);">Acenta</th>
+          <th style="text-align:left;padding:10px 8px;background:rgba(201,169,110,.06);color:var(--gold);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);">Not</th>
+          <th style="text-align:left;padding:10px 8px;background:rgba(201,169,110,.06);color:var(--gold);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);">Tarih</th>
+          <th style="text-align:right;padding:10px 8px;background:rgba(201,169,110,.06);color:var(--gold);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);">Aksiyon</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => {
+          const p = projects.find(x => x.id === r.project_id);
+          const d = r.reserved_at ? new Date(r.reserved_at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+          const note = (r.reservation_note || '').replace(/"/g, '&quot;');
+          return `<tr>
+            <td style="padding:10px 8px;border-bottom:1px solid rgba(245,240,232,.06);color:var(--white);">${(p?.name || r.project_id).replace('ARSLANLAR ','')}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid rgba(245,240,232,.06);font-weight:600;color:var(--gold);">${r.unit_no || 'K'}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid rgba(245,240,232,.06);color:var(--wd);font-size:11px;">${r.floor_name || ''} · ${r.unit_type || ''}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid rgba(245,240,232,.06);color:var(--white);">${r.customer_name || '—'}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid rgba(245,240,232,.06);color:var(--white);">${r.customer_tel || '—'}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid rgba(245,240,232,.06);color:var(--wd);font-size:11px;">${r.reserved_by_name || '—'}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid rgba(245,240,232,.06);color:var(--wd);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${note}">${note || '—'}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid rgba(245,240,232,.06);color:var(--wd);font-size:11px;">${d}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid rgba(245,240,232,.06);text-align:right;white-space:nowrap;">
+              <button onclick="resApprove('${r.id}')" style="background:rgba(93,189,132,.15);border:1px solid #5DBD84;color:#5DBD84;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:6px 10px;cursor:pointer;border-radius:2px;margin-right:4px;">✓ Onayla</button>
+              <button onclick="resReject('${r.id}')" style="background:rgba(232,112,112,.15);border:1px solid #E87070;color:#E87070;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:6px 10px;cursor:pointer;border-radius:2px;">✕ Reddet</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function resApprove(uid) {
+  const u = resItems.find(x => x.id == uid);
+  if (!u) return;
+  if (!confirm(`Daire ${u.unit_no || 'K'} → SATILDI olarak onaylanacak. Müşteri: ${u.customer_name || '—'}\n\nOnaylıyor musun?`)) return;
+  const now = new Date().toISOString();
+  const { error } = await sb.from('units').update({
+    status: 'satildi',
+    approved_at: now,
+    approved_by: currentUser?.email || null,
+    updated_at: now,
+  }).eq('id', uid);
+  if (error) { toast('Onay hatası: ' + error.message, '✕', true); return; }
+  resItems = resItems.filter(x => x.id != uid);
+  resRefreshBadge(resItems.length);
+  resRender();
+  toast('Rezervasyon onaylandı (Satıldı)', '✓');
+}
+
+async function resReject(uid) {
+  const u = resItems.find(x => x.id == uid);
+  if (!u) return;
+  if (!confirm(`Daire ${u.unit_no || 'K'} rezervasyonu reddedilecek ve Müsait durumuna dönecek. Müşteri bilgisi temizlenecek.\n\nEmin misin?`)) return;
+  const { error } = await sb.from('units').update({
+    status: 'musait',
+    customer_name: null, customer_tel: null, customer_email: null,
+    reservation_note: null, reserved_at: null,
+    reserved_by_agency: null, reserved_by_name: null,
+    updated_at: new Date().toISOString(),
+  }).eq('id', uid);
+  if (error) { toast('Red hatası: ' + error.message, '✕', true); return; }
+  resItems = resItems.filter(x => x.id != uid);
+  resRefreshBadge(resItems.length);
+  resRender();
+  toast('Rezervasyon reddedildi', '✓');
+}
+
+// Admin sayfası açıldığında badge için toplu sayım (arka planda)
+async function resInitBadge() {
+  const { count } = await sb.from('units').select('id', { count: 'exact', head: true }).eq('status', 'opsiyonlu');
+  resRefreshBadge(count || 0);
 }
 
 async function umSaveUnit() {
